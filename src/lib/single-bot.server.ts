@@ -11,7 +11,10 @@ export const SINGLE_WEBHOOK_PATH = "/api/public/telegram/webhook";
 
 export function singleBotToken(): string {
   const token = process.env["TELEGRAM_BOT_TOKEN"];
-  if (!token) throw new Error("TELEGRAM_BOT_TOKEN is not configured");
+  if (!token) {
+    console.error("[telegram] TELEGRAM_BOT_TOKEN is not configured");
+    throw new Error("Telegram boti vaqtincha sozlanmagan — administratorga murojaat qiling.");
+  }
   return token.trim();
 }
 

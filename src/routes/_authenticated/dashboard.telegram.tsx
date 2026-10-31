@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
   confirmTelegramLink,
+  getTelegramBotStatus,
   getTelegramLink,
   getTelegramLinkRequest,
   unlinkTelegram,
@@ -44,11 +45,13 @@ function TelegramPage() {
 
   const fetchLink = useServerFn(getTelegramLink);
   const fetchRequest = useServerFn(getTelegramLinkRequest);
+  const fetchBotStatus = useServerFn(getTelegramBotStatus);
   const confirm = useServerFn(confirmTelegramLink);
   const saveSettings = useServerFn(updateTelegramSettings);
   const unlink = useServerFn(unlinkTelegram);
 
   const link = useQuery({ queryKey: ["telegram-link"], queryFn: () => fetchLink() });
+  const botStatus = useQuery({ queryKey: ["telegram-bot-status"], queryFn: () => fetchBotStatus() });
   const request = useQuery({
     queryKey: ["telegram-link-request", search.code],
     queryFn: () => fetchRequest({ data: { code: search.code! } }),
@@ -57,8 +60,12 @@ function TelegramPage() {
 
   const confirmMutation = useMutation({
     mutationFn: () => confirm({ data: { code: search.code! } }),
-    onSuccess: () => {
-      toast.success(t("Telegram muvaffaqiyatli ulandi"));
+    onSuccess: (result: { delivered?: boolean }) => {
+      if (result?.delivered === false) {
+        toast.warning(t("Ulanish saqlandi, lekin bot xabar yubora olmadi — administratorga murojaat qiling."));
+      } else {
+        toast.success(t("Telegram muvaffaqiyatli ulandi"));
+      }
       void queryClient.invalidateQueries({ queryKey: ["telegram-link"] });
       void navigate({ to: "/dashboard/telegram", search: {} });
     },
@@ -140,22 +147,41 @@ function TelegramPage() {
       ) : (
         <div className="clay-panel space-y-3 p-6">
           <h2 className="text-lg font-semibold">{t("⚪️ Ulanmagan")}</h2>
-          <p className="text-sm text-muted-foreground">
-            {t("Telegram botni oching va")} <span className="font-medium">/start</span> {t("yuboring — ikki kirish usuli bor:")}
-          </p>
-          <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-            <li>
-              <span className="font-medium">{t("“🔑 Email va parol bilan kirish”")}</span> —{" "}
-              {t("hammasi bot ichida. Parol faqat tekshirishga ishlatiladi va tekshirilgach chatdagi xabar o‘chiriladi.")}
-            </li>
-            <li>
-              <span className="font-medium">{t("“🔗 Xavfsiz havola orqali”")}</span> —{" "}
-              {t("bot sizni shu sahifaga qaytaradi, parol Telegramga kirmaydi.")}
-            </li>
-          </ul>
-          <p className="text-sm text-muted-foreground">
-            {t("Botdan hisobotlar, bugungi qabullar ro‘yxati va yangi qabul qo‘shish — hammasi saytga kirmasdan ishlaydi.")}
-          </p>
+          {botStatus.data && !botStatus.data.configured ? (
+            <p className="text-sm text-muted-foreground">
+              {t("Telegram boti hozircha sozlanmagan — hisobotlar kelmaydi. Administratorga murojaat qiling.")}
+            </p>
+          ) : (
+            <>
+              <p className="text-sm text-muted-foreground">
+                {t("Telegram botni oching va")} <span className="font-medium">/start</span>{" "}
+                {t("yuboring — ikki kirish usuli bor:")}{" "}
+                {botStatus.data?.username ? (
+                  <a
+                    href={`https://t.me/${botStatus.data.username}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-medium underline"
+                  >
+                    @{botStatus.data.username}
+                  </a>
+                ) : null}
+              </p>
+              <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+                <li>
+                  <span className="font-medium">{t("“🔑 Email va parol bilan kirish”")}</span> —{" "}
+                  {t("hammasi bot ichida. Parol faqat tekshirishga ishlatiladi va tekshirilgach chatdagi xabar o‘chiriladi.")}
+                </li>
+                <li>
+                  <span className="font-medium">{t("“🔗 Xavfsiz havola orqali”")}</span> —{" "}
+                  {t("bot sizni shu sahifaga qaytaradi, parol Telegramga kirmaydi.")}
+                </li>
+              </ul>
+              <p className="text-sm text-muted-foreground">
+                {t("Botdan hisobotlar, bugungi qabullar ro‘yxati va yangi qabul qo‘shish — hammasi saytga kirmasdan ishlaydi.")}
+              </p>
+            </>
+          )}
         </div>
       )}
     </>

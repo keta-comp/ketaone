@@ -29,9 +29,6 @@ const PUBLIC_WRITE_FNS = new Set([
   "session.functions.ts:recordRegistration",
   // O'z profiliga bog'langan amallar: biznes emas, foydalanuvchi qatori.
   "telegram-link.functions.ts:getTelegramLinkRequest",
-  "telegram-link.functions.ts:confirmTelegramLink",
-  "telegram-link.functions.ts:updateTelegramSettings",
-  "telegram-link.functions.ts:unlinkTelegram",
   "notifications.functions.ts:markAnnouncementRead",
   // Ochiq sahifa: tashqi mijozning qabul yozuvi (token + rate limit bilan).
   "public-booking.functions.ts:createPublicBooking",

@@ -2,20 +2,43 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/auth-middleware";
+import { requireBusinessId } from "@/lib/tenant.server";
 
 /** Current Telegram link for the signed-in user's business (or null). */
 export const getTelegramLink = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const businessId = await requireBusinessId(context.supabase);
     const { data, error } = await context.supabase
       .from("telegram_links")
       .select(
         "id, telegram_user_id, telegram_username, status, daily_reports, report_time, timezone, notify_new_order, notify_payment, notify_lead, notify_low_stock, notify_booking, linked_at",
       )
+      .eq("business_id", businessId)
       .limit(1)
       .maybeSingle();
     if (error) throw new Error(error.message);
     return data;
+  });
+
+/**
+ * Botning holati — sahifa "ulanmagan" degan matn bilan foydalanuvchini
+ * yo'q botga yubormasin: kalit sozlanmagan bo'lsa shu aytiladi, sozlangan bo'lsa
+ * haqiqiy t.me havolasi ko'rsatiladi. Token hech qachon brauzerga chiqmaydi.
+ */
+export const getTelegramBotStatus = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async () => {
+    if (!process.env["TELEGRAM_BOT_TOKEN"]) return { configured: false as const, username: null as string | null };
+    try {
+      const { singleBotToken } = await import("@/lib/single-bot.server");
+      const { getMe } = await import("@/lib/telegram.server");
+      const me = await getMe(singleBotToken());
+      return { configured: true as const, username: me.username ?? null };
+    } catch (error) {
+      console.error("[telegram-bot-status]", error);
+      return { configured: false as const, username: null as string | null };
+    }
   });
 
 /** Details of a pending link request so the confirm screen can show the account. */
@@ -46,14 +69,7 @@ export const confirmTelegramLink = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { assertFeature } = await import("./billing.server");
     await assertFeature(context.supabase, "telegram_reports");
-    const { data: member, error: memberError } = await context.supabase
-      .from("business_members")
-      .select("business_id")
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle();
-    if (memberError) throw new Error(memberError.message);
-    if (!member) throw new Error("Biznes topilmadi");
+    const businessId = await requireBusinessId(context.supabase);
 
     const { supabaseAdmin } = await import("@/lib/platform.server");
     const { data: row } = await supabaseAdmin
@@ -74,7 +90,7 @@ export const confirmTelegramLink = createServerFn({ method: "POST" })
           telegram_chat_id: row.telegram_chat_id,
           telegram_username: row.telegram_username,
           user_id: context.userId,
-          business_id: member.business_id,
+          business_id: businessId,
           status: "active",
           linked_at: new Date().toISOString(),
         },
@@ -91,6 +107,9 @@ export const confirmTelegramLink = createServerFn({ method: "POST" })
       import("@/lib/single-bot.server"),
       import("@/lib/telegram-report.server"),
     ]);
+    // Ulanish DB'da saqlandi — lekin bot xabar yubora olmasa foydalanuvchiga
+    // "muvaffaqiyatli" demaymiz: hisobotlar baribir kelmaydi.
+    let delivered = true;
     try {
       await bot.sendMenu(
         single.singleBotToken(),
@@ -98,10 +117,11 @@ export const confirmTelegramLink = createServerFn({ method: "POST" })
         "✅ Telegram muvaffaqiyatli ulandi.\n\nKerakli hisobotni tanlang:",
       );
     } catch (error) {
+      delivered = false;
       console.error("[telegram-link] confirm message failed", error);
     }
 
-    return { ok: true, username: row.telegram_username };
+    return { ok: true, username: row.telegram_username, delivered };
   });
 
 const settingsSchema = z.object({
@@ -119,7 +139,13 @@ export const updateTelegramSettings = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: z.input<typeof settingsSchema>) => settingsSchema.parse(input))
   .handler(async ({ data, context }) => {
-    const { data: link } = await context.supabase.from("telegram_links").select("id").limit(1).maybeSingle();
+    const businessId = await requireBusinessId(context.supabase);
+    const { data: link } = await context.supabase
+      .from("telegram_links")
+      .select("id")
+      .eq("business_id", businessId)
+      .limit(1)
+      .maybeSingle();
     if (!link) throw new Error("Telegram ulanmagan");
     const { error } = await context.supabase
       .from("telegram_links")
@@ -141,7 +167,13 @@ export const updateTelegramSettings = createServerFn({ method: "POST" })
 export const unlinkTelegram = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data: link } = await context.supabase.from("telegram_links").select("id").limit(1).maybeSingle();
+    const businessId = await requireBusinessId(context.supabase);
+    const { data: link } = await context.supabase
+      .from("telegram_links")
+      .select("id")
+      .eq("business_id", businessId)
+      .limit(1)
+      .maybeSingle();
     if (!link) return { ok: true };
     const { error } = await context.supabase.from("telegram_links").delete().eq("id", link.id);
     if (error) throw new Error(error.message);
