@@ -72,8 +72,8 @@ export const listStudyGroups = createServerFn({ method: "GET" })
 
     const [groupsResult, coursesResult, teachersResult, membersResult] = await Promise.all([
       groupsQuery.order("name", { ascending: true }),
-      context.supabase.from("services").select("id, name, price"),
-      context.supabase.from("employees").select("id, full_name"),
+      context.supabase.from("services").select("id, name, price").eq("business_id", businessId),
+      context.supabase.from("employees").select("id, full_name").eq("business_id", businessId),
       context.supabase
         .from("group_members")
         .select("group_id, student_id, monthly_price")
@@ -162,16 +162,22 @@ export const saveStudyGroup = createServerFn({ method: "POST" })
         .from("study_groups")
         .select("name")
         .eq("id", data.id)
+        .eq("business_id", businessId)
         .maybeSingle();
       if (previousError) throw new Error(previousError.message);
+      if (!previous) throw new Error("Guruh topilmadi.");
 
-      const { error } = await context.supabase.from("study_groups").update(row).eq("id", data.id);
+      const { error } = await context.supabase
+        .from("study_groups")
+        .update(row)
+        .eq("id", data.id)
+        .eq("business_id", businessId);
       if (error) throw new Error(error.message);
 
       // Davomat belgilari guruh NOMI bilan bog'langan (attendance_one_mark_per_day
       // shu nom ustida), nom o'zgarsa eski yozuvlar guruh ko'rinishida yo'qolib
       // qoladi — shuning uchun ularni yangi nomga ko'chiramiz.
-      if (previous && previous.name !== data.name) {
+      if (previous.name !== data.name) {
         const { error: moveError } = await context.supabase
           .from("attendance")
           .update({ group_name: data.name, updated_at: new Date().toISOString() })
@@ -208,10 +214,16 @@ export const listStudyGroupMembers = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     const businessId = await requireBusinessId(context.supabase);
     const [{ data: group }, { data: members, error }] = await Promise.all([
-      context.supabase.from("study_groups").select("*").eq("id", data.groupId).maybeSingle(),
+      context.supabase
+        .from("study_groups")
+        .select("*")
+        .eq("id", data.groupId)
+        .eq("business_id", businessId)
+        .maybeSingle(),
       context.supabase
         .from("group_members")
         .select("student_id, monthly_price, status, joined_at")
+        .eq("business_id", businessId)
         .eq("group_id", data.groupId)
         .eq("status", "active")
         .order("joined_at", { ascending: true }),
@@ -222,6 +234,7 @@ export const listStudyGroupMembers = createServerFn({ method: "GET" })
     const { data: course } = await context.supabase
       .from("services")
       .select("id, name, price")
+      .eq("business_id", businessId)
       .eq("id", group.course_id)
       .maybeSingle();
 
@@ -230,6 +243,7 @@ export const listStudyGroupMembers = createServerFn({ method: "GET" })
       ? await context.supabase
           .from("customers")
           .select("id, full_name, phone, status")
+          .eq("business_id", businessId)
           .in("id", studentIds)
       : { data: [] };
 
@@ -292,12 +306,14 @@ export const addStudyGroupMembers = createServerFn({ method: "POST" })
       .from("study_groups")
       .select("id, name, capacity")
       .eq("id", data.groupId)
+      .eq("business_id", businessId)
       .maybeSingle();
     if (!group) throw new Error("Guruh topilmadi.");
 
     const { data: existing } = await context.supabase
       .from("group_members")
       .select("student_id, status")
+      .eq("business_id", businessId)
       .eq("group_id", data.groupId);
     const active = new Set(
       (existing ?? []).filter((row) => row.status === "active").map((row) => row.student_id),
@@ -326,6 +342,7 @@ export const addStudyGroupMembers = createServerFn({ method: "POST" })
         const { error } = await context.supabase
           .from("group_members")
           .update({ status: "active", updated_at: now })
+          .eq("business_id", businessId)
           .eq("group_id", data.groupId)
           .eq("student_id", studentId);
         if (error) throw new Error(error.message);
@@ -404,6 +421,7 @@ export const syncStudentGroups = createServerFn({ method: "POST" })
     const { data: current } = await context.supabase
       .from("group_members")
       .select("group_id, status")
+      .eq("business_id", businessId)
       .eq("student_id", data.studentId);
     const now = new Date().toISOString();
 
@@ -413,6 +431,7 @@ export const syncStudentGroups = createServerFn({ method: "POST" })
         const { error } = await context.supabase
           .from("group_members")
           .update({ status: "active", updated_at: now })
+          .eq("business_id", businessId)
           .eq("student_id", data.studentId)
           .eq("group_id", row.group_id);
         if (error) throw new Error(error.message);
@@ -420,6 +439,7 @@ export const syncStudentGroups = createServerFn({ method: "POST" })
         const { error } = await context.supabase
           .from("group_members")
           .update({ status: "archived", updated_at: now })
+          .eq("business_id", businessId)
           .eq("student_id", data.studentId)
           .eq("group_id", row.group_id);
         if (error) throw new Error(error.message);
@@ -447,9 +467,11 @@ export const listStudentGroups = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ studentId: ID }).parse(input))
   .handler(async ({ data, context }) => {
+    const businessId = await requireBusinessId(context.supabase);
     const { data: rows } = await context.supabase
       .from("group_members")
       .select("group_id")
+      .eq("business_id", businessId)
       .eq("student_id", data.studentId)
       .eq("status", "active");
     return { groupIds: (rows ?? []).map((row) => row.group_id) };
@@ -475,7 +497,12 @@ export const generateGroupTuition = createServerFn({ method: "POST" })
     );
 
     const groupsResult = data.groupId
-      ? await context.supabase.from("study_groups").select("*").eq("id", data.groupId).maybeSingle()
+      ? await context.supabase
+          .from("study_groups")
+          .select("*")
+          .eq("id", data.groupId)
+          .eq("business_id", businessId)
+          .maybeSingle()
       : await context.supabase
           .from("study_groups")
           .select("*")
@@ -494,7 +521,7 @@ export const generateGroupTuition = createServerFn({ method: "POST" })
 
     const groupIds = groups.map((group) => group.id);
     const [coursesResult, membersResult, paymentsResult] = await Promise.all([
-      context.supabase.from("services").select("id, price"),
+      context.supabase.from("services").select("id, price").eq("business_id", businessId),
       context.supabase
         .from("group_members")
         .select("group_id, student_id, monthly_price")

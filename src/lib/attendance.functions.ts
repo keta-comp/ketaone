@@ -17,11 +17,16 @@ type StudyGroup = { id: string; name: string };
 type StudentRow = { id: string; full_name: string | null; phone: string | null };
 type Client = DbClient;
 
-async function findStudyGroup(supabase: Client, groupId: string): Promise<StudyGroup | null> {
+async function findStudyGroup(
+  supabase: Client,
+  businessId: string,
+  groupId: string,
+): Promise<StudyGroup | null> {
   const { data } = await supabase
     .from("study_groups")
     .select(GROUP_SELECT)
     .eq("id", groupId)
+    .eq("business_id", businessId)
     .maybeSingle();
   return (data as StudyGroup | null) ?? null;
 }
@@ -67,7 +72,9 @@ export const getAttendanceDay = createServerFn({ method: "GET" })
     const businessId = await requireBusinessId(context.supabase);
     const from = shiftDayIso(data.date, -60);
 
-    const group = data.groupId ? await findStudyGroup(context.supabase, data.groupId) : null;
+    const group = data.groupId
+      ? await findStudyGroup(context.supabase, businessId, data.groupId)
+      : null;
     if (data.groupId && !group) throw new Error("Guruh topilmadi — sahifani yangilang.");
     const groupName = group?.name ?? data.group ?? "";
 
@@ -165,7 +172,9 @@ export const setAttendanceMark = createServerFn({ method: "POST" })
       "appointments.manage",
       "Davomatni faqat qabul, menejer, admin yoki egasi belgilaydi.",
     );
-    const group = data.groupId ? await findStudyGroup(context.supabase, data.groupId) : null;
+    const group = data.groupId
+      ? await findStudyGroup(context.supabase, businessId, data.groupId)
+      : null;
     if (data.groupId && !group) throw new Error("Guruh topilmadi — sahifani yangilang.");
     const groupName = group?.name ?? data.group ?? "";
 
@@ -225,7 +234,9 @@ export const setAttendanceMany = createServerFn({ method: "POST" })
     );
     if (!data.studentIds.length) return { ok: true as const, count: 0 };
 
-    const group = data.groupId ? await findStudyGroup(context.supabase, data.groupId) : null;
+    const group = data.groupId
+      ? await findStudyGroup(context.supabase, businessId, data.groupId)
+      : null;
     if (data.groupId && !group) throw new Error("Guruh topilmadi — sahifani yangilang.");
     const groupName = group?.name ?? data.group ?? "";
 
@@ -272,7 +283,9 @@ export const getAttendanceWeek = createServerFn({ method: "GET" })
     const businessId = await requireBusinessId(context.supabase);
     const from = shiftDayIso(data.date, -6);
 
-    const group = data.groupId ? await findStudyGroup(context.supabase, data.groupId) : null;
+    const group = data.groupId
+      ? await findStudyGroup(context.supabase, businessId, data.groupId)
+      : null;
     const groupName = group?.name ?? data.group ?? "";
 
     const { data: rows, error } = await context.supabase

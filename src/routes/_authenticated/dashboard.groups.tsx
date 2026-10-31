@@ -36,6 +36,7 @@ import {
   monthKey,
   parseLessonDays,
   seatsLeft,
+  tuitionPrice,
 } from "@/lib/groups";
 import {
   addStudyGroupMembers,
@@ -536,7 +537,12 @@ function GroupCard({
       </div>
 
       <dl className="grid grid-cols-2 gap-2 text-sm">
-        <Detail label={t("Oylik")} value={formatMoney(group.monthly_price || group.course_price)} />
+        <Detail
+          label={t("Oylik")}
+          value={formatMoney(
+            tuitionPrice({ groupPrice: group.monthly_price, coursePrice: group.course_price }),
+          )}
+        />
         <Detail
           label={t("O‘rin")}
           value={

@@ -383,6 +383,7 @@ export const recordDeposit = createServerFn({ method: "POST" })
       .from("appointments")
       .select("id, customer_id, service_name, deposit_amount, deposit_paid_at, deposit_refunded_at")
       .eq("id", data.id)
+      .eq("business_id", businessId)
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (!appointment) throw new Error("Qabul topilmadi.");
@@ -418,7 +419,8 @@ export const recordDeposit = createServerFn({ method: "POST" })
         deposit_method: data.method,
         deposit_refunded_at: null,
       })
-      .eq("id", appointment.id);
+      .eq("id", appointment.id)
+      .eq("business_id", businessId);
     if (updateError) throw new Error(updateError.message);
 
     const { notifyCurrentBusiness } = await import("./telegram-notify.server");
@@ -439,7 +441,7 @@ export const refundDeposit = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ id: z.string() }).parse(input))
   .handler(async ({ data, context }) => {
-    await requirePermission(
+    const businessId = await requirePermission(
       context.supabase,
       "finance.view",
       "Bu amal faqat moliyaga ruxsati bo'lgan xodimlar uchun.",
@@ -450,6 +452,7 @@ export const refundDeposit = createServerFn({ method: "POST" })
         "id, service_name, deposit_amount, deposit_paid_amount, deposit_paid_at, deposit_refunded_at",
       )
       .eq("id", data.id)
+      .eq("business_id", businessId)
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (depositState(appointment) !== "paid") throw new Error("Qaytariladigan depozit yo'q.");
@@ -463,7 +466,8 @@ export const refundDeposit = createServerFn({ method: "POST" })
         deposit_paid_amount: null,
         deposit_method: "",
       })
-      .eq("id", data.id);
+      .eq("id", data.id)
+      .eq("business_id", businessId);
     if (updateError) throw new Error(updateError.message);
 
     const { error: ledgerError } = await context.supabase
@@ -472,6 +476,7 @@ export const refundDeposit = createServerFn({ method: "POST" })
         status: "refunded",
         note: `Depozit qaytarildi · ${appointment?.service_name || "Qabul"}`,
       })
+      .eq("business_id", businessId)
       .eq("appointment_id", data.id)
       .eq("status", "paid");
     if (ledgerError) throw new Error(ledgerError.message);
