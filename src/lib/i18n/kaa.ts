@@ -1550,9 +1550,10 @@ const table: Record<string, string> = {
   "O‘chirish qaytarilmaydi. Foydalanuvchini vaqtincha to‘xtatish uchun “Bloklash” yetarli.": "Ó‘shiriw qaytarılmaydı. Paydalanıwshını waqtınsha toqtatıw ushın «Bólew» jeterli.",
   "Butunlay o‘chirish": "Túleyden ó‘shiriw",
   "O‘chirilsa sessiyalar, parol yozuvi va profil ketadi ({v0} ta a’zolik). U {v1} ta biznesning egasi bo‘lsa, har bir organizatsiyaning barcha maʼlumoti — mijozlar, bronlar, to‘lovlar, fayllar — qaytarib bo‘lmaslik darajasida yo‘qoladi.": "Ó‘shirilgende sessiyalar, parol jazıwı hám profil ketedi ({v0} aǵzaşılıq). Eger ol {v1} biznesdiń iyesi bolsa, hár bir organizaciyanıń barlıq maǵlıwmatı — klientler, bronlar, tólemler, fayllar — qaytarılmas túrde jo‘qoladı.",
-  "Tasdiq uchun O‘CHIRISH deb yozing": "Tastıyqlaw ushın O‘CHIRISH dep jazıń",
   "Ha, o‘chirilsin": "Iya, ó‘shirilsin",
   "Hisob o‘chirildi. {v0} ta biznes va {v1} ta a’zolik ham ketdi.": "Hisap ó‘shirildi. {v0} biznes hám {v1} aǵzaşılıq da ketti.",
+  "O‘CHIRISH": "Ó‘SHIRIW",
+  "Tasdiq uchun {v0} deb yozing": "Tastıyqlaw ushın {v0} dep jazıń",
 };
 
 export default table;

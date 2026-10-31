@@ -138,8 +138,10 @@ describe("Parolni admin belgilaydi, hisobni o'chirish qaytarilmaydi", () => {
 
   test("o'chirish faqat kalit so'z bilan va oxirgi adminni himoya qiladi", () => {
     const del = functions.slice(functions.indexOf("export const deletePlatformUser"));
-    expect(del).toContain('if (data.id === context.userId) throw new Error');
-    expect(del).toContain('data.confirm !== "O‘CHIRISH"');
+    expect(del).toContain("if (data.id === context.userId) throw new Error");
+    // Tasdiq so'zi tilga qarab yoziladi (en: DELETE), shuning uchun tekshiruv
+    // bitta satrga emas, umumiy jadvalga qaraydi.
+    expect(del).toContain("isDeleteConfirmation(data.confirm)");
     expect(del).toContain("preview.adminsTotal <= 1");
     expect(del).toContain("deleteAccount(data.id)");
     expect(del).toContain('action: "user_deleted"');
@@ -154,9 +156,12 @@ describe("Parolni admin belgilaydi, hisobni o'chirish qaytarilmaydi", () => {
     expect(server).toContain("export async function previewAccountDeletion");
   });
 
-  test("dialog parolni kamida 8 belgi va O‘CHIRISH yozilganda qabul qiladi", () => {
+  test("dialog parolni kamida 8 belgi va tasdiq so'zi yozilganda qabul qiladi", () => {
     expect(users).toContain("disabled={newPassword.length < 8 || setPassword.isPending}");
-    expect(users).toContain(`disabled={confirmText !== "O‘CHIRISH" || remove.isPending}`);
+    expect(users).toContain("disabled={!isDeleteConfirmation(confirmText) || remove.isPending}");
+    // So'z interfeys tilidan olinadi: inglizcha panelda "DELETE" so'raladi.
+    expect(users).toContain("const confirmWord = t(DELETE_CONFIRM_KEY)");
+    expect(users).toContain("placeholder={t(\"Tasdiq uchun {v0} deb yozing\", { v0: confirmWord })}");
     expect(users).toContain("previewUserDeletion");
     expect(users).not.toContain("sendPasswordResetFor");
   });

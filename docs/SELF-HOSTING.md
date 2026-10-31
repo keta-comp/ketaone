@@ -106,7 +106,9 @@ bo'lsa, o'sha organizatsiyaning barcha ma'lumoti (mijozlar, bronlar, to'lovlar,
 ish haqi, fayllar) ham ketadi. Shuning uchun skript avval sanagichni chop
 etadi, emailni `--confirm` bilan takrorlashni talab qiladi va oxirgi
 administratorni o'chirishdan bosh tortadi. Panel xuddi shu hisob-kitobni
-ko'rsatadi va «O‘CHIRISH» yozilmasa tugmani yoqmaydi.
+ko'rsatadi va tasdiq so'zi yozilmasa tugmani yoqmaydi — so'z interfeys tiliga
+qarab talab qilinadi (o'zbekcha: `O‘CHIRISH`, inglizcha: `DELETE`, ruscha:
+`УДАЛИТЬ`), server uchta so'zni ham qabul qiladi (`src/lib/delete-confirm.ts`).
 
 ## 5. Telegram webhook va /buyruqlar
 

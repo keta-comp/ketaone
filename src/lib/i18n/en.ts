@@ -1550,9 +1550,10 @@ const table: Record<string, string> = {
   "O‘chirish qaytarilmaydi. Foydalanuvchini vaqtincha to‘xtatish uchun “Bloklash” yetarli.": "Deletion is irreversible. To pause a user temporarily, “Block” is enough.",
   "Butunlay o‘chirish": "Delete permanently",
   "O‘chirilsa sessiyalar, parol yozuvi va profil ketadi ({v0} ta a’zolik). U {v1} ta biznesning egasi bo‘lsa, har bir organizatsiyaning barcha maʼlumoti — mijozlar, bronlar, to‘lovlar, fayllar — qaytarib bo‘lmaslik darajasida yo‘qoladi.": "Deleting removes sessions, the password record and the profile ({v0} memberships). If they own {v1} businesses, every record of each organization — customers, appointments, payments, files — is destroyed beyond recovery.",
-  "Tasdiq uchun O‘CHIRISH deb yozing": "Type O‘CHIRISH to confirm",
   "Ha, o‘chirilsin": "Yes, delete it",
   "Hisob o‘chirildi. {v0} ta biznes va {v1} ta a’zolik ham ketdi.": "Account deleted. {v0} businesses and {v1} memberships were removed too.",
+  "O‘CHIRISH": "DELETE",
+  "Tasdiq uchun {v0} deb yozing": "Type {v0} to confirm",
 };
 
 export default table;

@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/lib/auth-middleware";
+import { isDeleteConfirmation } from "@/lib/delete-confirm";
 import { PLAN_IDS } from "./billing";
 
 /** Every function here verifies platform-level authorization inside the handler.
@@ -336,7 +337,7 @@ export const deletePlatformUser = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const actor = await requireSuperAdmin(context);
     if (data.id === context.userId) throw new Error("O‘z hisobingizni o‘chira olmaysiz");
-    if (data.confirm !== "O‘CHIRISH") throw new Error("Tasdiq matni mos kelmadi");
+    if (!isDeleteConfirmation(data.confirm)) throw new Error("Tasdiq matni mos kelmadi");
     const { logAudit } = await import("./audit.server");
     const { previewAccountDeletion, deleteAccount } = await import("./super-admin.server");
 

@@ -1550,9 +1550,10 @@ const table: Record<string, string> = {
   "O‘chirish qaytarilmaydi. Foydalanuvchini vaqtincha to‘xtatish uchun “Bloklash” yetarli.": "Удаление необратимо. Чтобы временно остановить пользователя, достаточно «Заблокировать».",
   "Butunlay o‘chirish": "Удалить безвозвратно",
   "O‘chirilsa sessiyalar, parol yozuvi va profil ketadi ({v0} ta a’zolik). U {v1} ta biznesning egasi bo‘lsa, har bir organizatsiyaning barcha maʼlumoti — mijozlar, bronlar, to‘lovlar, fayllar — qaytarib bo‘lmaslik darajasida yo‘qoladi.": "Удаление сотрёт сессии, запись пароля и профиль (членств: {v0}). Если у него {v1} бизнесов, все данные каждой организации — клиенты, брони, платежи, файлы — будут уничтожены безвозвратно.",
-  "Tasdiq uchun O‘CHIRISH deb yozing": "Для подтверждения напишите O‘CHIRISH",
   "Ha, o‘chirilsin": "Да, удалить",
   "Hisob o‘chirildi. {v0} ta biznes va {v1} ta a’zolik ham ketdi.": "Аккаунт удалён. Вместе с ним удалено: бизнесов — {v0}, членств — {v1}.",
+  "O‘CHIRISH": "УДАЛИТЬ",
+  "Tasdiq uchun {v0} deb yozing": "Для подтверждения напишите {v0}",
 };
 
 export default table;

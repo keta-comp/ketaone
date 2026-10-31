@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DELETE_CONFIRM_KEY, isDeleteConfirmation } from "@/lib/delete-confirm";
 import {
   Dialog,
   DialogContent,
@@ -86,6 +87,8 @@ function UserDialog({ userId, onClose }: { userId: string; onClose: () => void }
   const [newPassword, setNewPassword] = useState("");
   const [danger, setDanger] = useState(false);
   const [confirmText, setConfirmText] = useState("");
+  // Tasdiq so'zi interfeys tilida: inglizcha panelda "DELETE" so'raladi.
+  const confirmWord = t(DELETE_CONFIRM_KEY);
 
   const { data, isPending, error, refetch } = useQuery({
     queryKey: ["super-admin-user", userId],
@@ -264,13 +267,13 @@ function UserDialog({ userId, onClose }: { userId: string; onClose: () => void }
                     <Input
                       value={confirmText}
                       onChange={(e) => setConfirmText(e.target.value)}
-                      placeholder={t("Tasdiq uchun O‘CHIRISH deb yozing")}
+                      placeholder={t("Tasdiq uchun {v0} deb yozing", { v0: confirmWord })}
                     />
                     <div className="flex flex-wrap gap-2">
                       <Button
                         size="sm"
                         variant="destructive"
-                        disabled={confirmText !== "O‘CHIRISH" || remove.isPending}
+                        disabled={!isDeleteConfirmation(confirmText) || remove.isPending}
                         onClick={() => remove.mutate()}
                       >
                         {t("Ha, o‘chirilsin")}
