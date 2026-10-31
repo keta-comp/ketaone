@@ -6,11 +6,12 @@ import en from "@/lib/i18n/en";
 
 export type Lang = "uz" | "kaa" | "ru" | "en";
 
-export const LANGS: { code: Lang; label: string; short: string }[] = [
-  { code: "uz", label: "O‘zbekcha", short: "UZ" },
-  { code: "kaa", label: "Qaraqalpaqsha", short: "KAA" },
-  { code: "ru", label: "Русский", short: "RU" },
-  { code: "en", label: "English", short: "EN" },
+/** `intl` pins date/number formatting; Qaraqalpaqsha keeps the Latin Uzbek months because Intl has no "kaa" data and falls back to Russian. */
+export const LANGS: { code: Lang; label: string; short: string; intl: string }[] = [
+  { code: "uz", label: "O‘zbekcha", short: "UZ", intl: "uz-UZ" },
+  { code: "kaa", label: "Qaraqalpaqsha", short: "KAA", intl: "uz-UZ" },
+  { code: "ru", label: "Русский", short: "RU", intl: "ru-RU" },
+  { code: "en", label: "English", short: "EN", intl: "en-GB" },
 ];
 
 const TABLES: Record<Lang, Record<string, string>> = {
@@ -19,6 +20,8 @@ const TABLES: Record<Lang, Record<string, string>> = {
   ru,
   en,
 };
+
+const INTL_LOCALE = Object.fromEntries(LANGS.map((lang) => [lang.code, lang.intl])) as Record<Lang, string>;
 
 const STORAGE_KEY = "ketaone-lang";
 
@@ -31,6 +34,11 @@ function isLang(value: string | null | undefined): value is Lang {
 
 export function getLang(): Lang {
   return current;
+}
+
+/** Locale for `toLocale*`/`Intl` — follows the app language, not the browser's, so dates stay in the script the user picked. */
+export function intlLocale(): string {
+  return INTL_LOCALE[current];
 }
 
 export function setLang(lang: Lang) {

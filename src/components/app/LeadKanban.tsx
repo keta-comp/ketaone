@@ -4,7 +4,7 @@ import { GripVertical, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { t } from "@/lib/i18n";
+import { intlLocale, t } from "@/lib/i18n";
 import { groupLeads, leadStatusChange, LEAD_STATUS_LABELS, type LeadTaskState } from "@/lib/lead-kanban";
 import { LEAD_STATUSES, type LeadScore, type LeadStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -55,7 +55,7 @@ function LeadCard({ row, pending, movingId, onOpen, onMove, taskStates }: Omit<P
       {row.ai_summary && <p className="mt-1 line-clamp-2 break-words text-xs text-muted-foreground">{row.ai_summary}</p>}
       <div className="mt-3 flex items-center justify-between gap-2 text-xs text-muted-foreground">
         <span className="rounded border border-border bg-muted px-2 py-0.5">{t(scoreLabels[row.score])}</span>
-        <span>{new Date(row.created_at).toLocaleDateString()}</span>
+        <span>{new Date(row.created_at).toLocaleDateString(intlLocale())}</span>
       </div>
       {(() => { const st = taskStates?.[row.id]; const b = st ? taskBadge[st] : undefined; return b ? <p className={cn("mt-2 inline-block rounded border px-2 py-0.5 text-xs font-medium", b.cls)}>{t(b.label)}</p> : null; })()}
       <p className="mt-2 truncate text-xs text-muted-foreground" title={row.assignee_name ?? undefined}>{row.assignee_name ?? t("Biriktirilmagan")}</p>

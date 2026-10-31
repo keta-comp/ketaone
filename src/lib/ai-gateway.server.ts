@@ -61,7 +61,12 @@ export function resolveAiRuntime(): AiRuntime | { error: string } {
     };
   }
   const lovableKey = process.env["LOVABLE_API_KEY"];
-  if (!lovableKey) return { error: "OPENROUTER_API_KEY yoki GEMINI_API_KEY (yoki LOVABLE_API_KEY) sozlanmagan" };
+  if (!lovableKey) {
+    console.warn(
+      "[ai-gateway] none of OPENROUTER_API_KEY, GEMINI_API_KEY, LOVABLE_API_KEY is configured",
+    );
+    return { error: "AI yordamchi hozircha sozlanmagan — administratorga murojaat qiling." };
+  }
   const provider = createLovableAiGatewayProvider(lovableKey);
   return {
     backend: "lovable",
@@ -79,7 +84,7 @@ export function gatewayErrorMessage(error: unknown): string {
     (error as { status?: number } | null)?.status;
   if (status === 402) return "AI credits exhausted. Add credits in Lovable to resume the AI agent.";
   if (status === 403) return "AI access is blocked by workspace policy.";
-  if (status === 401) return "AI kaliti yo'q yoki noto'g'ri (GEMINI_API_KEY).";
+  if (status === 401) return "AI kaliti yo'q yoki noto'g'ri — administratorga murojaat qiling.";
   if (status === 429) return "AI gateway is rate limited. Please retry shortly.";
   return error instanceof Error ? error.message : "Unknown AI gateway error";
 }

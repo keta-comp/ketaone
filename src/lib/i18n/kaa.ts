@@ -92,6 +92,7 @@ const table: Record<string, string> = {
   "AI va foydalanish": "AI hám paydalanıw",
   "AI yordamchi": "AI járdemshi",
   "AI yordamchi — KetaOne": "AI járdemshi — KetaOne",
+  "AI yordamchi hozircha sozlanmagan — administratorga murojaat qiling.": "AI járdemshi házirsha sazlanbaǵan — administratorǵa múrájaat qılıń.",
   "AI'ga qaytarish": "AI'ǵa qaytarıw",
   "Ali Valiyev": "Ali Valiyev",
   "Ali Valiyevga qo‘ng‘iroq qilish": "Ali Valiyevke qońıraw etiw",

@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { ErrorState, LoadingState, PageHeader } from "@/components/app/primitives";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { t } from "@/lib/i18n";
+import { intlLocale, t } from "@/lib/i18n";
 import { listBranches } from "@/lib/branches.functions";
 import { getTeam, removeMember, setMemberBranch, setMemberRole } from "@/lib/members.functions";
 import { ASSIGNABLE_ROLES, ROLE_LABELS, type MemberRole } from "@/lib/roles";
@@ -114,7 +114,7 @@ function TeamPage() {
                       </Link>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
-                      {new Date(member.created_at).toLocaleDateString()}
+                      {new Date(member.created_at).toLocaleDateString(intlLocale())}
                     </td>
                     <td className="px-4 py-3">
                       {canEditRole ? (

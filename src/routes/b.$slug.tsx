@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { depositFor } from "@/lib/deposit";
 import { createPublicBooking, getPublicBookingPage, getPublicSlots } from "@/lib/public-booking.functions";
-import { t } from "@/lib/i18n";
+import { intlLocale, t } from "@/lib/i18n";
 import { formatMoney } from "@/lib/types";
 
 export const Route = createFileRoute("/b/$slug")({
@@ -133,7 +133,7 @@ function PublicBookingPage() {
           <h1 className="mt-4 text-xl font-semibold">{t("Bron qabul qilindi")}</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             {businessName} —{" "}
-            {new Date(done.starts_at).toLocaleString([], {
+            {new Date(done.starts_at).toLocaleString(intlLocale(), {
               day: "numeric",
               month: "long",
               hour: "2-digit",
@@ -281,7 +281,7 @@ function PublicBookingPage() {
         ) : (
           <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-5">
             {slots.data?.slots.map((option) => {
-              const label = new Date(option.starts_at).toLocaleTimeString([], {
+              const label = new Date(option.starts_at).toLocaleTimeString(intlLocale(), {
                 hour: "2-digit",
                 minute: "2-digit",
               });

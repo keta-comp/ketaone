@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { listTasks, saveTask, setTaskStatus } from "@/lib/tasks.functions";
-import { t } from "@/lib/i18n";
+import { intlLocale, t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 function dueAt(daysAhead: number) {
@@ -119,7 +119,7 @@ export function LeadTasks({ leadId, customerId, memberId }: { leadId: string; cu
                 {task.due_date ? (
                   <p className={cn("text-xs text-muted-foreground", overdue && "font-medium text-destructive")}>
                     {overdue ? `${t("Muddati o‘tgan")} · ` : ""}
-                    {new Date(task.due_date).toLocaleString()}
+                    {new Date(task.due_date).toLocaleString(intlLocale())}
                   </p>
                 ) : null}
               </div>

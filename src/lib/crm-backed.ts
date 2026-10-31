@@ -412,6 +412,23 @@ export function backedTableOf(module: CrmModule | undefined): "payments" | "appo
   return module.table ?? null;
 }
 
+/** Eski saqlangan konfiguratsiyalarda `table` bo'lmasligi mumkin — sahifa jadvalni belgilaydi. */
+const LINKED_CORE_TABLE: Record<string, "payments" | "appointments"> = {
+  "/dashboard/appointments": "appointments",
+  "/dashboard/payments": "payments",
+};
+
+/**
+ * Dashboard vidjetlari yozuvlarni qayerda saqlashini emas, qayerdan o'qishini aniqlaydi:
+ * presetlarning `qabul`/`to'lovlar` moduli yadro jadvalida ham, sahifaga ham bog'langan,
+ * shuning uchun bunda `link` jadvalni bekor qilmaydi.
+ */
+export function widgetTableOf(module: CrmModule | undefined): "payments" | "appointments" | null {
+  if (!module) return null;
+  if (module.table) return module.table;
+  return module.link ? (LINKED_CORE_TABLE[module.link] ?? null) : null;
+}
+
 const SELECT: Record<"payments" | "appointments", string> = {
   payments: "*, customers(id, full_name, phone)",
   appointments:
@@ -504,18 +521,17 @@ export async function backedWidgetValue(
   options: {
     where?: { field: string; value: string } | undefined;
     todayStart: string;
+    todayEnd: string;
   },
 ): Promise<number> {
-  const table = backedTableOf(module);
+  const table = widgetTableOf(module);
   if (!table) return 0;
   const sumColumn = table === "payments" ? "amount" : "price";
   let query = sb.from(table).select(kind === "field_sum" ? sumColumn : "id").eq("business_id", businessId);
   if (kind === "module_count_today") {
-    // payments.paid_at — timestamptz, appointments sana/soat maydonlari kun bo'yicha.
-    query =
-      table === "payments"
-        ? query.gte("paid_at", options.todayStart)
-        : query.gte("starts_at", options.todayStart);
+    // "Bugungi" — kun oralig'i: ertangi qabul yoki to'lov bugungi hisobga kirmasin.
+    const column = table === "payments" ? "paid_at" : "starts_at";
+    query = query.gte(column, options.todayStart).lt(column, options.todayEnd);
   }
   if (options.where) {
     const column = filterColumn(table, options.where.field, options.where.value);

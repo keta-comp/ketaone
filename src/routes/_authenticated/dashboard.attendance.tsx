@@ -29,7 +29,7 @@ import {
   setAttendanceMany,
   setAttendanceMark,
 } from "@/lib/attendance.functions";
-import { t } from "@/lib/i18n";
+import { intlLocale, t } from "@/lib/i18n";
 import { useSectionVisibility } from "@/lib/section-visibility";
 import { useSectionTitle, useTerminology } from "@/lib/terminology";
 import { cn } from "@/lib/utils";
@@ -73,7 +73,7 @@ const DOT: Record<AttendanceStatus, string> = {
 function prettyDay(dayIso: string): string {
   const date = new Date(`${dayIso}T12:00:00`);
   if (dayIso === todayIso()) return t("Bugun");
-  return date.toLocaleDateString([], { day: "numeric", month: "long" });
+  return date.toLocaleDateString(intlLocale(), { day: "numeric", month: "long" });
 }
 
 function AttendancePage() {

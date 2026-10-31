@@ -22,7 +22,7 @@ import {
   type OrderStatus,
   type PaymentStatus,
 } from "@/lib/types";
-import { t } from "@/lib/i18n";
+import { intlLocale, t } from "@/lib/i18n";
 
 const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   new: "Yangi",
@@ -205,7 +205,7 @@ function OrdersPage() {
                       ) : (
                         customerName
                       )}{" "}
-                      · {order.phone ?? "telefon yo'q"} · {new Date(order.created_at).toLocaleString()}
+                      · {order.phone ?? "telefon yo'q"} · {new Date(order.created_at).toLocaleString(intlLocale())}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {order.assignee_name ? (

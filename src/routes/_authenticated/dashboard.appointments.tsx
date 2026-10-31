@@ -46,7 +46,7 @@ import {
   saveAppointment,
   setAppointmentStatus,
 } from "@/lib/appointments.functions";
-import { t } from "@/lib/i18n";
+import { intlLocale, t } from "@/lib/i18n";
 import { useSectionTitle, useTerminology } from "@/lib/terminology";
 import { formatMoney } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -162,7 +162,7 @@ function MiniAppointment({ row, onOpen, noPerson }: { row: AppointmentRow; onOpe
     >
       <span className={cn("size-1.5 shrink-0 rounded-full", STATUS_DOT[status])} />
       <span className="tabular-nums font-medium">
-        {new Date(row.starts_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+        {new Date(row.starts_at).toLocaleTimeString(intlLocale(), { hour: "2-digit", minute: "2-digit" })}
       </span>
       <span className="truncate text-muted-foreground">{customer?.full_name ?? row.service_name ?? noPerson}</span>
       {pendingDeposit ? <Wallet className="size-3 shrink-0 text-amber-600" aria-hidden /> : null}
@@ -528,10 +528,10 @@ function ScheduleTab() {
                 <div key={row.id} className="clay-panel flex flex-wrap items-center gap-3 p-4">
                   <div className="min-w-28 text-center">
                     <p className="text-lg font-semibold tabular-nums">
-                      {new Date(row.starts_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      {new Date(row.starts_at).toLocaleTimeString(intlLocale(), { hour: "2-digit", minute: "2-digit" })}
                     </p>
                     <p className="text-xs text-muted-foreground tabular-nums">
-                      {new Date(row.ends_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      {new Date(row.ends_at).toLocaleTimeString(intlLocale(), { hour: "2-digit", minute: "2-digit" })}
                     </p>
                   </div>
                   <div className="min-w-40 flex-1">
@@ -719,7 +719,7 @@ function ScheduleTab() {
                           <p key={row.id} className="flex items-center gap-1 truncate text-[11px]">
                             <span className={cn("size-1.5 shrink-0 rounded-full", STATUS_DOT[status])} />
                             <span className="tabular-nums">
-                              {new Date(row.starts_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                              {new Date(row.starts_at).toLocaleTimeString(intlLocale(), { hour: "2-digit", minute: "2-digit" })}
                             </span>
                             <span className="truncate text-muted-foreground">
                               {(row.customers as { full_name?: string } | null)?.full_name ?? row.service_name ?? ""}

@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { adjustStock, listInventoryMovements, listProducts } from "@/lib/catalog.functions";
 import { useHiddenSection } from "@/lib/section-visibility";
 import { stockState } from "@/lib/types";
-import { t } from "@/lib/i18n";
+import { intlLocale, t } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/dashboard/inventory")({
   head: () => ({
@@ -149,7 +149,7 @@ function InventoryPage() {
                   {movement.change > 0 ? `+${movement.change}` : movement.change}
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  {new Date(movement.created_at).toLocaleString()}
+                  {new Date(movement.created_at).toLocaleString(intlLocale())}
                 </span>
               </div>
             );

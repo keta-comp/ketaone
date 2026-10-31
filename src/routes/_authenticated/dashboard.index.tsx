@@ -23,7 +23,7 @@ import { getDashboardKpis } from "@/lib/workspace.functions";
 import { hiddenRoutesForPreset, resolvePresetId } from "@/lib/presets";
 import { listOrders } from "@/lib/orders.functions";
 import { formatMoney } from "@/lib/types";
-import { t } from "@/lib/i18n";
+import { intlLocale, t } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/dashboard/")({
   head: () => ({
@@ -191,7 +191,7 @@ function Overview() {
                   <div key={appointment.id} className="clay-inset flex items-center justify-between gap-3 rounded-2xl px-3 py-2">
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium">
-                        {new Date(appointment.starts_at).toLocaleString([], {
+                        {new Date(appointment.starts_at).toLocaleString(intlLocale(), {
                           day: "numeric",
                           month: "short",
                           hour: "2-digit",

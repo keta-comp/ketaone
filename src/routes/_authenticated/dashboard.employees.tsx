@@ -27,7 +27,7 @@ import {
   setEmployeeServices,
 } from "@/lib/employees.functions";
 import { listServices } from "@/lib/appointments.functions";
-import { t } from "@/lib/i18n";
+import { intlLocale, t } from "@/lib/i18n";
 import { useSectionTitle, useTerminology } from "@/lib/terminology";
 
 export const Route = createFileRoute("/_authenticated/dashboard/employees")({
@@ -395,9 +395,9 @@ function TimeOffEditor({ employeeId }: { employeeId: string }) {
                 <tr key={off.id}>
                   <td className="px-4 py-3">
                     <CalendarX2 className="mr-2 inline size-4 text-muted-foreground" />
-                    <span className="tabular-nums">{new Date(off.starts_at).toLocaleString()}</span>
+                    <span className="tabular-nums">{new Date(off.starts_at).toLocaleString(intlLocale())}</span>
                     {" — "}
-                    <span className="tabular-nums">{new Date(off.ends_at).toLocaleString()}</span>
+                    <span className="tabular-nums">{new Date(off.ends_at).toLocaleString(intlLocale())}</span>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">{off.reason || "—"}</td>
                   <td className="px-4 py-3 text-right">

@@ -26,7 +26,7 @@ import { listAssignees } from "@/lib/members.functions";
 import { notifyLeadStaff } from "@/lib/settings.functions";
 import { LEAD_SCORES, LEAD_STATUSES, type LeadScore, type LeadStatus } from "@/lib/types";
 import { useHiddenSection } from "@/lib/section-visibility";
-import { t } from "@/lib/i18n";
+import { intlLocale, t } from "@/lib/i18n";
 
 type LeadPatch = {
   id: string;
@@ -262,7 +262,7 @@ function LeadsPage() {
                       )}
                     </td>
                     <td className="px-4 py-3 text-xs text-muted-foreground">
-                      {new Date(row.created_at).toLocaleString()}
+                      {new Date(row.created_at).toLocaleString(intlLocale())}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <Button variant="outline" size="sm" className="clay-raised" onClick={() => setOpenId(row.id)}>
@@ -412,7 +412,7 @@ function LeadsPage() {
                           {event.event_type.replace(/_/g, " ")}
                         </span>
                         <span className="text-muted-foreground">
-                          {new Date(event.created_at).toLocaleString()}
+                          {new Date(event.created_at).toLocaleString(intlLocale())}
                         </span>
                       </div>
                       {event.detail ? <p className="mt-1 text-muted-foreground">{event.detail}</p> : null}

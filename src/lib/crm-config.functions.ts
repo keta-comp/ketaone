@@ -20,6 +20,7 @@ import {
   listBackedRecords,
   saveBackedRecord,
   backedWidgetValue,
+  widgetTableOf,
 } from "./crm-backed";
 import {
   applyMissingParts,
@@ -32,6 +33,7 @@ import {
   presetForId,
   resolvePresetId,
   type IndustryPreset,
+  type PresetDefaults,
 } from "./presets";
 import { can, type MemberRole } from "./roles";
 import { logAiUsage, logAudit } from "./audit.server";
@@ -466,6 +468,42 @@ export const generateInput = z.object({
   workingHours: z.string().max(120).optional(),
 });
 
+// business_settings is inserted with these non-empty column defaults, so "empty" alone cannot
+// tell an untouched tenant from one that kept the shipped value. Mirrors src/db/schema.ts.
+const SHIPPED_CURRENCY = "UZS";
+const SHIPPED_WORKING_HOURS = "09:00 - 20:00";
+
+/**
+ * Settings the onboarding wizard should seed. What the owner typed is a real edit and always wins;
+ * preset defaults only replace values nobody has touched, so re-running onboarding never overwrites
+ * hours or currency chosen in Settings.
+ */
+export function settingsSeedPatch(
+  typed: { description: string; currency?: string | undefined; workingHours?: string | undefined },
+  stored: {
+    business_description?: string | null;
+    currency?: string | null;
+    working_hours?: string | null;
+  },
+  defaults: PresetDefaults | undefined,
+): Record<string, string> {
+  const untouched = (value: string | null | undefined, shipped: string) => {
+    const trimmed = value?.trim();
+    return !trimmed || trimmed === shipped;
+  };
+  const patch: Record<string, string> = {};
+  const currency = typed.currency?.trim();
+  const hours = typed.workingHours?.trim();
+  if (typed.description && !stored.business_description?.trim()) patch["business_description"] = typed.description;
+  if (currency) patch["currency"] = currency;
+  else if (defaults && untouched(stored.currency, SHIPPED_CURRENCY)) patch["currency"] = defaults.currency;
+  if (hours) patch["working_hours"] = hours;
+  else if (defaults && untouched(stored.working_hours, SHIPPED_WORKING_HOURS)) {
+    patch["working_hours"] = `${defaults.workStart}–${defaults.workEnd}`;
+  }
+  return patch;
+}
+
 export const generateCrmConfig = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => generateInput.parse(input))
@@ -539,13 +577,11 @@ export const generateCrmConfig = createServerFn({ method: "POST" })
       .select("business_description, currency, working_hours")
       .eq("business_id", businessId)
       .maybeSingle();
-    const patch: Record<string, string> = {};
-    const currency = data.currency?.trim() || defaults?.currency;
-    const workingHours =
-      data.workingHours?.trim() || (defaults ? `${defaults.workStart}–${defaults.workEnd}` : undefined);
-    if (description && !currentSettings?.business_description?.trim()) patch["business_description"] = description;
-    if (currency && !currentSettings?.currency?.trim()) patch["currency"] = currency;
-    if (workingHours && !currentSettings?.working_hours?.trim()) patch["working_hours"] = workingHours;
+    const patch = settingsSeedPatch(
+      { description, currency: data.currency, workingHours: data.workingHours },
+      currentSettings ?? {},
+      defaults,
+    );
     if (Object.keys(patch).length) {
       await context.supabase.from("business_settings").update(patch as never).eq("business_id", businessId);
     }
@@ -918,6 +954,8 @@ export const getWidgetStats = createServerFn({ method: "GET" })
     const cfg = applyRelations(row.industry, row.config as unknown as CrmConfigData);
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date(todayStart);
+    todayEnd.setDate(todayEnd.getDate() + 1);
     const stats: Record<string, number> = {};
     const sb = context.supabase;
 
@@ -932,11 +970,12 @@ export const getWidgetStats = createServerFn({ method: "GET" })
             if (!widget.moduleKey) return;
             const linkedModule = cfg.modules.find((m) => m.key === widget.moduleKey);
             if (linkedModule) {
-              const table = backedTableOf(linkedModule);
+              const table = widgetTableOf(linkedModule);
               if (table) {
                 stats[widget.key] = await backedWidgetValue(sb, businessId, linkedModule, widget.kind, {
                   where: widget.where,
                   todayStart: todayStart.toISOString(),
+                  todayEnd: todayEnd.toISOString(),
                 });
                 return;
               }

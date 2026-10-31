@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { t } from "@/lib/i18n";
+import { intlLocale, t } from "@/lib/i18n";
 import {
   closeCashSession,
   deleteExpense,
@@ -314,7 +314,7 @@ function CashTab() {
       ) : active ? (
         <div className="clay-panel p-4">
           <p className="text-sm text-muted-foreground">
-            {t("Kassa ochilgan")}: {new Date(active.opened_at).toLocaleString()}
+            {t("Kassa ochilgan")}: {new Date(active.opened_at).toLocaleString(intlLocale())}
           </p>
           <div className="mt-3 grid gap-3 sm:grid-cols-4">
             <StatCard label={t("Boshlang'ich summa")} value={formatMoney(Number(active.opening_amount))} />
@@ -399,9 +399,9 @@ function CashTab() {
             <tbody className="divide-y divide-border">
               {(sessions.data ?? []).map((session) => (
                 <tr key={session.id}>
-                  <td className="px-4 py-3 text-muted-foreground">{new Date(session.opened_at).toLocaleString()}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{new Date(session.opened_at).toLocaleString(intlLocale())}</td>
                   <td className="px-4 py-3 text-muted-foreground">
-                    {session.closed_at ? new Date(session.closed_at).toLocaleString() : "—"}
+                    {session.closed_at ? new Date(session.closed_at).toLocaleString(intlLocale()) : "—"}
                   </td>
                   <td className="px-4 py-3 tabular-nums">{formatMoney(Number(session.opening_amount))}</td>
                   <td className="px-4 py-3 tabular-nums">

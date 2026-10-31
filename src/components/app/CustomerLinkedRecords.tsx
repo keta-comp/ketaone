@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 
 import { listCustomerLinkedRecords } from "@/lib/crm-config.functions";
-import { t } from "@/lib/i18n";
+import { intlLocale, t } from "@/lib/i18n";
 
 export function useCustomerLinkedRecords(customerId: string) {
   const fetch = useServerFn(listCustomerLinkedRecords);
@@ -30,7 +30,7 @@ export function CustomerLinkedRecords({ customerId }: { customerId: string }) {
           <div>
             <p className="font-medium">{r.title}</p>
             <p className="text-xs text-muted-foreground">
-              {t(r.moduleLabel)} · {new Date(r.created_at).toLocaleDateString()}
+              {t(r.moduleLabel)} · {new Date(r.created_at).toLocaleDateString(intlLocale())}
             </p>
           </div>
           {r.stage && <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs">{t(r.stage)}</span>}
