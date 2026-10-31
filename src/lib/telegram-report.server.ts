@@ -8,7 +8,7 @@
  */
 import { randomBytes } from "node:crypto";
 
-import { telegramCall, webhookBaseUrl } from "./telegram.server";
+import { scrubTelegramToken, telegramCall, webhookBaseUrl } from "./telegram.server";
 import {
   buildReportExcel,
   formatReportMessage,
@@ -99,7 +99,10 @@ export async function sendDocument(
     method: "POST",
     body: form,
   });
-  if (!response.ok) throw new Error(`sendDocument failed: ${response.status} ${await response.text()}`);
+  if (!response.ok)
+    throw new Error(
+      `sendDocument failed: ${response.status} ${scrubTelegramToken(await response.text(), token)}`,
+    );
 }
 
 export async function findLink(telegramUserId: string): Promise<TelegramLinkRow | null> {

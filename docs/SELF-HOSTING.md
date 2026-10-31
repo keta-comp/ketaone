@@ -32,8 +32,10 @@ Supabase ishtiroki yo'q: 33+ jadval, RLS siyosatlari, funksiyalar va triggerlar
   `S3_ENDPOINT` bo'lsa path-style ishlatiladi; kalitlar o'zgarsa jarayonni
   qayta ishga tushiring (S3 klienti keshlanadi)
 - `OPENROUTER_API_KEY` yoki `GEMINI_API_KEY` — AI uchun
-- `TELEGRAM_BOT_TOKEN`, `PUBLIC_APP_URL` — bot va webhook (`PUBLIC_APP_URL`
-  bo'lmasa havolalar eski `keta-sales.lovable.app` manziliga tushib qoladi)
+- `TELEGRAM_BOT_TOKEN`, `PUBLIC_APP_URL` — bot va webhook. `PUBLIC_APP_URL` o'z
+  domeningizni ko'rsatishi shart (sozlanmasa u production `https://www.nexora-crm.uz`
+  deb olinadi, webhook shu manzilga ketadi). Maxfiy sarlavha ixtiyoriy:
+  `TELEGRAM_WEBHOOK_SECRET` bo'lsa u, bo'lmasa token'dan HMAC hisoblanadi
 - `LOVABLE_CRON_SECRET` — kunlik hisobot va eslatma cron himoyasi (Vercel'da
   `CRON_SECRET` ham yaroqli: birinchi kalit bo'lsa u, bo'lmasa ikkinchisi ishlatiladi)
 
@@ -81,8 +83,8 @@ Shundan keyin `/super-admin` bo'limi shu hisobga ochiladi.
 Bitta buyruq bilan — webhook manzili, maxfiy sarlavha so'zi va bot menyusi:
 
 ```bash
-node scripts/telegram-setup.mjs          # setWebhook + setMyCommands
-node scripts/telegram-setup.mjs --check  # faqat joriy holatni ko'rsatadi
+node scripts/telegram-setup.mjs              # getMe + getWebhookInfo (hech narsa o'zgarmaydi)
+node scripts/telegram-setup.mjs --apply      # setWebhook + setMyCommands
 ```
 
 `TELEGRAM_BOT_TOKEN` va `PUBLIC_APP_URL` `.env.local` dan (yoki muhit

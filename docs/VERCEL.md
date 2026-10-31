@@ -28,7 +28,8 @@ Production va Preview uchun quyidagilarni qo'shing:
 | `OPENROUTER_MODEL` | `google/gemini-2.5-flash` (ixtiyoriy) |
 | `GEMINI_API_KEY` | ixtiyoriy zaxira |
 | `TELEGRAM_BOT_TOKEN` | BotFather tokeni |
-| `PUBLIC_APP_URL` | saytning haqiqiy manzili, masalan `https://ketaone.uz` |
+| `TELEGRAM_WEBHOOK_SECRET` | ixtiyoriy — webhook maxfiy so'zi. Bo'lmasa u token'dan HMAC bilan hisoblanadi (qo'shimcha sozlash shart emas). |
+| `PUBLIC_APP_URL` | saytning haqiqiy manzili, masalan `https://www.nexora-crm.uz` (sozlanmasa shu production manzili ishlatiladi) |
 | `LOVABLE_CRON_SECRET` | kunlik hisobot va eslatma cron chaqiruvi uchun maxfiy so'z (Vercel'da `CRON_SECRET` ham yaroqli) |
 | `INSTAGRAM_PAGE_ACCESS_TOKEN`, `META_APP_SECRET` | Instagram uchun, ixtiyoriy |
 
@@ -46,17 +47,29 @@ qaytadi — `PUBLIC_APP_URL` to'g'ri bo'lishi shart.
 Project Settings → **Domains** → `ketaone.uz` (va `www`) qo'shib,
 registrarda Vercel ko'rsatgan DNS yozuvlarini kiritasiz.
 
-## 4. Telegram webhook'ni yangi manzilga ko'chirish
+## 4. Telegram webhook'ni sozlash
+
+Webhook'ni faqat administrator qo'ldan o'rnatadi — ilova hech qachon o'zi
+`setWebhook` chaqirmaydi:
 
 ```bash
-node scripts/telegram-setup.mjs          # setWebhook + /buyruqlar ro'yxati
-node scripts/telegram-setup.mjs --check  # faqat tekshirish
+node scripts/telegram-setup.mjs              # getMe + getWebhookInfo, hech narsa o'zgarmaydi
+node scripts/telegram-setup.mjs --apply      # setWebhook + /buyruqlar ro'yxati
+node scripts/telegram-setup.mjs --url=https://sayt.uz --apply   # manzilni qo'ldan berish
 ```
 
-Skript `TELEGRAM_BOT_TOKEN` va `PUBLIC_APP_URL` ni `.env.local` (yoki muhit
-o'zgaruvchilaridan) oladi, webhook maxfiy so'zni esa kod bilan bir xil usulda
-hisoblaydi. Qo'lda qilsangiz: Telegram `secret_token` sarlavhasisiz so'rov yuborsa
-webhook 401 qaytadi — shuning uchun skriptdan foydalangan ma'qul.
+Skript `TELEGRAM_BOT_TOKEN`, `PUBLIC_APP_URL` va `TELEGRAM_WEBHOOK_SECRET` ni
+`.env.local` (yoki muhit o'zgaruvchilaridan) oladi; token o'zi chop etilmaydi.
+`vercel env pull .env.vercel --environment=production` deb tortiolib, skriptni
+`--env-file=.env.vercel` bilan ishga tushirish mumkin — `.env.local` ustiga
+yozmang, lokal baza va autentifikatsiya kalitlaringiz buziladi.
+Webhook maxfiy so'zi `TELEGRAM_WEBHOOK_SECRET` bo'lsa o'sha, bo'lmasa token'dan
+HMAC bilan hisoblanadi — server ham aynan shu formulani ishlatadi, shuning uchun
+Telegram `secret_token` sarlavhasisiz so'rov yuborsa webhook 401 qaytadi.
+
+Tekshirish: sayt → **Telegram** bo'limi (`/dashboard/telegram`) bot holatini jonli
+ko'rsatadi (`getMe` + `getWebhookInfo`). Webhook o'rnatilmagan bo'lsa sahifa buni
+yashirmaydi.
 
 ## 5. Kunlik hisobot va eslatmalar jadvali
 

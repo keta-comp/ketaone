@@ -28,11 +28,11 @@ export const Route = createFileRoute("/api/public/telegram/webhook")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const [telegram, single, bot, perf] = await Promise.all([
-          import("@/lib/telegram.server"),
+        const [single, bot, perf, guard] = await Promise.all([
           import("@/lib/single-bot.server"),
           import("@/lib/telegram-report.server"),
           import("@/lib/perf.server"),
+          import("@/lib/secure-compare.server"),
         ]);
 
         let token: string;
@@ -44,7 +44,8 @@ export const Route = createFileRoute("/api/public/telegram/webhook")({
         }
 
         const header = request.headers.get("x-telegram-bot-api-secret-token") ?? "";
-        if (!telegram.safeEqual(header, single.singleBotHeaderSecret(token))) {
+        // matchesSecret fail-closed: secret sozlanmagan bo'lsa bo'sh sarlavha ham rad etadi.
+        if (!guard.matchesSecret(header, single.singleBotHeaderSecret(token))) {
           return new Response("Unauthorized", { status: 401 });
         }
 

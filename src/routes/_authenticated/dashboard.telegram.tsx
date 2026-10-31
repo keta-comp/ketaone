@@ -103,6 +103,8 @@ function TelegramPage() {
         description={t("Telegram — hisobot va bildirishnoma kanali. Asosiy CRM ishi shu veb platformada davom etadi.")}
       />
 
+      <BotHealthNotice status={botStatus.data} />
+
       {search.code ? (
         <div className="clay-panel space-y-4 p-6">
           <h2 className="text-lg font-semibold">{t("Telegram akkauntini ulash")}</h2>
@@ -189,6 +191,51 @@ function TelegramPage() {
 }
 
 type LinkRow = NonNullable<Awaited<ReturnType<typeof getTelegramLink>>>;
+
+type BotStatus = NonNullable<Awaited<ReturnType<typeof getTelegramBotStatus>>>;
+
+/**
+ * Sahifa hech qachon "hammasi tayyor" demaydi, agar Telegram bizning serverga
+ * yurolmasa: sabab tushunarli til aytiladi, token yoki maxfiy so'z ko'rsatilmaydi.
+ */
+function BotHealthNotice({ status }: { status: BotStatus | undefined }) {
+  if (!status || status.webhook === "ok") return null;
+
+  const message =
+    status.webhook === "not_configured"
+      ? t("Telegram boti serverda sozlanmagan — hisobotlar va bildirishnomalar hozircha ishlamaydi. Administratorga murojaat qiling.")
+      : status.webhook === "unreachable"
+        ? t("Telegram serveriga bog'lanib bo'lmadi — bot holatini hozir tekshirib bo'lmaydi.")
+        : status.webhook === "missing"
+          ? t("Bot ishlaydi, lekin webhook o'rnatilmagan: Telegram xabarlar bizning serverga yetib bormaydi. Administrator telegram-setup skriptini ishga tushirishi kerak.")
+          : t("Webhook boshqa manzilga qaratilgan — sayt ko'chgan bo'lsa, uni qayta o'rnatish kerak.");
+
+  return (
+    <div className="clay-panel flex items-start gap-3 border border-destructive/30 bg-destructive/5 p-4">
+      <span className="clay-inset grid size-9 shrink-0 place-items-center text-lg">🟠</span>
+      <div className="space-y-1">
+        <p className="font-display text-sm font-semibold">{t("Telegram holati")}</p>
+        <p className="text-xs text-muted-foreground">{message}</p>
+        {status.lastError ? (
+          <p className="text-[11px] text-muted-foreground">
+            {t("Telegramning oxirgi xatosi")}: {status.lastError}
+          </p>
+        ) : null}
+        {status.configured && status.username ? (
+          <a
+            href={`https://t.me/${status.username}`}
+            target="_blank"
+            rel="noreferrer"
+            className="text-xs font-medium underline"
+          >
+            @{status.username}
+          </a>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 
 function LinkedCard({
   link,

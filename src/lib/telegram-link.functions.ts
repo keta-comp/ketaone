@@ -4,7 +4,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/auth-middleware";
 import { requireBusinessId } from "@/lib/tenant.server";
 
-/** Current Telegram link for the signed-in user's business (or null). */
+/** Current Telegram link of the signed-in user (or null). */
 export const getTelegramLink = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -15,6 +15,8 @@ export const getTelegramLink = createServerFn({ method: "GET" })
         "id, telegram_user_id, telegram_username, status, daily_reports, report_time, timezone, notify_new_order, notify_payment, notify_lead, notify_low_stock, notify_booking, linked_at",
       )
       .eq("business_id", businessId)
+      .eq("user_id", context.userId)
+      .order("linked_at", { ascending: false })
       .limit(1)
       .maybeSingle();
     if (error) throw new Error(error.message);
@@ -23,22 +25,15 @@ export const getTelegramLink = createServerFn({ method: "GET" })
 
 /**
  * Botning holati — sahifa "ulanmagan" degan matn bilan foydalanuvchini
- * yo'q botga yubormasin: kalit sozlanmagan bo'lsa shu aytiladi, sozlangan bo'lsa
- * haqiqiy t.me havolasi ko'rsatiladi. Token hech qachon brauzerga chiqmaydi.
+ * yo'q botga yubormasin va webhook o'rnatilmagan bo'lsa "hammasi tayyor"
+ * deb aldamasin: token, webhook manzili va yetkazish xatosi alohida ko'rsatiladi.
+ * Token ham, webhook maxfiy so'zi ham hech qachon brauzerga chiqmaydi.
  */
 export const getTelegramBotStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async () => {
-    if (!process.env["TELEGRAM_BOT_TOKEN"]) return { configured: false as const, username: null as string | null };
-    try {
-      const { singleBotToken } = await import("@/lib/single-bot.server");
-      const { getMe } = await import("@/lib/telegram.server");
-      const me = await getMe(singleBotToken());
-      return { configured: true as const, username: me.username ?? null };
-    } catch (error) {
-      console.error("[telegram-bot-status]", error);
-      return { configured: false as const, username: null as string | null };
-    }
+    const { inspectSingleBotWebhook } = await import("@/lib/single-bot.server");
+    return inspectSingleBotWebhook();
   });
 
 /** Details of a pending link request so the confirm screen can show the account. */
@@ -144,6 +139,8 @@ export const updateTelegramSettings = createServerFn({ method: "POST" })
       .from("telegram_links")
       .select("id")
       .eq("business_id", businessId)
+      .eq("user_id", context.userId)
+      .order("linked_at", { ascending: false })
       .limit(1)
       .maybeSingle();
     if (!link) throw new Error("Telegram ulanmagan");
@@ -172,6 +169,8 @@ export const unlinkTelegram = createServerFn({ method: "POST" })
       .from("telegram_links")
       .select("id")
       .eq("business_id", businessId)
+      .eq("user_id", context.userId)
+      .order("linked_at", { ascending: false })
       .limit(1)
       .maybeSingle();
     if (!link) return { ok: true };

@@ -1,15 +1,19 @@
 const TELEGRAM_API = "https://api.telegram.org";
 
-/** Public base URL Telegram must call. Stable production host, overridable per environment. */
+/** Production host. PUBLIC_APP_URL overrides it per environment (preview, self-hosting). */
+export const DEFAULT_PUBLIC_URL = "https://www.nexora-crm.uz";
+
+/** Public base URL Telegram must call. */
 export function webhookBaseUrl(): string {
-  return (process.env["PUBLIC_APP_URL"] || "https://keta-sales.lovable.app").replace(/\/$/, "");
+  return (process.env["PUBLIC_APP_URL"]?.trim() || DEFAULT_PUBLIC_URL).replace(/\/$/, "");
 }
 
-export function safeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return diff === 0;
+/**
+ * Bot so'rov URL'ida token turadi, shuning uchun xatolik matni logga yoki
+ * foydalanuvchiga chiqarib yuborilmasligi oldin undan token o'chiriladi.
+ */
+export function scrubTelegramToken(value: string, token: string): string {
+  return token ? value.split(token).join("[token]") : value;
 }
 
 export class TelegramError extends Error {
@@ -34,7 +38,8 @@ export async function telegramCall<T = unknown>(
       body: JSON.stringify(body),
     });
   } catch (error) {
-    console.error(`[telegram] ${method} network failure`, error);
+    const reason = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+    console.error(`[telegram] ${method} network failure`, scrubTelegramToken(reason, token));
     throw new TelegramError("Telegram could not be reached. Please try again.", 0);
   }
 
@@ -44,7 +49,9 @@ export async function telegramCall<T = unknown>(
     description?: string;
   };
   if (!response.ok || !payload.ok) {
-    throw new TelegramError(payload.description ?? `Telegram ${method} failed`, response.status);
+    const description = scrubTelegramToken(payload.description ?? `Telegram ${method} failed`, token);
+    console.error(`[telegram] ${method} rejected (${response.status})`, description);
+    throw new TelegramError(description, response.status);
   }
   return payload.result as T;
 }

@@ -5,9 +5,26 @@
  */
 import { createHmac } from "node:crypto";
 
-import { getMe, getWebhookInfo, telegramCall, webhookBaseUrl } from "./telegram.server";
+import { getMe, getWebhookInfo, webhookBaseUrl } from "./telegram.server";
 
 export const SINGLE_WEBHOOK_PATH = "/api/public/telegram/webhook";
+
+/**
+ * Secret Telegram has to echo back in `x-telegram-bot-api-secret-token`.
+ * TELEGRAM_WEBHOOK_SECRET wins when it is set, so the secret can be rotated
+ * without touching the bot token; otherwise it is derived from the token by
+ * HMAC, which needs no extra configuration and never leaves the server.
+ * scripts/telegram-setup.mjs repeats this exact formula — keep both in step.
+ */
+export function singleBotHeaderSecret(token: string): string {
+  const explicit = process.env["TELEGRAM_WEBHOOK_SECRET"]?.trim();
+  if (explicit) return explicit;
+  return createHmac("sha256", token).update("telegram-webhook").digest("base64url");
+}
+
+export function singleWebhookUrl(): string {
+  return `${webhookBaseUrl()}${SINGLE_WEBHOOK_PATH}`;
+}
 
 export function singleBotToken(): string {
   const token = process.env["TELEGRAM_BOT_TOKEN"];
@@ -16,15 +33,6 @@ export function singleBotToken(): string {
     throw new Error("Telegram boti vaqtincha sozlanmagan — administratorga murojaat qiling.");
   }
   return token.trim();
-}
-
-/** Header secret Telegram must echo back. Derived from the token, so it needs no storage. */
-export function singleBotHeaderSecret(token: string): string {
-  return createHmac("sha256", token).update("telegram-webhook").digest("base64url");
-}
-
-export function singleWebhookUrl(): string {
-  return `${webhookBaseUrl()}${SINGLE_WEBHOOK_PATH}`;
 }
 
 let businessIdCache: { at: number; value: string } | null = null;
@@ -46,19 +54,54 @@ export async function singleBusinessId(): Promise<string> {
   return data.id;
 }
 
-export async function ensureSingleBotWebhook() {
-  const token = singleBotToken();
-  const url = singleWebhookUrl();
-  const info = await getWebhookInfo(token);
-  if (info.url !== url) {
-    await telegramCall(token, "setWebhook", {
-      url,
-      secret_token: singleBotHeaderSecret(token),
-      allowed_updates: ["message", "edited_message", "callback_query"],
-      drop_pending_updates: true,
-      max_connections: 100,
-    });
+export type BotWebhookState = "not_configured" | "ok" | "missing" | "wrong_url" | "unreachable";
+
+export type BotWebhookStatus = {
+  /** TELEGRAM_BOT_TOKEN mavjud va Telegram uni qabul qilyapti. */
+  configured: boolean;
+  username: string | null;
+  webhook: BotWebhookState;
+  pendingUpdates: number;
+  /** Telegramning oxirgi yetkazish xatosi — maxfiy ma'lumot yo'q, faqat sabab. */
+  lastError: string | null;
+};
+
+const NOT_CONFIGURED: BotWebhookStatus = {
+  configured: false,
+  username: null,
+  webhook: "not_configured",
+  pendingUpdates: 0,
+  lastError: null,
+};
+
+let statusCache: { at: number; value: BotWebhookStatus } | null = null;
+const STATUS_TTL_MS = 60_000;
+
+/**
+ * Read-only bot health for the CRM status card. setWebhook is deliberately NOT
+ * called from a request: pointing the production webhook is an admin action that
+ * runs through scripts/telegram-setup.mjs with explicit approval.
+ */
+export async function inspectSingleBotWebhook(): Promise<BotWebhookStatus> {
+  if (statusCache && Date.now() - statusCache.at < STATUS_TTL_MS) return statusCache.value;
+  if (!process.env["TELEGRAM_BOT_TOKEN"]) {
+    return NOT_CONFIGURED;
   }
-  const me = await getMe(token);
-  return { url, username: me.username, pending: info.pending_update_count };
+  const token = singleBotToken();
+  try {
+    const [me, info] = await Promise.all([getMe(token), getWebhookInfo(token)]);
+    const expected = singleWebhookUrl();
+    const status: BotWebhookStatus = {
+      configured: true,
+      username: me.username ?? null,
+      webhook: !info.url ? "missing" : info.url === expected ? "ok" : "wrong_url",
+      pendingUpdates: info.pending_update_count ?? 0,
+      lastError: info.last_error_message ?? null,
+    };
+    statusCache = { at: Date.now(), value: status };
+    return status;
+  } catch (error) {
+    console.error("[telegram] bot status check failed", error);
+    return { ...NOT_CONFIGURED, lastError: "unreachable" };
+  }
 }

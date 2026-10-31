@@ -25,7 +25,7 @@ turli bo'limlar, atamalar va jarayonlar bilan ishlaydi.
 | Ma'lumot katlami | `src/lib/pg-rest.server.ts` — PostgREST-ga mos yozilgan qatlam (`supabaseAdmin` nomi shu yerda)     |
 | Auth             | Neon Auth (Better Auth), sessiya `keta_session` cookie'sida                                         |
 | Fayllar          | S3 mos saqlagich (Neon Storage / R2 / AWS), `branding/` va `crm_attachments/` prefikslari           |
-| Telegram         | Bitta bot (`TELEGRAM_BOT_TOKEN`), webhook + HMAC asosidagi maxfiy sarlavha                          |
+| Telegram         | Bitta bot (`TELEGRAM_BOT_TOKEN`), webhook + `TELEGRAM_WEBHOOK_SECRET` (bo'lmasa token'dan HMAC)     |
 | Qurish           | nitro — Cloudflare yoki Vercel preseti bilan                                                        |
 
 ## Ishga tushirish
