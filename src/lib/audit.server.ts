@@ -35,6 +35,16 @@ export async function logAudit(entry: AuditEntry) {
     });
   } catch (error) {
     console.error("[audit] failed to write log", error);
+    // Buzilgan audit yozuvi konsolda qolib ketmasligi kerak: xato jurnali
+    // `/super-admin/errors` da ko'rinishi uchun u yerga ham yozamiz.
+    const { captureError } = await import("./error-events.server");
+    await captureError({
+      error,
+      route: "audit-log-write",
+      level: "warning",
+      businessId: entry.businessId ?? null,
+      userId: entry.actorUserId ?? null,
+    });
   }
 }
 

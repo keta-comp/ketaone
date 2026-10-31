@@ -83,3 +83,21 @@ describe("Bloklash haqiqiy to'siq", () => {
     expect(auth).toMatch(/if \(!row \|\| row\.banned\) return null/);
   });
 });
+
+describe("Panel bo'sh qolmasligi", () => {
+  test("yangi funksiya qo'shish formasi mavjud", () => {
+    const flags = readFileSync("src/routes/_authenticated/super-admin.flags.tsx", "utf8");
+    // Ro'yxat bo'sh bo'lsa administrator faqat shu forma orqali chiqib ketadi.
+    expect(flags).toContain("Yangi funksiya qo‘shish");
+    expect(flags).toMatch(/save\.mutate\(\{ key, label, enabled: false/);
+    expect(flags).toContain("disabled={!(keyIsValid && label) || save.isPending}");
+    expect(flags).toMatch(/\/\^\[a-z\]\[a-z0-9_.-\]\{1,63\}\$\//);
+  });
+
+  test("audit yozuvi buzilsa xato jurnaliga tushadi", () => {
+    const audit = readFileSync("src/lib/audit.server.ts", "utf8");
+    expect(audit).toMatch(/console\.error\("\[audit\] failed to write log", error\);/);
+    expect(audit).toContain('route: "audit-log-write"');
+    expect(audit).toMatch(/level: "warning"/);
+  });
+});

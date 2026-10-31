@@ -1,8 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { useState } from "react";
 import { toast } from "sonner";
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ErrorState, LoadingState, PageHeader } from "@/components/app/primitives";
@@ -31,6 +34,7 @@ function FlagsPage() {
   const queryClient = useQueryClient();
   const load = useServerFn(getFeatureFlags);
   const saveFn = useServerFn(saveFeatureFlag);
+  const [draft, setDraft] = useState({ key: "", label: "" });
 
   const { data, isPending, error, refetch } = useQuery({
     queryKey: ["super-admin-flags"],
@@ -47,6 +51,7 @@ function FlagsPage() {
     }) => saveFn({ data: input }),
     onSuccess: () => {
       toast.success(t("Saqlandi"));
+      setDraft({ key: "", label: "" });
       void queryClient.invalidateQueries({ queryKey: ["super-admin-flags"] });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : t("Saqlanmadi")),
@@ -56,6 +61,10 @@ function FlagsPage() {
   if (error) return <ErrorState error={error} onRetry={() => void refetch()} />;
 
   const flags = data?.flags ?? [];
+  const key = draft.key.trim();
+  const label = draft.label.trim();
+  // Bir so'zli kalit boshqa flag bilan to'qnashmasligi uchun faqat [a-z0-9_.-] qabul qilinadi.
+  const keyIsValid = /^[a-z][a-z0-9_.-]{1,63}$/.test(key);
 
   return (
     <div className="space-y-6">
@@ -66,6 +75,35 @@ function FlagsPage() {
       <p className="-mt-4 text-xs text-muted-foreground">
         {t("Yoqilgan flag plan talabini yengadi, o‘chirilgan flag esa istalgan planda funksiyani o‘chiradi.")}
       </p>
+
+      <Panel title={t("Yangi funksiya qo‘shish")}>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto]">
+          <Input
+            value={draft.key}
+            onChange={(e) => setDraft((d) => ({ ...d, key: e.target.value }))}
+            placeholder={t("Funksiya kaliti")}
+          />
+          <Input
+            value={draft.label}
+            onChange={(e) => setDraft((d) => ({ ...d, label: e.target.value }))}
+            placeholder={t("Funksiya nomi")}
+          />
+          <Button
+            disabled={!(keyIsValid && label) || save.isPending}
+            onClick={() =>
+              save.mutate({ key, label, enabled: false, target_plan: null, target_business_id: null })
+            }
+          >
+            {t("Qo‘shish")}
+          </Button>
+        </div>
+        <p className="mt-2 text-xs text-muted-foreground">
+          {t("Kalit kichik harf, raqam, nuqta yoki tire bilan yoziladi (masalan: ai_assistant).")}
+          {keyIsValid && flags.some((f) => f.key === key)
+            ? ` ${t("Bu kalit allaqachon bor — nomi va sozlamalari yangilanadi.")}`
+            : ""}
+        </p>
+      </Panel>
 
       {flags.length === 0 ? (
         <Panel><NoData label={t("Funksiyalar ro‘yxati bo‘sh")} /></Panel>
