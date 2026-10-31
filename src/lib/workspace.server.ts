@@ -134,7 +134,7 @@ export async function buildTodoActions(supabase: Client, hidden = new Set<string
   const soon = dayStart(3).toISOString().slice(0, 10);
   const todayDate = dayStart().toISOString().slice(0, 10);
 
-  const [unconfirmedOrders, duePayments, overdueTasks, unconfirmedAppointments] = await Promise.all([
+  const [unconfirmedOrders, duePayments, overdueTasks, unconfirmedAppointments, newLeads] = await Promise.all([
     supabase
       .from("orders")
       .select("id", { count: "exact", head: true })
@@ -155,11 +155,22 @@ export async function buildTodoActions(supabase: Client, hidden = new Set<string
       .eq("status", "new")
       .gte("starts_at", dayStart().toISOString())
       .lt("starts_at", dayStart(1).toISOString()),
+    hidden.has("/dashboard/leads")
+      ? Promise.resolve({ count: 0 })
+      : supabase
+          .from("leads")
+          .select("id", { count: "exact", head: true })
+          .in("status", ["new", "needs_attention"]),
   ]);
 
-  // "Murojaatlar" bo'limi butunlay olib tashlandi — shu sahifaga olib boradigan
-  // vazifalar ro'yxatda qolmaydi (qayta aloqa hisobi Telegram hisobotida saqlanadi).
   const actions: TodoAction[] = [
+    {
+      key: "leads",
+      count: newLeads.count ?? 0,
+      label: "yangi murojaatga javob berilmagan",
+      to: "/dashboard/leads",
+      tone: "warning",
+    },
     {
       key: "orders",
       count: unconfirmedOrders.count ?? 0,

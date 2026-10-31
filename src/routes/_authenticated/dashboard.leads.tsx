@@ -138,7 +138,7 @@ function LeadsPage() {
 
   return (
     <Tabs value={view} onValueChange={setView} className="space-y-5">
-      <PageHeader title={t("Lidlar")} description={t("AI agenti aniqlagan, baholagan va yo'naltirgan har bir so'rov.")} actions={
+      <PageHeader title={t("Murojaatlar")} description={t("AI agenti aniqlagan, baholagan va yo'naltirgan har bir so'rov.")} actions={
         <TabsList aria-label={t("Lidlar ko‘rinishi")}>
           <TabsTrigger value="kanban"><Columns3 className="mr-2 size-4" />{t("Kanban")}</TabsTrigger>
           <TabsTrigger value="table"><List className="mr-2 size-4" />{t("Jadval")}</TabsTrigger>

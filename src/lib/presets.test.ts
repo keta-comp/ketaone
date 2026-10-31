@@ -104,8 +104,8 @@ describe("preset registry", () => {
       for (const to of required) {
         expect(menu.some((item) => item.to === to)).toBe(!hidden.has(to));
       }
-      // Murojaatlar bo'limi hech qaysi sohada qolmaydi.
-      expect(hidden.has("/dashboard/leads")).toBe(true);
+      // Murojaatlar faqat extraCoreKeys'ida "leads" deb yoqqan sohada ochiq.
+      expect(hidden.has("/dashboard/leads")).toBe(id !== "oquv");
     }
   });
 
@@ -115,6 +115,8 @@ describe("preset registry", () => {
     }
     expect(isSectionVisible("oquv", "/dashboard/inventory")).toBe(false);
     expect(isSectionVisible("oquv", "/dashboard/customers")).toBe(true);
+    expect(isSectionVisible("oquv", "/dashboard/leads")).toBe(true);
+    expect(isSectionVisible("beauty", "/dashboard/leads")).toBe(false);
     expect(isSectionVisible("ecommerce", "/dashboard/orders")).toBe(true);
     expect(isSectionVisible("ecommerce", "/dashboard/inventory")).toBe(true);
     expect(isSectionVisible("universal", "/dashboard/inventory")).toBe(true);
