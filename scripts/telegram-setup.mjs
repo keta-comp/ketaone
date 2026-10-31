@@ -18,6 +18,7 @@
 // aks holda webhook 401 qaytaradi.
 import { createHmac } from "node:crypto";
 import fs from "node:fs";
+import https from "node:https";
 
 const API = "https://api.telegram.org";
 const WEBHOOK_PATH = "/api/public/telegram/webhook";
@@ -34,8 +35,10 @@ function envFromLocal() {
   for (const file of ENV_FILES) {
     if (!fs.existsSync(file)) continue;
     for (const line of fs.readFileSync(file, "utf8").split(/\r?\n/)) {
-      const match = line.match(/^\s*([A-Z0-9_]+)\s*=\s*"([^"]*)"/);
-      if (match && !vars[match[1]]) vars[match[1]] = match[2];
+      // `KEY="qiymat"`, `KEY='qiymat'` va qo'shtirnoqsiz `KEY=qiymat` — uchchalasini ham o'qiymiz.
+      const match = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|(\S*))\s*$/);
+      if (!match || vars[match[1]]) continue;
+      vars[match[1]] = (match[2] ?? match[3] ?? match[4]).trim();
     }
   }
   return vars;
@@ -62,17 +65,41 @@ const secretToken =
   createHmac("sha256", token).update(SECRET_SALT).digest("base64url");
 const secretSource = env("TELEGRAM_WEBHOOK_SECRET") ? "TELEGRAM_WEBHOOK_SECRET" : "token'dan HMAC";
 
-async function call(method, body = {}) {
-  const response = await fetch(`${API}/bot${token}/${method}`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(body),
+// Node'ning own fetch'i keep-alive socketini yopishda Windows'da
+// `Assertion failed: UV_HANDLE_CLOSING` bilan 127 exit kod beradi. Shuning uchun
+// bu yerda bitta so'rov = bitta socket ishlatiladi: skript toza exit(0) bilan chiqadi.
+function call(method, body = {}) {
+  return new Promise((resolve, reject) => {
+    const request = https.request(
+      `${API}/bot${token}/${method}`,
+      { method: "POST", headers: { "content-type": "application/json" }, agent: false },
+      (response) => {
+        let raw = "";
+        response.setEncoding("utf8");
+        response.on("data", (chunk) => {
+          raw += chunk;
+        });
+        response.on("end", () => {
+          let json = null;
+          try {
+            json = JSON.parse(raw);
+          } catch {
+            json = null;
+          }
+          if (!json?.ok) {
+            reject(new Error(`${method}: ${scrub(json?.description || `HTTP ${response.statusCode}`)}`));
+            return;
+          }
+          resolve(json.result);
+        });
+      },
+    );
+    request.on("error", (error) => reject(new Error(`${method}: ${scrub(error.message)}`)));
+    request.end(JSON.stringify(body));
   });
-  const json = await response.json().catch(() => null);
-  const description = json?.description ? String(json.description).split(token).join("[token]") : null;
-  if (!json?.ok) throw new Error(`${method}: ${description ?? `HTTP ${response.status}`}`);
-  return json.result;
 }
+
+const scrub = (value) => String(value).split(token).join("[token]");
 
 const apply = process.argv.includes("--apply");
 
