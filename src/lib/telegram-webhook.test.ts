@@ -63,6 +63,12 @@ describe("webhook maxfiy so'zi", () => {
     expect(SETUP_SCRIPT).toContain('const SECRET_SALT = "telegram-webhook"');
     expect(SETUP_SCRIPT).toContain("TELEGRAM_WEBHOOK_SECRET");
   });
+
+  test("token fayli flagi Node'ning own flagi bilan to'qnashmaydi", () => {
+    // Node `--env-file`ni yutib qo'yadi: skript uni hech qachon ko'rmaydi.
+    expect(SETUP_SCRIPT).toContain('startsWith("--envfile=")');
+    expect(SETUP_SCRIPT).not.toContain('startsWith("--env-file=")');
+  });
 });
 
 describe("webhook sarlavhasini tekshirish", () => {

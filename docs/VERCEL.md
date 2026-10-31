@@ -61,8 +61,12 @@ node scripts/telegram-setup.mjs --url=https://sayt.uz --apply   # manzilni qo'ld
 Skript `TELEGRAM_BOT_TOKEN`, `PUBLIC_APP_URL` va `TELEGRAM_WEBHOOK_SECRET` ni
 `.env.local` (yoki muhit o'zgaruvchilaridan) oladi; token o'zi chop etilmaydi.
 `vercel env pull .env.vercel --environment=production` deb tortiolib, skriptni
-`--env-file=.env.vercel` bilan ishga tushirish mumkin — `.env.local` ustiga
+`--envfile=.env.vercel` bilan ishga tushirish mumkin — `.env.local` ustiga
 yozmang, lokal baza va autentifikatsiya kalitlaringiz buziladi.
+**Ogoh bo'ling:** Vercel'ga *Sensitive* turdagi maxfiy so'z sifatida qo'shilgan
+token `env pull` faylida bo'sh qator bo'lib chiqadi (`TELEGRAM_BOT_TOKEN=""`).
+Bunday holda token qiymatini BotFather'dan (`/token`) olib, `.env.local` ga yozing
+skript ishlashi uchun — production'dagi token shu qoldi, uni almashtirmang.
 Webhook maxfiy so'zi `TELEGRAM_WEBHOOK_SECRET` bo'lsa o'sha, bo'lmasa token'dan
 HMAC bilan hisoblanadi — server ham aynan shu formulani ishlatadi, shuning uchun
 Telegram `secret_token` sarlavhasisiz so'rov yuborsa webhook 401 qaytadi.

@@ -3,11 +3,14 @@
 //   node scripts/telegram-setup.mjs              # faqat tekshiradi, hech narsa o'zgarmaydi
 //   node scripts/telegram-setup.mjs --apply      # webhook'ni haqiqatan o'zgartiradi
 //   node scripts/telegram-setup.mjs --url=https://sayt.uz   # manzilni qo'ldan beradi
-//   node scripts/telegram-setup.mjs --env-file=.env.vercel  # token'ni boshqa fayldan o'qiydi
+//   node scripts/telegram-setup.mjs --envfile=.env.vercel  # token'ni boshqa fayldan o'qiydi
 //
 // `vercel env pull .env.vercel --environment=production` bilan tortib olingan kalitlarni
 // `.env.local` ustiga yozish xavfsiz emas (lokal muhit production bazasiga qaraydi),
 // shuning uchun alohida fayl o'qish mumkin.
+//
+// Flag nomi `--envfile`, `--env-file` emas: Node o'zagi `--env-file`ni yutib
+// qo'yadi va skript argumentlarigacha yetmaydi.
 //
 // Xavfsizlik: token va maxfiy so'z chop etilmaydi. Webhook sarlavha maxfiy so'zi
 // TELEGRAM_WEBHOOK_SECRET bo'lsa o'sha, bo'lmasa token'dan HMAC bilan hisoblanadi —
@@ -21,9 +24,9 @@ const WEBHOOK_PATH = "/api/public/telegram/webhook";
 const DEFAULT_PUBLIC_URL = "https://www.nexora-crm.uz";
 const SECRET_SALT = "telegram-webhook";
 
-const envFileArg = process.argv.find((arg) => arg.startsWith("--env-file="));
+const envFileArg = process.argv.find((arg) => arg.startsWith("--envfile="));
 const ENV_FILES = envFileArg
-  ? [envFileArg.slice("--env-file=".length)]
+  ? [envFileArg.slice("--envfile=".length)]
   : [".env.local", ".env"];
 
 function envFromLocal() {
