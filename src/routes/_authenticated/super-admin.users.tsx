@@ -92,8 +92,12 @@ function UserDialog({ userId, onClose }: { userId: string; onClose: () => void }
 
   const changeStatus = useMutation({
     mutationFn: (status: "active" | "suspended") => statusFn({ data: { id: userId, status } }),
-    onSuccess: () => {
-      toast.success(t("Holat yangilandi"));
+    onSuccess: (result) => {
+      toast.success(
+        result && result.sessionsCleared > 0
+          ? t("Bloklandi — sessiyalar yopildi, endi kira olmaydi")
+          : t("Holat yangilandi"),
+      );
       invalidate();
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : t("Amal bajarilmadi")),

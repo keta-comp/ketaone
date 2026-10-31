@@ -153,6 +153,7 @@ const table: Record<string, string> = {
   "Bitimlar": "Deals",
   "Bitta biznesning platforma darajasidagi profili: jamoa, CRM, faollik va AI ishlatilishi.": "Platform-level profile of one business: team, CRM, activity, and AI usage.",
   "Bitta ekranda mijoz haqida hamma narsa.": "Everything about the client on one screen.",
+  "Bloklandi — sessiyalar yopildi, endi kira olmaydi": "Blocked — sessions were closed, sign-in no longer works",
   "Biz haqimizda": "About us",
   "Bizga yangi field qo‘sh: mijoz qayerdan kelganini ko‘rsatadigan field.": "Add a new field: a field showing where the customer came from.",
   "Biznes bilimlari": "Business insights",

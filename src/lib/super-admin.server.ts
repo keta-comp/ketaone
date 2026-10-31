@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/platform.server";
+import { ownerSql } from "./db";
 import { audienceCount, countAudiences, type NotificationAudiences } from "./notification-targets";
 
 /** Platform-level data layer for the Super Admin Control Center.
@@ -462,6 +463,30 @@ export async function getUserDetail(userId: string) {
 
 function dayKey(value: string) {
   return value.slice(0, 10);
+}
+
+/** Bloklov haqiqiy to'siq bo'lishi uchun yoziladigan qator.
+ *
+ *  `profiles.status` — panel ko'radigan belgi; haqiqiy tekshiruv esa
+ *  `currentSession()` ichidagi `banned` qatori (src/lib/auth.server.ts:193).
+ *  Shu yozilmagan "Bloklash" tugmasi foydalanuvchining kirishini to'xtatmaydi,
+ *  shuning uchun blokda uning sessiyalari ham o'chiriladi. */
+export async function applyAccountBan(userId: string, banned: boolean): Promise<{ sessionsCleared: number }> {
+  return ownerSql().begin(async (tx) => {
+    const updated = await tx`
+      update neon_auth."user"
+         set banned = ${banned},
+             "banReason" = ${banned ? "Super Admin tomonidan bloklandi" : null},
+             "banExpires" = null,
+             "updatedAt" = now()
+       where id = ${userId}::uuid
+      returning id`;
+    if (updated.length === 0) throw new Error("Hisob topilmadi (neon_auth.user)");
+    const cleared = banned
+      ? await tx`delete from neon_auth.session where "userId" = ${userId}::uuid returning token`
+      : [];
+    return { sessionsCleared: cleared.length };
+  });
 }
 
 export async function buildSaasAnalytics(from: string, to: string) {

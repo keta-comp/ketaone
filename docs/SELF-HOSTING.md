@@ -68,16 +68,22 @@ yangilaydi — kod uning ustidan ishlaydigan PostgREST moslik qatlamini
 
 ## 4. Super Admin hisobini yaratish
 
-1. Saytga kirib odatdagidek ro'yxatdan o'ting.
-2. Neon → **SQL Editor** da bir marta bajaring:
+`platform_admins` bo'sh bo'lsa `/super-admin` hamma uchun 403 beradi va ichkaridan
+buni tuzatib bo'lmaydi — o'z ruxsatingizni o'sha sahifadan so'ray olasiz. Yozish
+faqat `app_service`/egaga ruxsat berilgan (tenant roliga INSERT siyosati yo'q),
+shuning uchun bu ham administrator skripti orqali qilinadi:
 
-```sql
-insert into public.platform_admins (user_id, email)
-select id, email from neon_auth."user" where email = 'SIZNING@EMAIL.COM'
-on conflict do nothing;
+```bash
+node scripts/super-admin.mjs --list                              # kimlar admin + mavjud hisoblar
+node scripts/super-admin.mjs --grant=SIZNING@EMAIL.COM           # SINOV: o'zgarishni ko'rsatadi
+node scripts/super-admin.mjs --grant=SIZNING@EMAIL.COM --apply   # haqiqatan yozadi
+node scripts/super-admin.mjs --revoke=SIZNING@EMAIL.COM --apply  # orqaga qaytaradi
 ```
 
-Shundan keyin `/super-admin` bo'limi shu hisobga ochiladi.
+Skript `NEON_DATABASE_URL`ni `.env.local`dan (yoki `--envfile=` bilan berilgan
+fayldan) oladi, hech qanday maxfiy qatorni chop etmaydi va yozishdan keyin
+`is_super_admin()`ni RLS ostida qayta chaqirib, ruxsat haqiqatan ochilganini
+tekshiradi. Shundan keyin `/super-admin` bo'limi shu hisobga ochiladi.
 
 ## 5. Telegram webhook va /buyruqlar
 
@@ -163,6 +169,7 @@ o'qimaydi — panel server funksiyasi orqali o'tadi.
 - [ ] `NEON_DATABASE_URL` va `NEON_AUTH_ISSUER` server muhitida (omma bron sahifasi shular bilan ishlaydi)
 - [ ] To'lov webhook kalitlari (`PAYME_KEY`, `CLICK_SECRET_KEY`, `CLICK_SERVICE_ID`) o'rnatilgan — ulanmagan holda endpointlar fail-closed
 - [ ] `/api/health` 200 qaytaryapti
+- [ ] `node scripts/super-admin.mjs --grant=... --apply` — `/super-admin` kamida bitta hisobga ochilgan
 - [ ] Bitta real biznes to'liq oqim: sozlamalar → xizmatlar → xodimlar → bron → kalendar → oylik hisob-kitob → CSV eksport
 - [ ] Omma bron havolasi (`/b/<slug>`) telefonda ochiladi va bron `new` holatida tushadi
 - [ ] Billing yoqilganda (`VITE_BILLING_ENFORCED=true` build) tarif darvozalari ishlaydi; pilot davomida bayrog' o'chiq

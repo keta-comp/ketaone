@@ -187,6 +187,11 @@ export const setUserStatus = createServerFn({ method: "POST" })
     if (readError) throw new Error(readError.message);
     if (!target) throw new Error("Foydalanuvchi topilmadi");
 
+    // Auth qatori birinchi: shu yozilmagan "Bloklash" kirishni to'xtatmaydi,
+    // shuning uchun xato bo'lsa profil belgisi ham o'zgarmay qoladi.
+    const { applyAccountBan } = await import("./super-admin.server");
+    const ban = await applyAccountBan(data.id, data.status === "suspended");
+
     const { error } = await supabaseAdmin.from("profiles").update({ status: data.status }).eq("id", data.id);
     if (error) throw new Error(error.message);
 
@@ -198,9 +203,9 @@ export const setUserStatus = createServerFn({ method: "POST" })
       targetType: "user",
       targetId: data.id,
       targetLabel: target.email ?? target.full_name ?? null,
-      metadata: { from: target.status, to: data.status },
+      metadata: { from: target.status, to: data.status, sessionsCleared: ban.sessionsCleared },
     });
-    return { ok: true };
+    return { ok: true, sessionsCleared: ban.sessionsCleared };
   });
 
 /** Changing a role is always scoped to one workspace: an unscoped update would rewrite
