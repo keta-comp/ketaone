@@ -33,6 +33,7 @@ import {
 } from "@/lib/settings.functions";
 import { cn } from "@/lib/utils";
 import { t } from "@/lib/i18n";
+import { uploadToStorage } from "@/lib/storage-upload";
 
 export const Route = createFileRoute("/_authenticated/dashboard/settings")({
   head: () => ({
@@ -463,13 +464,10 @@ function BrandingCard({
     setBusy(true);
     const previous = logoPath;
     try {
-      const { path, uploadUrl } = await issueLogoUploadUrl({ data: { contentType: file.type } });
-      const response = await fetch(uploadUrl, {
-        method: "PUT",
-        headers: { "Content-Type": file.type },
-        body: file,
+      const { path, uploadUrl } = await issueLogoUploadUrl({
+        data: { contentType: file.type, size: file.size },
       });
-      if (!response.ok) throw new Error(t("Yuklash amalga oshmadi"));
+      await uploadToStorage(uploadUrl, file, file.type);
       if (previous && previous !== path) {
         await removeBrandingLogo({ data: { path: previous } }).catch(() => undefined);
       }

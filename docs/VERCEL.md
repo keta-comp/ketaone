@@ -22,8 +22,7 @@ Production va Preview uchun quyidagilarni qo'shing:
 | --- | --- |
 | `NEON_DATABASE_URL` | `postgresql://neondb_owner:...@ep-...-pooler...aws.neon.tech/neondb?sslmode=require` (maxfiy) |
 | `NEON_AUTH_ISSUER` | `https://ep-....neonauth...aws.neon.tech/neondb/auth` |
-| `S3_ENDPOINT`, `S3_REGION`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | fayl saqlash — qo'shilmagan holda logo/biriktirma yuklash "sozlanmagan" xatosi beradi |
-| `S3_PUBLIC_BASE_URL` | ixtiyoriy (bo'lmasa presigned GET) |
+| `STORAGE_URL_SECRET` | ixtiyoriy — fayl URL tokenlari uchun maxfiy so'z. Bo'lmasa u `NEON_DATABASE_URL`'dan HMAC bilan hisoblanadi, shuning uchun qo'shimcha sozlash shart emas. |
 | `OPENROUTER_API_KEY` | `sk-or-...` (AI uchun) |
 | `OPENROUTER_MODEL` | `google/gemini-2.5-flash` (ixtiyoriy) |
 | `GEMINI_API_KEY` | ixtiyoriy zaxira |
@@ -36,6 +35,13 @@ Production va Preview uchun quyidagilarni qo'shing:
 Autentifikatsiya va baza to'liq server tomonda — `VITE_` bilan boshlanadigan
 Supabase kalitlari kerak emas. Muhit o'zgaruvchilarini qo'shgandan keyin
 qayta **Redeploy** qiling.
+
+Fayl saqlash (logotip va CRM biriktirmalari) Neon bazasidagi
+`public.storage_objects` jadvalida joylashadi — tashqi S3/R2 hisobi, endpoint
+yoki kalit talab qilinmaydi. Jadval `scripts/neon-apply.mjs` orqali qo'llanadi
+(`drizzle/migrations/0001_storage_objects.sql`). Vercel so'rov hajmi cheklovidan
+oshmasligi uchun fayllar 3 MB'lik bo'laklar bilan yuklanadi: logo 2 MB,
+biriktirma 15 MB gacha.
 
 Ro'yxatdan o'tishda Neon Auth email yuborishi uchun Neon dashboard →
 Authentication → Email'da SMTP sozlanadi (yoki default yetkazib beruvchi).

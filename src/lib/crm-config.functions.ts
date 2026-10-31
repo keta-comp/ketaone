@@ -1129,7 +1129,7 @@ export const issueCrmAttachmentPath = createServerFn({ method: "POST" })
     });
     if (!path) throw new Error("Faqat PDF, PNG, JPG, WEBP yoki TIFF fayl biriktirish mumkin.");
     const { signedUploadUrl } = await import("./storage.server");
-    const uploadUrl = await signedUploadUrl(ATTACHMENT_BUCKET, path, data.contentType);
+    const uploadUrl = await signedUploadUrl(ATTACHMENT_BUCKET, path, data.contentType, 300, data.size);
     return { path, name: path.split("/").pop() ?? path, uploadUrl };
   });
 
@@ -1164,7 +1164,7 @@ export const removeCrmAttachments = createServerFn({ method: "POST" })
     const owned = data.paths.filter((path) => path.startsWith(`${businessId}/`));
     if (!owned.length) return { removed: 0 };
     const { deleteObjects } = await import("./storage.server");
-    await deleteObjects(ATTACHMENT_BUCKET, owned);
+    await deleteObjects(ATTACHMENT_BUCKET, owned, context.userId);
     return { removed: owned.length };
   });
 

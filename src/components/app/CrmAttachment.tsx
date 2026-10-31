@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { getCrmAttachmentUrl, issueCrmAttachmentPath } from "@/lib/crm-config.functions";
 import { t } from "@/lib/i18n";
+import { uploadToStorage } from "@/lib/storage-upload";
 
 /** Objects are stored under `{business}/{module}/{uuid}/{name}` — the last segment is the display name. */
 function attachmentName(path: string): string {
@@ -68,12 +69,7 @@ export function AttachmentField({
       const { path, uploadUrl } = await issueCrmAttachmentPath({
         data: { moduleKey, filename: file.name, contentType: file.type, size: file.size },
       });
-      const response = await fetch(uploadUrl, {
-        method: "PUT",
-        headers: { "Content-Type": file.type },
-        body: file,
-      });
-      if (!response.ok) throw new Error(t("Yuklash amalga oshmadi"));
+      await uploadToStorage(uploadUrl, file, file.type);
       onChange(path);
       toast.success(t("Fayl biriktirildi"));
     } catch (error) {

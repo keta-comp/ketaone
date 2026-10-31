@@ -26,11 +26,12 @@ Supabase ishtiroki yo'q: 33+ jadval, RLS siyosatlari, funksiyalar va triggerlar
 - `NEON_DATABASE_URL` — pooler manzili, `?sslmode=require` bilan
 - `NEON_AUTH_ISSUER` — 1-bosqichdagi auth manzili
 - `NEON_JWKS_URL` — ixtiyoriy (hozircha kod uni o'qimaydi)
-- `S3_*` — fayl saqlash (Neon Storage / R2 / AWS S3). To'rtalasini
-  (`S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_ENDPOINT`)
-  qo'shmaguncha logo/biriktirma yuklash ishlatilmaydi. R2/MinIO uchun
-  `S3_ENDPOINT` bo'lsa path-style ishlatiladi; kalitlar o'zgarsa jarayonni
-  qayta ishga tushiring (S3 klienti keshlanadi)
+- `STORAGE_URL_SECRET` — ixtiyoriy. Fayllar Neon bazasidagi
+  `public.storage_objects` jadvalida (bytea) saqlanadi: tashqi S3/R2 hisobi,
+  endpoint va kalitlar kerak emas. Bo'sh qolsa yuklab olish/yuklash URL'laridagi
+  qisqa muddatli token `NEON_DATABASE_URL`'dan HMAC bilan hisoblanadi. Logo 2 MB,
+  biriktirma 15 MB gacha; katta fayllar 3 MB'lik bo'laklar bilan yuklanadi,
+  shuning uchun hosting'da so'rov tanasi chegarasi kamida 4 MB bo'lishi yetarli
 - `OPENROUTER_API_KEY` yoki `GEMINI_API_KEY` — AI uchun
 - `TELEGRAM_BOT_TOKEN`, `PUBLIC_APP_URL` — bot va webhook. `PUBLIC_APP_URL` o'z
   domeningizni ko'rsatishi shart (sozlanmasa u production `https://www.nexora-crm.uz`
@@ -200,11 +201,12 @@ Sahifa mijozdan ro'yxatdan o'tish so'ramaydi: xizmat → xodim → sana → bo's
 tanlaydi, ism/telefon/izoh qoldiradi va bron `new` holatida tushadi.
 
 Sahifa tashqi ko'rinishi biznes brendi bilan to'ldiriladi — Sozlamalar → "Brend va
-aloqa": logotip (`branding` bucket'iga `<businessId>/logo.<ext>`, 2 MB gacha,
+aloqa": logotip (`branding` saqlagichiga `<businessId>/logo.<ext>`, 2 MB gacha,
 PNG/JPG/WEBP) va telefon (`tel:` havola sifatida chiqadi). Logotip yo'q bo'lsa
-standart belgi ko'rinadi. Bucket mantiqiy — `S3_BUCKET` ichida prefiks; URL server
-tomonida presigned sifatida yig'iladi, shuning uchun fayllarni ko'chirishga hojat
-yo'q.
+standart belgi ko'rinadi. Fayllar Neon'dagi `public.storage_objects` jadvalida
+(bytea) yotadi — tashqi bucket sozlamaydi; yuklash/ko'rish havolalari server
+tomonida qisqa muddatli HMAC token bilan yig'iladi, shuning uchun fayllarni
+boshqa joyga ko'chirishga hojat yo'q.
 
 Barcha sohalar uchun bir xil ishlaydi — `booking_enabled` yoqilgan istalgan biznes
 ochiq havolaga ega (soha tanlovi faqat ichki CRM modulini sozlaydi).

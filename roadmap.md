@@ -25,8 +25,8 @@
 - [x] Suhbat holati uchun `telegram_bot_state` jadvali (migratsiya + sxema mirror)
 - [x] Cron uchun ikkala manzil GET/POST + `Authorization: Bearer` ni qabul qiladi, `vercel.json` da `crons` qo'shildi, `.github/workflows/scheduler.yml` yozildi
 - [x] `scripts/telegram-setup.mjs` — setWebhook + setMyCommands; `neon-apply.mjs` ga `--file=` qo'shildi
-- [ ] **Migratsiyani jonli Neon'ga qo'llash** — `.env.local` da `NEON_DATABASE_URL` bo'lmasa bot ichidagi kirish/qabul ishlamaydi
-- [ ] `TELEGRAM_BOT_TOKEN` + `PUBLIC_APP_URL` va `node scripts/telegram-setup.mjs` ishga tushirish
-- [ ] `S3_*` to'rttalasi — logo va biriktirma yuklash shundan keyin ochiladi
+- [x] **Migratsiyani jonli Neon'ga qo'llash** — `.env.local` da `NEON_DATABASE_URL` bor, sxema jonli bazada
+- [x] `TELEGRAM_BOT_TOKEN` + `PUBLIC_APP_URL` va `node scripts/telegram-setup.mjs --apply` — webhook `https://www.nexora-crm.uz/api/public/telegram/webhook` da
+- [x] Fayl saqlash — `S3_*` o'rniga Neon `public.storage_objects` (bytea + bo'laklab yuklash); kod va lokal sinov tayyor, production'da deploy bilan ochiladi
 - [ ] Hostingga mos cron yoqish (Vercel `crons` yoki GitHub Actions workflow)
 - [ ] Tarif cheklovi (`VITE_BILLING_ENFORCED="true"`) — hozir hamma feature ochiq

@@ -97,18 +97,19 @@ const LOGO_SUFFIX: Record<string, string> = {
 export const issueLogoUploadUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
-    z.object({ contentType: z.string().min(1).max(80) }).parse(input),
+    z.object({ contentType: z.string().min(1).max(80), size: z.number().int().positive() }).parse(input),
   )
   .handler(async ({ data, context }): Promise<{ path: string; uploadUrl: string }> => {
     const businessId = await requireBusinessAdmin(context.supabase);
     const suffix = LOGO_SUFFIX[data.contentType];
     if (!suffix) throw new Error("Faqat PNG, JPG yoki WEBP rasm yuklang.");
     const path = `${businessId}/logo.${suffix}`;
-    const { signedUploadUrl } = await import("./storage.server");
-    return { path, uploadUrl: await signedUploadUrl("branding", path, data.contentType) };
+    const { BUCKET_LIMITS, signedUploadUrl } = await import("./storage.server");
+    if (data.size > BUCKET_LIMITS.branding) throw new Error("Logotip hajmi 2 MB dan kichik bo'lsin.");
+    return { path, uploadUrl: await signedUploadUrl("branding", path, data.contentType, 300, data.size) };
   });
 
-/** Public booking shows the logo over a CDN base URL; without one a short signed link is used. */
+/** Ommaviy bron sahifasi logotipni ham shu qisqa muddatli havola orqali oladi. */
 export const getBrandingLogoUrl = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ path: z.string().min(1).max(300) }).parse(input))
@@ -116,8 +117,8 @@ export const getBrandingLogoUrl = createServerFn({ method: "GET" })
     const { requireBusinessId } = await import("./tenant.server");
     const businessId = await requireBusinessId(context.supabase);
     if (!data.path.startsWith(`${businessId}/`)) throw new Error("Bu fayl sizning biznesingizga tegishli emas.");
-    const { publicObjectUrl, signedDownloadUrl } = await import("./storage.server");
-    return { url: publicObjectUrl("branding", data.path) ?? (await signedDownloadUrl("branding", data.path, 600)) };
+    const { signedDownloadUrl } = await import("./storage.server");
+    return { url: await signedDownloadUrl("branding", data.path, 600) };
   });
 
 export const removeBrandingLogo = createServerFn({ method: "POST" })
@@ -127,7 +128,7 @@ export const removeBrandingLogo = createServerFn({ method: "POST" })
     const businessId = await requireBusinessAdmin(context.supabase);
     if (!data.path.startsWith(`${businessId}/`)) throw new Error("Bu fayl sizning biznesingizga tegishli emas.");
     const { deleteObjects } = await import("./storage.server");
-    await deleteObjects("branding", [data.path]);
+    await deleteObjects("branding", [data.path], context.userId);
     return { ok: true };
   });
 

@@ -55,6 +55,8 @@ import { Route as AuthenticatedSuperAdminSettingsRouteImport } from './routes/_a
 import { Route as AuthenticatedSuperAdminUsersRouteImport } from './routes/_authenticated/super-admin.users'
 import { Route as ApiPublicPaymeRouteImport } from './routes/api/public/payme'
 import { Route as ApiPublicRemindersRouteImport } from './routes/api/public/reminders'
+import { Route as ApiStorageObjectRouteImport } from './routes/api/storage/object'
+import { Route as ApiStorageUploadRouteImport } from './routes/api/storage/upload'
 import { Route as AuthenticatedDashboardCrmModuleKeyRouteImport } from './routes/_authenticated/dashboard.crm.$moduleKey'
 import { Route as AuthenticatedDashboardCustomersIndexRouteImport } from './routes/_authenticated/dashboard.customers.index'
 import { Route as AuthenticatedDashboardCustomersIdRouteImport } from './routes/_authenticated/dashboard.customers.$id'
@@ -330,6 +332,16 @@ const ApiPublicRemindersRoute = ApiPublicRemindersRouteImport.update({
   path: '/api/public/reminders',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiStorageObjectRoute = ApiStorageObjectRouteImport.update({
+  id: '/api/storage/object',
+  path: '/api/storage/object',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiStorageUploadRoute = ApiStorageUploadRouteImport.update({
+  id: '/api/storage/upload',
+  path: '/api/storage/upload',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedDashboardCrmModuleKeyRoute =
   AuthenticatedDashboardCrmModuleKeyRouteImport.update({
     id: '/crm/$moduleKey',
@@ -428,6 +440,8 @@ export interface FileRoutesByFullPath {
   '/super-admin/users': typeof AuthenticatedSuperAdminUsersRoute
   '/api/public/payme': typeof ApiPublicPaymeRoute
   '/api/public/reminders': typeof ApiPublicRemindersRoute
+  '/api/storage/object': typeof ApiStorageObjectRoute
+  '/api/storage/upload': typeof ApiStorageUploadRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/super-admin/': typeof AuthenticatedSuperAdminIndexRoute
   '/dashboard/crm/$moduleKey': typeof AuthenticatedDashboardCrmModuleKeyRoute
@@ -481,6 +495,8 @@ export interface FileRoutesByTo {
   '/super-admin/users': typeof AuthenticatedSuperAdminUsersRoute
   '/api/public/payme': typeof ApiPublicPaymeRoute
   '/api/public/reminders': typeof ApiPublicRemindersRoute
+  '/api/storage/object': typeof ApiStorageObjectRoute
+  '/api/storage/upload': typeof ApiStorageUploadRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
   '/super-admin': typeof AuthenticatedSuperAdminIndexRoute
   '/dashboard/crm/$moduleKey': typeof AuthenticatedDashboardCrmModuleKeyRoute
@@ -539,6 +555,8 @@ export interface FileRoutesById {
   '/_authenticated/super-admin/users': typeof AuthenticatedSuperAdminUsersRoute
   '/api/public/payme': typeof ApiPublicPaymeRoute
   '/api/public/reminders': typeof ApiPublicRemindersRoute
+  '/api/storage/object': typeof ApiStorageObjectRoute
+  '/api/storage/upload': typeof ApiStorageUploadRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/_authenticated/super-admin/': typeof AuthenticatedSuperAdminIndexRoute
   '/_authenticated/dashboard/crm/$moduleKey': typeof AuthenticatedDashboardCrmModuleKeyRoute
@@ -597,6 +615,8 @@ export interface FileRouteTypes {
     | '/super-admin/users'
     | '/api/public/payme'
     | '/api/public/reminders'
+    | '/api/storage/object'
+    | '/api/storage/upload'
     | '/dashboard/'
     | '/super-admin/'
     | '/dashboard/crm/$moduleKey'
@@ -650,6 +670,8 @@ export interface FileRouteTypes {
     | '/super-admin/users'
     | '/api/public/payme'
     | '/api/public/reminders'
+    | '/api/storage/object'
+    | '/api/storage/upload'
     | '/dashboard'
     | '/super-admin'
     | '/dashboard/crm/$moduleKey'
@@ -707,6 +729,8 @@ export interface FileRouteTypes {
     | '/_authenticated/super-admin/users'
     | '/api/public/payme'
     | '/api/public/reminders'
+    | '/api/storage/object'
+    | '/api/storage/upload'
     | '/_authenticated/dashboard/'
     | '/_authenticated/super-admin/'
     | '/_authenticated/dashboard/crm/$moduleKey'
@@ -728,6 +752,8 @@ export interface RootRouteChildren {
   BSlugRoute: typeof BSlugRoute
   ApiPublicPaymeRoute: typeof ApiPublicPaymeRoute
   ApiPublicRemindersRoute: typeof ApiPublicRemindersRoute
+  ApiStorageObjectRoute: typeof ApiStorageObjectRoute
+  ApiStorageUploadRoute: typeof ApiStorageUploadRoute
   ApiPublicClickActionRoute: typeof ApiPublicClickActionRoute
   ApiPublicInstagramWebhookRoute: typeof ApiPublicInstagramWebhookRoute
   ApiPublicTelegramDailyReportRoute: typeof ApiPublicTelegramDailyReportRoute
@@ -1058,6 +1084,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicRemindersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/storage/object': {
+      id: '/api/storage/object'
+      path: '/api/storage/object'
+      fullPath: '/api/storage/object'
+      preLoaderRoute: typeof ApiStorageObjectRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/storage/upload': {
+      id: '/api/storage/upload'
+      path: '/api/storage/upload'
+      fullPath: '/api/storage/upload'
+      preLoaderRoute: typeof ApiStorageUploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/dashboard/crm/$moduleKey': {
       id: '/_authenticated/dashboard/crm/$moduleKey'
       path: '/crm/$moduleKey'
@@ -1277,6 +1317,8 @@ const rootRouteChildren: RootRouteChildren = {
   BSlugRoute: BSlugRoute,
   ApiPublicPaymeRoute: ApiPublicPaymeRoute,
   ApiPublicRemindersRoute: ApiPublicRemindersRoute,
+  ApiStorageObjectRoute: ApiStorageObjectRoute,
+  ApiStorageUploadRoute: ApiStorageUploadRoute,
   ApiPublicClickActionRoute: ApiPublicClickActionRoute,
   ApiPublicInstagramWebhookRoute: ApiPublicInstagramWebhookRoute,
   ApiPublicTelegramDailyReportRoute: ApiPublicTelegramDailyReportRoute,

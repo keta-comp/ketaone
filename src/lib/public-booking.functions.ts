@@ -110,12 +110,12 @@ export const getPublicBookingPage = createServerFn({ method: "GET" })
           .eq("business_id", business.id)
           .maybeSingle(),
       ]);
-      const { publicObjectUrl } = await import("./storage.server");
+      const { signedDownloadUrl } = await import("./storage.server");
       return {
         businessName: business.name,
         phone: settings?.phone ?? "",
         workingHours: settings?.working_hours ?? "",
-        logoUrl: settings?.logo_path ? (publicObjectUrl("branding", settings.logo_path) ?? "") : "",
+        logoUrl: settings?.logo_path ? await signedDownloadUrl("branding", settings.logo_path, 3600) : "",
         services: services ?? [],
         employees: ((employees ?? []) as Array<{ id: string; full_name: string; position: string | null }>).map(
           (row) => ({ id: row.id, full_name: row.full_name, position: row.position ?? "" }),

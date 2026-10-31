@@ -9,11 +9,12 @@ binding = "ASSETS"
 
 # Sirli qiymatlar `wrangler secret put` bilan qo'yiladi:
 #   NEON_DATABASE_URL, NEON_AUTH_ISSUER, TELEGRAM_BOT_TOKEN, LOVABLE_CRON_SECRET,
-#   S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, OPENROUTER_API_KEY (yoki GEMINI_API_KEY)
+#   OPENROUTER_API_KEY (yoki GEMINI_API_KEY)
+# Ixtiyoriy sir: STORAGE_URL_SECRET (bo'lmasa token NEON_DATABASE_URL'dan hisoblanadi).
+# Fayllar Neon bazasida (public.storage_objects) — bucket kalitlari kerak emas.
 # Oddiy (maxfiy bo'lmagan) qiymatlar esa shu yerda:
 [vars]
 PUBLIC_APP_URL = "https://ketaone.uz"
-S3_REGION = "auto"
 
 # Cloudflare cron trigger'i faqat `/` ga GET yuboradi, shuning uchun kunlik
 # hisobot va eslatmalarni .github/workflows/scheduler.yml chaqiradi.

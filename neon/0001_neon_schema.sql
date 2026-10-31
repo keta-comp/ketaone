@@ -3594,6 +3594,41 @@ CREATE UNIQUE INDEX IF NOT EXISTS payments_group_tuition_uniq
   ON public.payments (business_id, group_id, customer_id, period_month)
   WHERE group_id IS NOT NULL AND period_month IS NOT NULL AND status = 'pending';
 
+-- 20261101120000_storage_objects.sql
+-- Fayl saqlash Neon'da: S3 o'rniga bytea (src/lib/storage.server.ts).
+CREATE TABLE IF NOT EXISTS public.storage_objects (
+  bucket text NOT NULL CHECK (bucket IN ('branding', 'crm_attachments')),
+  path text NOT NULL,
+  business_id uuid NOT NULL REFERENCES public.businesses(id) ON DELETE CASCADE,
+  content_type text NOT NULL,
+  size_bytes bigint NOT NULL DEFAULT 0,
+  data bytea NOT NULL DEFAULT ''::bytea,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (bucket, path)
+);
+
+-- 20261101120000_storage_objects.sql
+CREATE INDEX IF NOT EXISTS storage_objects_business_idx
+  ON public.storage_objects(business_id, created_at DESC);
+
+-- 20261101120000_storage_objects.sql
+CREATE TRIGGER storage_objects_updated_at BEFORE UPDATE ON public.storage_objects
+  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+-- 20261101120000_storage_objects.sql
+ALTER TABLE public.storage_objects ENABLE ROW LEVEL SECURITY;
+
+-- 20261101120000_storage_objects.sql
+CREATE POLICY "storage_objects tenant" ON public.storage_objects FOR ALL TO app_user
+  USING (public.is_business_member(business_id)) WITH CHECK (public.is_business_member(business_id));
+
+-- 20261101120000_storage_objects.sql
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.storage_objects TO app_user;
+
+-- 20261101120000_storage_objects.sql
+GRANT ALL ON public.storage_objects TO app_service;
+
 -- ============ epilogue ============
 -- Migratsiyalar yaratgan barcha ketma-ketliklarga huquq (default privileges
 -- faqat keyingi obyektlarga ta'sir qiladi). Jadval huquqlari har migratsiyada
