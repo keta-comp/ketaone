@@ -27,10 +27,12 @@ import {
   fmtNumber,
 } from "@/components/app/super-admin-ui";
 import {
+  deletePlatformUser,
   exportPlatformExcel,
   getPlatformUser,
   listUsersFn,
-  sendPasswordResetFor,
+  previewUserDeletion,
+  setUserPassword,
   setUserRole,
   setUserStatus,
 } from "@/lib/super-admin.functions";
@@ -78,11 +80,24 @@ function UserDialog({ userId, onClose }: { userId: string; onClose: () => void }
   const load = useServerFn(getPlatformUser);
   const statusFn = useServerFn(setUserStatus);
   const roleFn = useServerFn(setUserRole);
-  const resetFn = useServerFn(sendPasswordResetFor);
+  const passwordFn = useServerFn(setUserPassword);
+  const previewFn = useServerFn(previewUserDeletion);
+  const deleteFn = useServerFn(deletePlatformUser);
+  const [newPassword, setNewPassword] = useState("");
+  const [danger, setDanger] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
 
   const { data, isPending, error, refetch } = useQuery({
     queryKey: ["super-admin-user", userId],
     queryFn: () => load({ data: { id: userId } }),
+  });
+
+  // Raqamlar faqat "Butunlay o‘chirish" bosilganda so'raladi — oddiy profil
+  // ko'rish uchun qo'shimcha so'rov ortmasligi kerak.
+  const deletion = useQuery({
+    queryKey: ["super-admin-user-deletion", userId],
+    enabled: danger,
+    queryFn: () => previewFn({ data: { id: userId } }),
   });
 
   const invalidate = () => {
@@ -113,11 +128,28 @@ function UserDialog({ userId, onClose }: { userId: string; onClose: () => void }
     onError: (e) => toast.error(e instanceof Error ? e.message : t("Amal bajarilmadi")),
   });
 
-  const sendReset = useMutation({
-    mutationFn: () => resetFn({ data: { id: userId } }),
-    onSuccess: () =>
-      toast.success(t("Parolni tiklash havolasi yuborildi. Email kelmasa SMTP sozlamalarini tekshiring.")),
-    onError: (e) => toast.error(e instanceof Error ? e.message : t("Yuborilmadi")),
+  const setPassword = useMutation({
+    mutationFn: (password: string) => passwordFn({ data: { id: userId, password } }),
+    onSuccess: () => {
+      toast.success(t("Parol almashtirildi — eski sessiyalar ishlashda davom etadi."));
+      setNewPassword("");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : t("Parol almashtirilmadi")),
+  });
+
+  const remove = useMutation({
+    mutationFn: () => deleteFn({ data: { id: userId, confirm: confirmText } }),
+    onSuccess: (result) => {
+      toast.success(
+        t("Hisob o‘chirildi. {v0} ta biznes va {v1} ta a’zolik ham ketdi.", {
+          v0: result?.businessesDeleted ?? 0,
+          v1: result?.membershipsDeleted ?? 0,
+        }),
+      );
+      void queryClient.invalidateQueries({ queryKey: ["super-admin-users"] });
+      onClose();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : t("O‘chirilmadi")),
   });
 
   return (
@@ -126,7 +158,7 @@ function UserDialog({ userId, onClose }: { userId: string; onClose: () => void }
         <DialogHeader>
           <DialogTitle>{t("Foydalanuvchi profili")}</DialogTitle>
           <DialogDescription>
-            {t("Parol va maxfiy kalitlar hech qachon ko‘rsatilmaydi — faqat tiklash havolasi yuboriladi.")}
+            {t("Parol va maxfiy kalitlar hech qachon ko‘rsatilmaydi — faqat yangi parol belgilanadi.")}
           </DialogDescription>
         </DialogHeader>
 
@@ -189,9 +221,77 @@ function UserDialog({ userId, onClose }: { userId: string; onClose: () => void }
                   {t("Bloklash")}
                 </Button>
               )}
-              <Button size="sm" variant="outline" onClick={() => sendReset.mutate()}>
-                <KeyRound className="size-4" /> {t("Parolni tiklash havolasi")}
-              </Button>
+            </div>
+
+            <div className="space-y-2 rounded-lg border p-3">
+              <p className="text-sm font-medium">{t("Parolni almashtirish")}</p>
+              <p className="text-xs text-muted-foreground">
+                {t("Email orqali tiklash sozlanmagan — administrator yangi parolni qo‘lda belgilaydi.")}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Input
+                  type="password"
+                  className="max-w-64"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder={t("Yangi parol (kamida 8 belgi)")}
+                />
+                <Button
+                  size="sm"
+                  disabled={newPassword.length < 8 || setPassword.isPending}
+                  onClick={() => setPassword.mutate(newPassword)}
+                >
+                  <KeyRound className="size-4" /> {t("Saqlash")}
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-2 rounded-lg border border-destructive/40 p-3">
+              {danger ? (
+                deletion.isPending ? (
+                  <LoadingState />
+                ) : deletion.error ? (
+                  <ErrorState error={deletion.error} onRetry={() => void deletion.refetch()} />
+                ) : deletion.data ? (
+                  <>
+                    <p className="text-sm font-medium text-destructive">{t("Butunlay o‘chirish")}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {t("O‘chirilsa sessiyalar, parol yozuvi va profil ketadi ({v0} ta a’zolik). U {v1} ta biznesning egasi bo‘lsa, har bir organizatsiyaning barcha maʼlumoti — mijozlar, bronlar, to‘lovlar, fayllar — qaytarib bo‘lmaslik darajasida yo‘qoladi.", {
+                        v0: deletion.data.memberships,
+                        v1: deletion.data.businessesOwned,
+                      })}
+                    </p>
+                    <Input
+                      value={confirmText}
+                      onChange={(e) => setConfirmText(e.target.value)}
+                      placeholder={t("Tasdiq uchun O‘CHIRISH deb yozing")}
+                    />
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        disabled={confirmText !== "O‘CHIRISH" || remove.isPending}
+                        onClick={() => remove.mutate()}
+                      >
+                        {t("Ha, o‘chirilsin")}
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => setDanger(false)}>
+                        {t("Bekor qilish")}
+                      </Button>
+                    </div>
+                  </>
+                ) : null
+              ) : (
+                <>
+                  <p className="text-sm font-medium">{t("Xavfli hudud")}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t("O‘chirish qaytarilmaydi. Foydalanuvchini vaqtincha to‘xtatish uchun “Bloklash” yetarli.")}
+                  </p>
+                  <Button size="sm" variant="destructive" onClick={() => setDanger(true)}>
+                    {t("Butunlay o‘chirish")}
+                  </Button>
+                </>
+              )}
             </div>
 
             {data.audit.length ? (

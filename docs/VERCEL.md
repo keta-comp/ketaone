@@ -43,10 +43,15 @@ yoki kalit talab qilinmaydi. Jadval `scripts/neon-apply.mjs` orqali qo'llanadi
 oshmasligi uchun fayllar 3 MB'lik bo'laklar bilan yuklanadi: logo 2 MB,
 biriktirma 15 MB gacha.
 
-Ro'yxatdan o'tishda Neon Auth email yuborishi uchun Neon dashboard →
-Authentication → Email'da SMTP sozlanadi (yoki default yetkazib beruvchi).
-Parolni tiklash havolasi `{PUBLIC_APP_URL}/auth?mode=recover` manziliga
-qaytadi — `PUBLIC_APP_URL` to'g'ri bo'lishi shart.
+**Email orqali parol tiklash hozir ishlamaydi.** Neon Auth'da email transporti
+sozlanmagan, shuning uchun hosting'da `/forget-password` route'i umuman mavjud
+emas (404) — ilova bu tugmani ko'rsatmaydi. Parolni yozib qo'ygan kimsa uchun
+yo'l bitta: Super Admin paneli → Foydalanuvchilar → «Parolni almashtirish»
+(`node scripts/super-admin.mjs --grant=<email> --apply` administratorga Neon
+Auth `role = 'admin'`ni ham beradi — parol endpointi shu rolni tekshiradi).
+Neon dashboard → Authentication → Email'da SMTP soqlsa, tiklash oqimini qayta
+qo'shish mumkin; havola `{PUBLIC_APP_URL}/auth?mode=recover`ga qaytadi,
+`PUBLIC_APP_URL` to'g'ri bo'lishi shart.
 
 ## 3. Domen
 

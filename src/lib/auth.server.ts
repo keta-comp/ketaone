@@ -142,16 +142,13 @@ export async function signOut() {
   deleteCookie(COOKIE, { path: "/" });
 }
 
-export async function requestPasswordReset(email: string, redirectTo: string) {
-  const response = await authFetch("/forget-password", {
-    method: "POST",
-    body: { email, redirectTo },
-  });
-  if (response.status >= 400) {
-    throw new Error(upstreamMessage(response.body, "Tiklash havolasi yuborilmadi."));
-  }
-}
-
+/** Parolni token bilan yangilash.
+ *
+ *  "Havola yuborish" funksiyasi o'chirildi: Neon Auth hosting'da
+ *  `/forget-password` route'i mavjud emas (404), chunki email transporti
+ *  sozlanmagan. Xabari kelmaydigan tugmani ko'rsatish — production'da
+ *  ishlamaydigan funksiya demo qilish bo'lardi. Parolni admin belgilaydi
+ *  (`adminSetPassword`), bu funksiya esa token qo'lga topsa ishlaydi. */
 export async function resetPassword(token: string, newPassword: string) {
   const response = await authFetch("/reset-password", {
     method: "POST",
@@ -159,6 +156,30 @@ export async function resetPassword(token: string, newPassword: string) {
   });
   if (response.status >= 400) {
     throw new Error(upstreamMessage(response.body, "Parol yangilanmadi."));
+  }
+}
+
+/** Administrator parolni o'zi belgilaydi.
+ *
+ *  `/admin/set-user-password` mavjud — u chaqiruvchining sessiyasida
+ *  `role = "admin"` bo'lishini talab qiladi, shuning uchun `--grant` shu rolni
+ *  ham yozadi. */
+export async function adminSetPassword(userId: string, newPassword: string) {
+  const cookie = getCookie(COOKIE);
+  if (!cookie) throw new Error("Sessiya topilmadi — qaytadan kiring.");
+  const response = await authFetch("/admin/set-user-password", {
+    method: "POST",
+    body: { userId, newPassword },
+    cookie,
+  });
+  if (response.status === 404)
+    throw new Error("Neon Auth admin plagini yoqish kerak — parol almashtirish endpointi topilmadi.");
+  if (response.status === 403)
+    throw new Error(
+      "Sizning hisobingizda admin roli yo'q: node scripts/super-admin.mjs --grant=<email> --apply ni qayta ishga tushiring.",
+    );
+  if (response.status >= 400) {
+    throw new Error(upstreamMessage(response.body, "Parol almashtirilmadi."));
   }
 }
 

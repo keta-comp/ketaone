@@ -3,17 +3,11 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
-import { BrandMark } from "@/components/app/brand";
+import { BrandMark, CONTACT_EMAIL, CONTACT_EMAIL_HREF } from "@/components/app/brand";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  applyPasswordReset,
-  getAuthSession,
-  sendPasswordReset,
-  signIn,
-  signUp,
-} from "@/lib/auth.functions";
+import { applyPasswordReset, getAuthSession, signIn, signUp } from "@/lib/auth.functions";
 import { recordFailedLogin, recordLogin, recordRegistration } from "@/lib/session.functions";
 import { t } from "@/lib/i18n";
 import { LanguageSwitcher } from "@/components/app/LanguageSwitcher";
@@ -86,7 +80,7 @@ function AuthPage() {
       if (mode === "recover") {
         if (!resetToken) {
           throw new Error(
-            t("Tiklash havolasi topilmadi. Emaildagi havolani shu brauzerda qayta oching."),
+            t("Tiklash havolasi topilmadi. Email orqali tiklash sozlanmagan — administrator bilan bog‘laning."),
           );
         }
         if (password !== confirmPassword) throw new Error(t("Parollar mos kelmadi"));
@@ -121,24 +115,6 @@ function AuthPage() {
       navigate({ to: redirectTo ?? "/dashboard" });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : t("Kirishda xatolik yuz berdi"));
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const sendResetLink = async () => {
-    if (!email.trim()) {
-      toast.error(t("Avval emailingizni kiriting"));
-      return;
-    }
-    setBusy(true);
-    try {
-      await sendPasswordReset({
-        data: { email: email.trim(), redirectTo: `${window.location.origin}/auth?mode=recover` },
-      });
-      toast.success(t("Tiklash havolasi yuborildi. Kelmasa spam papkini tekshiring."));
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : t("Havola yuborilmadi"));
     } finally {
       setBusy(false);
     }
@@ -277,7 +253,7 @@ function AuthPage() {
           )}
           {mode === "recover" && !resetToken && (
             <p className="text-sm text-destructive">
-              {t("Tiklash havolasi topilmadi. Emaildagi havolani shu brauzerda qayta oching.")}
+              {t("Tiklash havolasi topilmadi. Email orqali tiklash sozlanmagan — administrator bilan bog‘laning.")}
             </p>
           )}
           <Button type="submit" className="w-full" disabled={busy}>
@@ -290,14 +266,12 @@ function AuthPage() {
                   : t("Ro‘yxatdan o‘tish")}
           </Button>
           {mode === "login" && !adminOnly && (
-            <button
-              type="button"
-              onClick={() => void sendResetLink()}
-              disabled={busy}
-              className="w-full text-center text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+            <a
+              href={CONTACT_EMAIL_HREF}
+              className="block w-full text-center text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
             >
-              {t("Parolni unutdingizmi?")}
-            </button>
+              {t("Parolni unutdingizmi? {v0} manziliga yozing — administrator yangi parolni qo‘lda belgilaydi.", { v0: CONTACT_EMAIL })}
+            </a>
           )}
         </form>
 

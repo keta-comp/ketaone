@@ -277,9 +277,16 @@ export const setUserRole = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-export const sendPasswordResetFor = createServerFn({ method: "POST" })
+/** Administrator parolni qo'lda almashtiradi.
+ *
+ *  Email orqali tiklash bu deployment'da mavjud emas (Neon Auth'da
+ *  `/forget-password` route'i yo'q), shuning uchun yagona haqiqiy yo'l — admin
+ *  plagidagi set-user-password. Chaqiruvchi sessiyasi Neon Auth'ga uzatiladi. */
+export const setUserPassword = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .inputValidator((input: unknown) =>
+    z.object({ id: z.string().uuid(), password: z.string().min(8).max(200) }).parse(input),
+  )
   .handler(async ({ data, context }) => {
     const actor = await requireSuperAdmin(context);
     const { supabaseAdmin } = await import("@/lib/platform.server");
@@ -287,30 +294,68 @@ export const sendPasswordResetFor = createServerFn({ method: "POST" })
 
     const { data: target, error: readError } = await supabaseAdmin
       .from("profiles")
-      .select("email")
+      .select("email, full_name")
       .eq("id", data.id)
       .maybeSingle();
     if (readError) throw new Error(readError.message);
-    if (!target?.email) throw new Error("Email topilmadi");
+    if (!target) throw new Error("Foydalanuvchi topilmadi");
 
-    // Password itself is never readable — only a reset link can be issued.
-    // The link has to land on the app's own recovery screen, otherwise the user
-    // receives a token they cannot use.
-    const { requestOrigin } = await import("./request.server");
-    const { requestPasswordReset } = await import("./auth.server");
-    const origin = requestOrigin() || "http://localhost:8080";
-    await requestPasswordReset(target.email, `${origin}/auth?mode=recover`);
+    const { adminSetPassword } = await import("./auth.server");
+    await adminSetPassword(data.id, data.password);
 
+    // Parol matni hech qayerda saqlanmaydi — faqat fakt yoziladi.
     await logAudit({
       actorUserId: context.userId,
       actorEmail: actor.email,
       actorKind: "super_admin",
-      action: "password_reset_sent",
+      action: "user_password_set",
       targetType: "user",
       targetId: data.id,
-      targetLabel: target.email,
+      targetLabel: target.email ?? target.full_name ?? null,
     });
     return { ok: true };
+  });
+
+export const previewUserDeletion = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await requireSuperAdmin(context);
+    const { previewAccountDeletion } = await import("./super-admin.server");
+    return previewAccountDeletion(data.id);
+  });
+
+/** O'chirish qaytarib bo'lmaydi: bloklangan hisob kirishni yo'qotadi, o'chirilgan
+ *  hisob esa butun organizatsiyasi bilan ketadi. Shuning uchun kalit so'z bilan
+ *  tasdiq, o'zini va oxirgi administratorni o'chirish taqiqlanadi. */
+export const deletePlatformUser = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ id: z.string().uuid(), confirm: z.string() }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const actor = await requireSuperAdmin(context);
+    if (data.id === context.userId) throw new Error("O‘z hisobingizni o‘chira olmaysiz");
+    if (data.confirm !== "O‘CHIRISH") throw new Error("Tasdiq matni mos kelmadi");
+    const { logAudit } = await import("./audit.server");
+    const { previewAccountDeletion, deleteAccount } = await import("./super-admin.server");
+
+    const preview = await previewAccountDeletion(data.id);
+    if (preview.isPlatformAdmin && preview.adminsTotal <= 1)
+      throw new Error("Bu — platformadagi oxirgi administrator, uni o'chirish darvozani yopadi");
+
+    const removed = await deleteAccount(data.id);
+    await logAudit({
+      actorUserId: context.userId,
+      actorEmail: actor.email,
+      actorKind: "super_admin",
+      action: "user_deleted",
+      targetType: "user",
+      targetId: data.id,
+      targetLabel: preview.email,
+      metadata: { ...removed, businessesOwned: preview.businessesOwned },
+    });
+    return { ok: true, ...removed };
   });
 
 export const getSaasAnalytics = createServerFn({ method: "GET" })

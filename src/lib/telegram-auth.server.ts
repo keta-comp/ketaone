@@ -7,8 +7,8 @@
  * tasdiqlangan email va userId turadi). Bosqich 15 daqiqada eskiradi, urinishlar
  * soni cheklangan.
  */
-import { authenticateWithoutSession, requestPasswordReset } from "./auth.server";
-import { deleteMessage, escapeHtml, webhookBaseUrl } from "./telegram.server";
+import { authenticateWithoutSession } from "./auth.server";
+import { deleteMessage, escapeHtml } from "./telegram.server";
 import {
   MAX_LOGIN_ATTEMPTS,
   clearBotState,
@@ -231,7 +231,7 @@ async function handleFailedAttempt(input: {
     input.token,
     input.chatId,
     `⛔️ Email yoki parol xato. Qolgan urinishlar: <b>${MAX_LOGIN_ATTEMPTS - input.attempts}</b>.\n\n` +
-      "Parolni unutdingizmi? <b>/reset</b> yozing — tiklash havolasi emailingizga yuboriladi.",
+      "Parolni unutdingizmi? «🔗 Xavfsiz havola orqali» tugmasi parol talab qilmaydi.",
     CANCEL_BUTTON,
   );
 }
@@ -313,17 +313,14 @@ export async function handleAuthText(input: {
   if (isMainMenuText(text)) return false;
 
   if (text.startsWith("/reset")) {
-    const email = state.data.email ?? (EMAIL_PATTERN.test(text.slice(6).trim()) ? text.slice(6).trim() : "");
-    if (!email) {
-      await sendMessage(token, chatId, "Avval email yuboring, so‘ng <b>/reset</b> deb yozing.");
-      return true;
-    }
-    try {
-      await requestPasswordReset(email, `${webhookBaseUrl()}/auth?mode=reset`);
-      await sendMessage(token, chatId, "📧 Tiklash havolasi emailingizga yuborildi — pochta qutingizni tekshiring.");
-    } catch {
-      await sendMessage(token, chatId, "⚠️ Tiklash havolasi yuborilmadi. Email manzilini tekshirib qayta urinib ko‘ring.");
-    }
+    await sendMessage(
+      token,
+      chatId,
+      "🔑 Email orqali parol tiklash bu serverda yo‘q — Neon Auth email transporti sozlanmagan, hech qanday havola yuborilmaydi.\n\n" +
+        "Parolsiz kirish: «🔗 Xavfsiz havola orqali» tugmasini bosing.\n" +
+        "Yangi parol kerak bo‘lsa: keta.comp.dev@gmail.com ga yozing — administrator parolni qo‘lda belgilaydi.",
+      CANCEL_BUTTON,
+    );
     return true;
   }
 

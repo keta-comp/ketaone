@@ -27,7 +27,10 @@ describe("super-admin darvozasi", () => {
   test("skript yozishlarni --apply bilan himoya qiladi", () => {
     expect(script).toContain("insert into public.platform_admins");
     expect(script).toContain("delete from public.platform_admins");
-    expect(script.match(/if \(!apply\)/g) ?? []).toHaveLength(2);
+    // Grant va revoke — faqat --apply; purge — --apply + --confirm=<email>.
+    expect(script.match(/else if \(!apply\) \{/g) ?? []).toHaveLength(2);
+    expect(script).toContain("if (!apply || confirmEmail !== purgeEmail)");
+    expect(script).toContain('delete from neon_auth."user" where id =');
   });
 
   test("tekshiruv RLS ostidagi is_super_admin() orqali qilinadi", () => {
@@ -99,5 +102,62 @@ describe("Panel bo'sh qolmasligi", () => {
     expect(audit).toMatch(/console\.error\("\[audit\] failed to write log", error\);/);
     expect(audit).toContain('route: "audit-log-write"');
     expect(audit).toMatch(/level: "warning"/);
+  });
+});
+
+describe("Parolni admin belgilaydi, hisobni o'chirish qaytarilmaydi", () => {
+  const users = readFileSync("src/routes/_authenticated/super-admin.users.tsx", "utf8");
+  const telegram = readFileSync("src/lib/telegram-auth.server.ts", "utf8");
+  const authFns = readFileSync("src/lib/auth.functions.ts", "utf8");
+
+  test("email orqali tiklash chaqiruvi hech qayerda qolmaydi", () => {
+    expect(auth).not.toContain('authFetch("/forget-password"');
+    expect(auth).not.toContain("export async function requestPasswordReset");
+    expect(authFns).not.toContain("sendPasswordReset");
+    expect(telegram).not.toContain("requestPasswordReset");
+    // Bot endi parolni tiklashni va'da qilmaydi — parolsiz havolani ko'rsatadi.
+    expect(telegram).not.toContain("tiklash havolasi emailingizga yuboriladi");
+    expect(telegram).toContain("Email orqali parol tiklash bu serverda yo‘q");
+  });
+
+  test("set-user-password endpointi va uning 403/404 javoblari", () => {
+    const fn = auth.slice(auth.indexOf("export async function adminSetPassword"));
+    expect(fn).toContain('authFetch("/admin/set-user-password"');
+    expect(fn).toMatch(/status === 404/);
+    expect(fn).toMatch(/status === 403/);
+    expect(fn).toContain("--grant=");
+  });
+
+  test("--grant Neon Auth admin rolini ham yozadi, --revoke uni qaytaradi", () => {
+    const grant = script.slice(script.indexOf("findUser(grantEmail)"));
+    expect(grant).toContain(`set role = 'admin'`);
+    expect(grant).toContain(`if (roleAfter !== "admin")`);
+    const revoke = script.slice(script.indexOf("findUser(revokeEmail)"));
+    expect(revoke).toContain(`set role = 'user'`);
+  });
+
+  test("o'chirish faqat kalit so'z bilan va oxirgi adminni himoya qiladi", () => {
+    const del = functions.slice(functions.indexOf("export const deletePlatformUser"));
+    expect(del).toContain('if (data.id === context.userId) throw new Error');
+    expect(del).toContain('data.confirm !== "O‘CHIRISH"');
+    expect(del).toContain("preview.adminsTotal <= 1");
+    expect(del).toContain("deleteAccount(data.id)");
+    expect(del).toContain('action: "user_deleted"');
+  });
+
+  test("hisob o'chirish faqat auth qatorini o'chiradi, qolganini CASCADE yechadi", () => {
+    const del = server.slice(server.indexOf("export async function deleteAccount"));
+    expect(del).toContain('delete from neon_auth."user" where id = ${userId}::uuid returning id');
+    expect(del).toContain("if (removed.length === 0)");
+    // Raqamlar o'chirish bilan bir tranzaksiyada: aks holda hisobot 0 ko'rsatardi.
+    expect(del).toContain("businessesDeleted:");
+    expect(server).toContain("export async function previewAccountDeletion");
+  });
+
+  test("dialog parolni kamida 8 belgi va O‘CHIRISH yozilganda qabul qiladi", () => {
+    expect(users).toContain("disabled={newPassword.length < 8 || setPassword.isPending}");
+    expect(users).toContain(`disabled={confirmText !== "O‘CHIRISH" || remove.isPending}`);
+    expect(users).toContain("previewUserDeletion");
+    expect(users).not.toContain("sendPasswordResetFor");
   });
 });

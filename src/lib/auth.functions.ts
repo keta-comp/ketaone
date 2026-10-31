@@ -69,16 +69,6 @@ export const getAuthSession = createServerFn({ method: "GET" }).handler(async ()
   return (await currentSession()) ?? null;
 });
 
-export const sendPasswordReset = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) =>
-    z.object({ email: emailSchema, redirectTo: z.string().url().max(500) }).parse(input),
-  )
-  .handler(async ({ data }) => {
-    const { requestPasswordReset } = await import("./auth.server");
-    await requestPasswordReset(data.email, data.redirectTo);
-    return { ok: true };
-  });
-
 export const applyPasswordReset = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z.object({ token: z.string().min(10).max(500), password: passwordSchema }).parse(input),

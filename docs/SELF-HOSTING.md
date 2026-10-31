@@ -78,12 +78,35 @@ node scripts/super-admin.mjs --list                              # kimlar admin 
 node scripts/super-admin.mjs --grant=SIZNING@EMAIL.COM           # SINOV: o'zgarishni ko'rsatadi
 node scripts/super-admin.mjs --grant=SIZNING@EMAIL.COM --apply   # haqiqatan yozadi
 node scripts/super-admin.mjs --revoke=SIZNING@EMAIL.COM --apply  # orqaga qaytaradi
+node scripts/super-admin.mjs --purge=MIJOZ@EMAIL.COM             # SINOV: nima yo'qoladi
+node scripts/super-admin.mjs --purge=MIJOZ@EMAIL.COM --apply --confirm=MIJOZ@EMAIL.COM
 ```
 
 Skript `NEON_DATABASE_URL`ni `.env.local`dan (yoki `--envfile=` bilan berilgan
 fayldan) oladi, hech qanday maxfiy qatorni chop etmaydi va yozishdan keyin
 `is_super_admin()`ni RLS ostida qayta chaqirib, ruxsat haqiqatan ochilganini
 tekshiradi. Shundan keyin `/super-admin` bo'limi shu hisobga ochiladi.
+
+`--grant` ikki narsani yozadi: `platform_admins` qatori (sahifa darvozasi) va
+`neon_auth."user".role = 'admin'`. Ikkinchisi shart — Neon Auth'ning
+`/admin/set-user-password` endpointi sessiyadagi shu rolga qaraydi, rolsiz
+panel «Parolni almashtirish»da 403 oladi. `--revoke` ikkalasini orqaga qaytaradi.
+
+**Email orqali parol tiklash ishlamaydi:** Neon Auth hosting'da
+`/forget-password` route'i yo'q (email transporti sozlanmagan), shuning uchun
+ilova tiklash havolasini va'da qilmaydi. Parolni administrator panel orqali
+qo'lda belgilaydi; eski sessiyalar bunda yopilmaydi — kirishni to'xtatish kerak
+bo'lsa «Bloklash»dan foydalaning (u `neon_auth.user.banned`ni yozadi va
+sessiyalari o'chiriladi).
+
+**O'chirish qaytarilmaydi.** `--purge` (yoki paneldagi «Xavfli hudud»)
+`neon_auth."user"` qatorini o'chiradi, qolganini sxemadagi CASCADE hal qiladi:
+profil, sessiyalar, parol yozuvi, a'zoliklar — va u biror biznesning egasi
+bo'lsa, o'sha organizatsiyaning barcha ma'lumoti (mijozlar, bronlar, to'lovlar,
+ish haqi, fayllar) ham ketadi. Shuning uchun skript avval sanagichni chop
+etadi, emailni `--confirm` bilan takrorlashni talab qiladi va oxirgi
+administratorni o'chirishdan bosh tortadi. Panel xuddi shu hisob-kitobni
+ko'rsatadi va «O‘CHIRISH» yozilmasa tugmani yoqmaydi.
 
 ## 5. Telegram webhook va /buyruqlar
 

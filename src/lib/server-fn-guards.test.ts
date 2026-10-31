@@ -21,7 +21,8 @@ const PUBLIC_WRITE_FNS = new Set([
   "auth.functions.ts:signUp",
   "auth.functions.ts:signIn",
   "auth.functions.ts:signOut",
-  "auth.functions.ts:sendPasswordReset",
+  // Parolni tiklash faqat token orqali: email transporti sozlanmagan,
+  // shuning uchun "havola yuborish" funksiyesi o'chirildi.
   "auth.functions.ts:applyPasswordReset",
   // Auth quvurining o'zi yozadigan xatti-harakat jadvallari (sessiya yo'q).
   "session.functions.ts:recordLogin",

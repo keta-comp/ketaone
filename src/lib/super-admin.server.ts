@@ -489,6 +489,49 @@ export async function applyAccountBan(userId: string, banned: boolean): Promise<
   });
 }
 
+/** O'chirishdan oldin "nima ketadi" raqamlari.
+ *
+ *  `businesses.owner_id → CASCADE`, `businesses` esa yana 41 jadvalga cascade —
+ *  ya'ni egasini o'chirish uning organizatsiyasini to'liq yo'q qiladi. Shu
+ *  sababli raqamlar foydalanuvchiga ko'rsatilishi shart. */
+export async function previewAccountDeletion(userId: string) {
+  return ownerSql().begin(async (tx) => {
+    const [account] = await tx`select email, name from neon_auth."user" where id = ${userId}::uuid`;
+    if (!account) throw new Error("Hisob topilmadi (neon_auth.user)");
+    const [stats] = await tx`
+      select (select count(*)::int from public.businesses       where owner_id = ${userId}::uuid) as owned,
+             (select count(*)::int from public.business_members where user_id  = ${userId}::uuid) as memberships,
+             (select count(*)::int from public.platform_admins  where user_id  = ${userId}::uuid) as admin_rows,
+             (select count(*)::int from public.platform_admins) as admins_total`;
+    return {
+      email: account["email"] as string,
+      name: account["name"] as string | null,
+      businessesOwned: stats?.["owned"] ?? 0,
+      memberships: stats?.["memberships"] ?? 0,
+      isPlatformAdmin: (stats?.["admin_rows"] ?? 0) > 0,
+      adminsTotal: stats?.["admins_total"] ?? 0,
+    };
+  });
+}
+
+/** Hisobni butunlay o'chirish — sessiyalar, parol yozuvi, profil va (eger u
+ *  biznes egasi bo'lsa) organizatsiya ma'lumoti CASCADE bilan ketadi.
+ *  Raqamlar o'chirish bilan bir tranzaksiyada olinadi, aks holda "nechta
+ *  biznes o'chdi" hisoboti keyingi so'rovda 0 ko'rsatardi. */
+export async function deleteAccount(userId: string) {
+  return ownerSql().begin(async (tx) => {
+    const [stats] = await tx`
+      select (select count(*)::int from public.businesses       where owner_id = ${userId}::uuid) as owned,
+             (select count(*)::int from public.business_members where user_id  = ${userId}::uuid) as memberships`;
+    const removed = await tx`delete from neon_auth."user" where id = ${userId}::uuid returning id`;
+    if (removed.length === 0) throw new Error("Hisob topilmadi (neon_auth.user)");
+    return {
+      businessesDeleted: stats?.["owned"] ?? 0,
+      membershipsDeleted: stats?.["memberships"] ?? 0,
+    };
+  });
+}
+
 export async function buildSaasAnalytics(from: string, to: string) {
   const results = await Promise.all([
     supabaseAdmin.from("businesses").select("id, created_at, status"),
