@@ -27,6 +27,14 @@ const AI_STEPS = [
   "Dashboard tayyorlanmoqda...",
 ];
 
+/** Klubda pipeline va Dashboard yo'q — tayyorlanayotgan narsa shu 4 bo'limning o'zi. */
+const CLUB_AI_STEPS = [
+  "AI biznesingiz uchun CRMni tayyorlamoqda...",
+  "Dastur va mobil ilova bo'limlari qurilmoqda...",
+  "Telegram bildirishnomalari sozlanmoqda...",
+  "Bron va qabul sozlamalari tayyorlanmoqda...",
+];
+
 const STEPS = ["Biznes", "Soha", "Sozlash", "Yaratilmoqda", "Tayyor"];
 
 /** Where the wizard stopped — used to resume after a closed tab or a slow connection. */
@@ -109,6 +117,8 @@ function Onboarding() {
   const industry = draft.industry;
   const selectedType = draft.presetId ?? resolvePresetId(industry);
   const chosenPreset = presetForId(selectedType);
+  // Klub presetlarida Dashboard, filial va crm-builder yo'q — menyuda faqat 4 bo'lim qoladi.
+  const isClub = Boolean(chosenPreset?.allowedRoutes);
 
   useEffect(() => {
     if (step !== 4) return;
@@ -193,7 +203,9 @@ function Onboarding() {
                 >
                   {passed ? "✓" : n}
                 </span>
-                <span className={cn("hidden lg:inline", !active && "text-muted-foreground")}>{t(label)}</span>
+                <span className={cn("hidden lg:inline", !active && "text-muted-foreground")}>
+                  {t(label)}
+                </span>
                 {n < STEPS.length && <span className="h-px flex-1 bg-border" />}
               </li>
             );
@@ -203,7 +215,9 @@ function Onboarding() {
         {step === 1 && (
           <section className="clay-panel flex flex-col gap-5 p-6">
             <div>
-              <h1 className="font-display text-xl font-semibold">{t("Biznesingiz haqida ma'lumot bering")}</h1>
+              <h1 className="font-display text-xl font-semibold">
+                {t("Biznesingiz haqida ma'lumot bering")}
+              </h1>
               <p className="mt-1 text-sm text-muted-foreground">
                 {t("Ixtiyoriy maydonlar — hozir tashlab, keyinroq to‘ldirishingiz mumkin.")}
               </p>
@@ -218,11 +232,15 @@ function Onboarding() {
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="biznes-tavsif">{t("Biznesingiz haqida qisqacha ma'lumot bering")}</Label>
+              <Label htmlFor="biznes-tavsif">
+                {t("Biznesingiz haqida qisqacha ma'lumot bering")}
+              </Label>
               <Textarea
                 id="biznes-tavsif"
                 rows={5}
-                placeholder={t("Masalan: Biz stomatologiya klinikasimiz. 3 ta shifokorimiz bor va mijozlar asosan Telegram orqali murojaat qiladi.")}
+                placeholder={t(
+                  "Masalan: Biz stomatologiya klinikasimiz. 3 ta shifokorimiz bor va mijozlar asosan Telegram orqali murojaat qiladi.",
+                )}
                 value={draft.description}
                 onChange={(e) => setField("description", e.target.value)}
               />
@@ -239,7 +257,9 @@ function Onboarding() {
         {step === 2 && (
           <section className="clay-panel flex flex-col gap-5 p-6">
             <div>
-              <h1 className="font-display text-xl font-semibold">{t("Biznesingiz qaysi sohada?")}</h1>
+              <h1 className="font-display text-xl font-semibold">
+                {t("Biznesingiz qaysi sohada?")}
+              </h1>
               <p className="mt-1 text-sm text-muted-foreground">
                 {t("Shunga qarab modullar, pipeline va maydonlar tayyorlanadi.")}
               </p>
@@ -255,7 +275,8 @@ function Onboarding() {
                   }}
                   className={cn(
                     "flex min-h-20 flex-col items-center justify-center gap-1 rounded-2xl border border-transparent bg-card px-3 py-4 text-center text-sm font-medium transition-all hover:shadow-clay",
-                    industry === option.key && "clay-raised border-primary/40 ring-2 ring-primary/30",
+                    industry === option.key &&
+                      "clay-raised border-primary/40 ring-2 ring-primary/30",
                   )}
                 >
                   <span className="text-2xl">{option.emoji}</span>
@@ -306,7 +327,9 @@ function Onboarding() {
                 {t("Orqaga")}
               </Button>
               <Button
-                disabled={!industry || (industry === "boshqa" && draft.otherLabel.trim().length < 3)}
+                disabled={
+                  !industry || (industry === "boshqa" && draft.otherLabel.trim().length < 3)
+                }
                 onClick={() => setField("step", 3)}
               >
                 {t("Davom etish")}
@@ -349,7 +372,13 @@ function Onboarding() {
               </div>
             </div>
             <p className="text-sm text-muted-foreground">
-              {t("Filiallar, xizmatlar va onlayn qabulni CRM tayyor bo‘lgach ham sozlash mumkin.")}
+              {isClub
+                ? t(
+                    "Dastur havolalari, Telegram va bron sozlamalarini CRM tayyor bo‘lgach ham o‘zgartirish mumkin.",
+                  )
+                : t(
+                    "Filiallar, xizmatlar va onlayn qabulni CRM tayyor bo‘lgach ham sozlash mumkin.",
+                  )}
             </p>
             <div className="flex items-center justify-between">
               <Button variant="outline" onClick={() => setField("step", 2)}>
@@ -370,7 +399,9 @@ function Onboarding() {
                 {industryEmoji}
               </span>
             </div>
-            <p className="font-display text-lg font-semibold">{AI_STEPS[aiStep]}</p>
+            <p className="font-display text-lg font-semibold">
+              {(isClub ? CLUB_AI_STEPS : AI_STEPS)[aiStep]}
+            </p>
             <div className="h-2 w-64 overflow-hidden rounded-full bg-muted">
               <div
                 className="h-full rounded-full bg-primary transition-all duration-700"
@@ -382,33 +413,55 @@ function Onboarding() {
 
         {done && step === 5 && (
           <section className="clay-panel flex flex-col items-center gap-6 p-10 text-center">
-            <span className="clay-raised grid size-16 place-items-center rounded-full bg-card text-3xl">🚀</span>
+            <span className="clay-raised grid size-16 place-items-center rounded-full bg-card text-3xl">
+              🚀
+            </span>
             <div>
               <h1 className="font-display text-xl font-semibold">{t("CRM tayyor!")}</h1>
               <p className="mt-1 text-sm text-muted-foreground">
-                {t("Dashboard, modullar va pipeline biznesingizga moslab tayyorlandi.")}
+                {isClub
+                  ? t("Klubingiz uchun 4 bo‘lim tayyor: dastur, mobil ilova, Telegram va bron.")
+                  : t("Dashboard, modullar va pipeline biznesingizga moslab tayyorlandi.")}
               </p>
             </div>
             <div className="flex flex-col items-center gap-2 text-sm">
               <p className="text-muted-foreground">{t("Keyingi qadamlar:")}</p>
               <div className="flex flex-wrap justify-center gap-3">
-                <Link to="/dashboard/branches" className="text-primary hover:underline">
-                  {t("Filial qo‘shish")}
-                </Link>
-                <Link to="/dashboard/appointments" className="text-primary hover:underline">
-                  {t("Xizmatlar va qabul")}
-                </Link>
-                <Link to="/dashboard/settings" className="text-primary hover:underline">
-                  {t("Sozlamalar")}
-                </Link>
+                {isClub ? (
+                  <>
+                    <Link to="/dashboard/program" className="text-primary hover:underline">
+                      {t("Dasturni yuklab olish")}
+                    </Link>
+                    <Link to="/dashboard/mobile" className="text-primary hover:underline">
+                      {t("Mobil dastur")}
+                    </Link>
+                    <Link to="/dashboard/booking" className="text-primary hover:underline">
+                      {t("Bron va qabul sozlamalari")}
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/dashboard/branches" className="text-primary hover:underline">
+                      {t("Filial qo‘shish")}
+                    </Link>
+                    <Link to="/dashboard/appointments" className="text-primary hover:underline">
+                      {t("Xizmatlar va qabul")}
+                    </Link>
+                    <Link to="/dashboard/settings" className="text-primary hover:underline">
+                      {t("Sozlamalar")}
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
             <Button size="lg" onClick={() => navigate({ to: "/dashboard" })}>
               {t("CRMga kirish")}
             </Button>
-            <Link to="/dashboard/crm-builder" className="text-xs text-primary hover:underline">
-              {t("Keyinroq AI bilan CRMni moslash")}
-            </Link>
+            {!isClub && (
+              <Link to="/dashboard/crm-builder" className="text-xs text-primary hover:underline">
+                {t("Keyinroq AI bilan CRMni moslash")}
+              </Link>
+            )}
           </section>
         )}
       </div>

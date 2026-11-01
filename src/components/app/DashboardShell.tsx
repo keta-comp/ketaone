@@ -14,6 +14,7 @@ import {
   Car,
   Check,
   ClipboardList,
+  Download,
   Eye,
   FileText,
   FlaskConical,
@@ -28,6 +29,7 @@ import {
   Menu,
   MessagesSquare,
   Package,
+  Smartphone,
   Settings,
   Send,
   ShoppingCart,
@@ -95,6 +97,9 @@ const ICONS: Record<string, LucideIcon> = {
   sparkles: Sparkles,
   send: Send,
   settings: Settings,
+  // Klub presetlari (PlayStation, Bilyard) bo'limlari.
+  download: Download,
+  phone: Smartphone,
 };
 
 const SECTION_ORDER: PresetSection[] = ["core", "operations", "industry", "money", "team", "admin"];

@@ -50,6 +50,31 @@ const EMPTY_FORM = {
   deposit_value: "",
 };
 
+/**
+ * Katalog `services` jadvali bir xil, lekin klubda u «Qurilmalar va stollar» deb ataladi.
+ * So'zlarni komponent chaqiruvchisi beradi, shunda sahifa sarlavhasi bilan form matni
+ * bir-biriga zid qolmaydi.
+ */
+export type CatalogLabels = {
+  name: string;
+  add: string;
+  remove: string;
+  saved: string;
+  deleted: string;
+  empty: string;
+  emptyHint: string;
+};
+
+const DEFAULT_LABELS: CatalogLabels = {
+  name: "Xizmat nomi",
+  add: "Xizmat qo'shish",
+  remove: "Xizmatni o'chirish",
+  saved: "Xizmat saqlandi",
+  deleted: "Xizmat o'chirildi",
+  empty: "Xizmatlar yo'q",
+  emptyHint: "Bron qilish uchun avval xizmat qo'shing.",
+};
+
 /** Xizmat qatoridagi depozit qoidasi: sayt egasi jadvaldan chiqmasdan sozlaydi. */
 function DepositRuleCell({
   service,
@@ -144,7 +169,7 @@ function DepositRuleCell({
   );
 }
 
-export function ServicesCatalog() {
+export function ServicesCatalog({ labels = DEFAULT_LABELS }: { labels?: CatalogLabels } = {}) {
   const queryClient = useQueryClient();
   const { term } = useTerminology();
   const staff = term("employees");
@@ -179,7 +204,7 @@ export function ServicesCatalog() {
   const saveMutation = useMutation({
     mutationFn: (input: ServiceSaveInput) => save({ data: input }),
     onSuccess: () => {
-      toast.success(t("Xizmat saqlandi"));
+      toast.success(t(labels.saved));
       setForm(EMPTY_FORM);
       setEditingId(null);
       invalidate();
@@ -191,7 +216,7 @@ export function ServicesCatalog() {
   const removeMutation = useMutation({
     mutationFn: (id: string) => remove({ data: { id } }),
     onSuccess: () => {
-      toast.success(t("Xizmat o'chirildi"));
+      toast.success(t(labels.deleted));
       invalidate();
     },
     onError: (error: unknown) =>
@@ -224,7 +249,7 @@ export function ServicesCatalog() {
         }}
       >
         <div className="min-w-52 flex-1">
-          <Label htmlFor="svc-name">{t("Xizmat nomi")}</Label>
+          <Label htmlFor="svc-name">{t(labels.name)}</Label>
           <Input
             id="svc-name"
             required
@@ -295,7 +320,7 @@ export function ServicesCatalog() {
           </div>
         ) : null}
         <Button type="submit" disabled={saveMutation.isPending}>
-          {editingId ? t("Saqlash") : t("Xizmat qo'shish")}
+          {editingId ? t("Saqlash") : t(labels.add)}
         </Button>
         {editingId ? (
           <Button
@@ -316,16 +341,13 @@ export function ServicesCatalog() {
       ) : services.error ? (
         <ErrorState error={services.error} onRetry={() => void services.refetch()} />
       ) : (services.data ?? []).length === 0 ? (
-        <EmptyState
-          title={t("Xizmatlar yo'q")}
-          description={t("Bron qilish uchun avval xizmat qo'shing.")}
-        />
+        <EmptyState title={t(labels.empty)} description={t(labels.emptyHint)} />
       ) : (
         <div className="clay-panel overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
-                <th className="px-4 py-3">{t("Xizmat nomi")}</th>
+                <th className="px-4 py-3">{t(labels.name)}</th>
                 <th className="px-4 py-3">{t("Davomiylik (min)")}</th>
                 <th className="px-4 py-3">{t("Narx")}</th>
                 <th className="px-4 py-3">{t("Depozit qoidasi")}</th>
@@ -412,7 +434,7 @@ export function ServicesCatalog() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          aria-label={t("Xizmatni o'chirish")}
+                          aria-label={t(labels.remove)}
                           disabled={removeMutation.isPending}
                           onClick={() => removeMutation.mutate(service.id)}
                         >

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Navigate, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import {
   ArrowRight,
@@ -20,7 +20,7 @@ import { LIVE_REFETCH_MS } from "@/lib/polling";
 import { getBookingSummary } from "@/lib/appointments.functions";
 import { getMyCrmConfig, getWidgetStats } from "@/lib/crm-config.functions";
 import { getDashboardKpis } from "@/lib/workspace.functions";
-import { hiddenRoutesForPreset, resolvePresetId } from "@/lib/presets";
+import { hiddenRoutesForPreset, homeRouteForPreset, resolvePresetId } from "@/lib/presets";
 import { listOrders } from "@/lib/orders.functions";
 import { formatMoney } from "@/lib/types";
 import { intlLocale, t } from "@/lib/i18n";
@@ -48,17 +48,26 @@ function Overview() {
   const fetchWidgets = useServerFn(getWidgetStats);
   const fetchBookings = useServerFn(getBookingSummary);
 
-  const kpis = useQuery({ queryKey: ["kpis"], queryFn: () => fetchKpis(), refetchInterval: LIVE_REFETCH_MS });
+  const crmConfig = useQuery({ queryKey: ["crm-config"], queryFn: () => fetchConfig() });
+  const presetId = resolvePresetId(crmConfig.data?.industry, crmConfig.data?.config?.presetId);
+  // Klub presetlarida «Umumiy ko‘rinish» bo‘limi yo‘q — dashboard raqam so‘ramaydi,
+  // birinchi bo‘limga yuboradi.
+  const landing = homeRouteForPreset(presetId);
+  // Preset bo'limi yashirgan sahifaga havola ham, uning ma'lumot so'rovi ham bo'lmaydi.
+  const hidden = hiddenRoutesForPreset(presetId);
+  const showOrders = !landing && !hidden.has("/dashboard/orders");
+  const kpis = useQuery({
+    queryKey: ["kpis"],
+    queryFn: () => fetchKpis(),
+    refetchInterval: LIVE_REFETCH_MS,
+    enabled: !landing,
+  });
   const bookings = useQuery({
     queryKey: ["booking-summary"],
     queryFn: () => fetchBookings(),
     refetchInterval: LIVE_REFETCH_MS,
+    enabled: !landing,
   });
-  const crmConfig = useQuery({ queryKey: ["crm-config"], queryFn: () => fetchConfig() });
-  const presetId = resolvePresetId(crmConfig.data?.industry, crmConfig.data?.config?.presetId);
-  // Preset bo'limi yashirgan sahifaga havola ham, uning ma'lumot so'rovi ham bo'lmaydi.
-  const hidden = hiddenRoutesForPreset(presetId);
-  const showOrders = !hidden.has("/dashboard/orders");
   const orders = useQuery({
     queryKey: ["orders", "recent"],
     queryFn: () => fetchOrders({ data: {} }),
@@ -68,9 +77,10 @@ function Overview() {
   const widgetStats = useQuery({
     queryKey: ["crm-widgets"],
     queryFn: () => fetchWidgets(),
-    enabled: !!crmConfig.data?.hasConfig,
+    enabled: !landing && !!crmConfig.data?.hasConfig,
   });
 
+  if (!crmConfig.isPending && landing) return <Navigate to={landing} replace />;
   if (kpis.isPending) return <LoadingState label={t("Ko‘rsatkichlar yuklanmoqda…")} />;
   if (kpis.error) return <ErrorState error={kpis.error} onRetry={() => void kpis.refetch()} />;
 
