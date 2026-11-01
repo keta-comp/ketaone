@@ -161,11 +161,14 @@ describe("preset registry", () => {
         "/dashboard/payroll",
         "/dashboard/team",
         "/dashboard/analytics",
-        "/dashboard/settings",
         "/dashboard/crm-builder",
       ]) {
         expect(isRouteAllowed(id, to)).toBe(false);
       }
+      // Sozlamalar menyuda emas, lekin ochiq: klubga o'tgan biznes turini ortga
+      // qaytarish shu sahifa orqali bo'ladi.
+      expect(isRouteAllowed(id, "/dashboard/settings")).toBe(true);
+      expect(menuForPreset(id).some((item) => item.to === "/dashboard/settings")).toBe(false);
       // Bronlar ro'yxati menyuda emas, lekin 4-bo'limdan ochiladi.
       expect(isRouteAllowed(id, "/dashboard/appointments")).toBe(true);
       expect(isModuleEnabled(id, "mijozlar")).toBe(false);

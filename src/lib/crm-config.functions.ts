@@ -606,21 +606,30 @@ export const updateCrmConfig = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const businessId = await requireSettingsAdmin(context.supabase);
-    const { data: row } = await context.supabase
+    const { data: row, error: loadError } = await context.supabase
       .from("crm_configs")
       .select("industry, config")
       .eq("business_id", businessId)
       .maybeSingle();
-    if (!row) throw new Error("CRM konfiguratsiyasi topilmadi");
-    const normalized = attachPresetId(
-      row.industry,
-      normalizeConfig(data.config, row.config as unknown as CrmConfigData),
-    );
-    const { error } = await context.supabase
-      .from("crm_configs")
-      .update({ config: normalized as never })
-      .eq("business_id", businessId);
-    if (error) throw new Error(error.message);
+    if (loadError) throw new Error(loadError.message);
+    const industry = row?.industry ?? null;
+    const base = (row?.config ?? crmConfigForPreset(resolvePresetId(null))) as unknown as CrmConfigData;
+    const normalized = attachPresetId(industry, normalizeConfig(data.config, base));
+    const payload = { industry, config: normalized as never };
+    const write = row
+      ? await context.supabase
+          .from("crm_configs")
+          .update(payload)
+          .eq("business_id", businessId)
+          .select("id")
+      : await context.supabase
+          .from("crm_configs")
+          .upsert({ business_id: businessId, ...payload }, { onConflict: "business_id" })
+          .select("id");
+    if (write.error) throw new Error(write.error.message);
+    if (!write.data || write.data.length === 0) {
+      throw new Error("Saqlanmadi — huquqingiz yetmaydi. Qayta urinib ko‘ring.");
+    }
     invalidateCrmAgentContext(businessId);
     return { config: normalized };
   });
@@ -652,17 +661,17 @@ export const switchCrmPreset = createServerFn({ method: "POST" })
       .eq("business_id", businessId)
       .maybeSingle();
     if (loadError) throw new Error(loadError.message);
-    if (!row) throw new Error("CRM konfiguratsiyasi topilmadi");
-
-    const previous = attachPresetId(row.industry, applyRelations(row.industry, row.config as unknown as CrmConfigData));
+    const previous = row
+      ? attachPresetId(row.industry, applyRelations(row.industry, row.config as unknown as CrmConfigData))
+      : null;
     const next = attachPresetId(target.industryKey, {
       ...crmConfigForPreset(target.id),
       presetId: target.id,
     });
 
-    const dropped = droppedModulesForPreset(previous, target.id);
+    const dropped = previous ? droppedModulesForPreset(previous, target.id) : [];
     const orphans: OrphanedModule[] = [];
-    if (dropped.length) {
+    if (previous && dropped.length) {
       const counts = await Promise.all(
         dropped.map(async (module) => {
           const { count } = await context.supabase
@@ -677,12 +686,26 @@ export const switchCrmPreset = createServerFn({ method: "POST" })
     }
 
     // A custom industry label only survives while the tenant stays on the universal preset.
-    const industry = target.industryKey === "boshqa" ? row.industry : target.industryKey;
-    const { error } = await context.supabase
-      .from("crm_configs")
-      .update({ industry, config: next as never })
-      .eq("business_id", businessId);
-    if (error) throw new Error(error.message);
+    const industry =
+      target.industryKey === "boshqa" ? (row?.industry ?? target.industryKey) : target.industryKey;
+    const payload = { industry, config: next as never };
+    // Ro'yxatdan endi o'tgan biznesda `crm_configs` qatori bo'lmaydi — uni shu yerda
+    // presetdan urug'laymiz, aks holda biznes turini biror marta ham o'zgartirib bo'lmaydi.
+    const write = row
+      ? await context.supabase
+          .from("crm_configs")
+          .update(payload)
+          .eq("business_id", businessId)
+          .select("id")
+      : await context.supabase
+          .from("crm_configs")
+          .upsert({ business_id: businessId, ...payload }, { onConflict: "business_id" })
+          .select("id");
+    if (write.error) throw new Error(write.error.message);
+    // RLS yozuvni sekin yashirsa xato chiqmaydi, shuning uchun natijani tekshiramiz.
+    if (!write.data || write.data.length === 0) {
+      throw new Error("Biznes turi saqlanmadi — huquqingiz yetmaydi. Qayta urinib ko‘ring.");
+    }
 
     invalidateCrmAgentContext(businessId);
     return { config: next, orphans };
@@ -711,9 +734,41 @@ export const syncPresetModules = createServerFn({ method: "POST" })
       .eq("business_id", businessId)
       .maybeSingle();
     if (loadError) throw new Error(loadError.message);
-    if (!row) throw new Error("CRM konfiguratsiyasi topilmadi");
-
-    const current = attachPresetId(row.industry, applyRelations(row.industry, row.config as unknown as CrmConfigData));
+    if (!row) {
+      // Konfiguratsiya qatori hali yo'q (endi ro'yxatdan o'tgan biznes) — presetni shu
+      // yerda urug'laymiz, aks holda "sozlash" tugalari biror narsa qilmay qoladi.
+      const seedPresetId = data.presetId ?? resolvePresetId(null);
+      const seeded = attachPresetId(null, {
+        ...crmConfigForPreset(seedPresetId),
+        presetId: seedPresetId,
+      });
+      const { data: inserted, error: seedError } = await context.supabase
+        .from("crm_configs")
+        .upsert(
+          {
+            business_id: businessId,
+            industry: presetForId(seedPresetId)?.industryKey ?? null,
+            config: seeded as never,
+          },
+          { onConflict: "business_id" },
+        )
+        .select("id");
+      if (seedError) throw new Error(seedError.message);
+      if (!inserted || inserted.length === 0) {
+        throw new Error("Saqlanmadi — huquqingiz yetmaydi. Qayta urinib ko‘ring.");
+      }
+      invalidateCrmAgentContext(businessId);
+      return {
+        config: seeded,
+        addedModules: seeded.modules.map((module) => module.label),
+        addedWidgets: [],
+        addedFields: [],
+      };
+    }
+    const current = attachPresetId(
+      row.industry,
+      applyRelations(row.industry, row.config as unknown as CrmConfigData),
+    );
     const presetId = data.presetId ?? current.presetId ?? resolvePresetId(row.industry);
     const { config: next, missing } = applyMissingParts(current, presetId);
     if (
@@ -724,11 +779,15 @@ export const syncPresetModules = createServerFn({ method: "POST" })
       return { config: current, addedModules: [], addedWidgets: [], addedFields: [] };
     }
 
-    const { error } = await context.supabase
+    const { data: synced, error } = await context.supabase
       .from("crm_configs")
       .update({ config: next as never })
-      .eq("business_id", businessId);
+      .eq("business_id", businessId)
+      .select("id");
     if (error) throw new Error(error.message);
+    if (!synced || synced.length === 0) {
+      throw new Error("Saqlanmadi — huquqingiz yetmaydi. Qayta urinib ko‘ring.");
+    }
 
     invalidateCrmAgentContext(businessId);
     return {

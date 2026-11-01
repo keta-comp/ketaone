@@ -868,8 +868,13 @@ const RETIRED_WIDGET_KINDS: string[] = ["legacy_today_leads", "legacy_hot_leads"
 
 /** Turns mapped text fields into relation fields; also upgrades saved configs. */
 export function applyRelations(industry: string | null | undefined, config: CrmConfigData): CrmConfigData {
+  // Eski yoki yarim saqlangan JSON'larda maydon umuman bo'lmasligi mumkin — chiziqdan
+  // oldin massivga yo'llaymiz, aks holda sahifa "Nimadir xato ketdi" bilan qulaydi.
+  const savedWidgets = Array.isArray(config.dashboardWidgets) ? config.dashboardWidgets : [];
+  const savedModules = Array.isArray(config.modules) ? config.modules : [];
+
   // Saved configs predate the retire of the sales-agent "operator" wording.
-  const dashboardWidgets = config.dashboardWidgets
+  const dashboardWidgets = savedWidgets
     .map((widget) =>
       widget.key === "operator" ? { ...widget, key: "attention", label: "E'tibor kutilmoqda" } : widget,
     )
@@ -879,7 +884,7 @@ export function applyRelations(industry: string | null | undefined, config: CrmC
   const industryKey = industry ?? "";
   const map = RELATION_MAP[industryKey];
   const titleMap = TITLE_FIELD_MAP[industryKey];
-  const modules = config.modules
+  const modules = savedModules
     // "Suhbatlar" bo'limi sahifasi o'chirilgan — saqlangan konfiguratsiyalarda ham qolmasin.
     .filter(
       (m) =>

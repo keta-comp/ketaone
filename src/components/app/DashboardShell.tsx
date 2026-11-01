@@ -56,7 +56,8 @@ import { QuickNewButton } from "@/components/app/crm-dialogs";
 import { getMyCrmConfig } from "@/lib/crm-config.functions";
 import { getPlatformNotice } from "@/lib/notifications.functions";
 import { buildNavItems } from "@/lib/nav";
-import type { PresetSection } from "@/lib/presets";
+import { isClubPreset, resolvePresetId, type PresetSection } from "@/lib/presets";
+import { can } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 import { signOut as endSession } from "@/lib/auth.functions";
 import { t } from "@/lib/i18n";
@@ -118,6 +119,11 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const fetchConfig = useServerFn(getMyCrmConfig);
   const { data: crm } = useQuery({ queryKey: ["crm-config"], queryFn: () => fetchConfig() });
+  // Klub menyuda 4 bo'limdan boshqasi ko'rinmaydi — Sozlamalaga shu yerdan kiriladi,
+  // aks holda biznes turini ortga qaytarib bo'lmaydi.
+  const showClubSettings =
+    isClubPreset(resolvePresetId(crm?.industry, crm?.config?.presetId)) &&
+    can(crm?.role as never, "settings.manage");
   const items = buildNavItems(crm);
   const groups = SECTION_ORDER.map((section) => ({
     section,
@@ -154,6 +160,21 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
           })}
         </div>
       ))}
+      {showClubSettings ? (
+        <Link
+          to="/dashboard/settings"
+          onClick={onNavigate}
+          className={cn(
+            "mt-2 flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition-all",
+            pathname.startsWith("/dashboard/settings")
+              ? "clay-raised bg-sidebar-accent text-sidebar-accent-foreground"
+              : "text-muted-foreground hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground",
+          )}
+        >
+          <Settings className="size-4" />
+          {t("Sozlamalar")}
+        </Link>
+      ) : null}
     </nav>
   );
 }

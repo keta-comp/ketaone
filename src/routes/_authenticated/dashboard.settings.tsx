@@ -16,6 +16,7 @@ import {
   INDUSTRIES,
   medicalModuleKeys,
   missingPresetParts,
+  presetForConfig,
   presetForId,
   resolvePresetId,
   SUB_PRESETS,
@@ -108,14 +109,15 @@ function PresetCard({ isAdmin }: { isAdmin: boolean }) {
 
   const crm = useQuery({ queryKey: ["crm-config"], queryFn: () => fetchConfig(), enabled: isAdmin });
   const config = crm.data?.config ?? null;
-  const currentId = config?.presetId ?? null;
-  const current = presetForId(currentId);
+  // Yangi biznesda `crm_configs` qatori bo'lmasligi mumkin — kartochka baribir ko'rinadi,
+  // chunki server tanlangan turni shu yerda urug'laydi.
+  const current = presetForConfig(crm.data?.industry ?? null, config);
+  const currentId = current.id;
   const target = presetForId(choice);
   const dropped = config && choice ? droppedModulesForPreset(config, choice) : [];
-  const missing =
-    config && current
-      ? missingPresetParts(config, current.id)
-      : { modules: [], widgets: [], fields: [] };
+  const missing = config
+    ? missingPresetParts(config, current.id)
+    : { modules: [], widgets: [], fields: [] };
   /** Field sync only ever touches modules the tenant already has, so their labels are stored. */
   const fieldGroups = missing.fields
     .map((entry) => ({
@@ -169,7 +171,7 @@ function PresetCard({ isAdmin }: { isAdmin: boolean }) {
 
   if (!isAdmin) return null;
   if (crm.isPending) return null;
-  if (!config || !current) return null;
+  if (crm.error) return null;
 
   return (
     <section className="clay-panel space-y-4 p-5">

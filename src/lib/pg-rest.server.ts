@@ -322,7 +322,10 @@ const SYSTEM_ERROR_MESSAGES: Record<string, string> = {
   "08001": "Ma'lumotlar bazasiga ulanib bo'lmadi.",
 };
 
-function toError(error: unknown): PgError {
+function toError(
+  error: unknown,
+  context?: { actor: Actor; table: string; mode: Mode },
+): PgError {
   const anyError = error as any;
   const code = anyError?.code ? String(anyError.code) : "UNKNOWN";
   const raw = anyError?.message ? String(anyError.message) : "";
@@ -333,6 +336,19 @@ function toError(error: unknown): PgError {
   }
   if (isInternalErrorText(raw)) {
     console.error(`[pg] ${code}: ${raw}`, anyError?.stack ?? "");
+    // Matn foydalanuvchiga ko'rsatilmaydi va Vercel logi ham to'liq o'qilmaydi — sababni
+    // keyinchalik topish uchun xatoni error_events jadvaliga tushiramiz.
+    if (context) {
+      void import("./error-events.server")
+        .then(({ captureError }) =>
+          captureError({
+            error,
+            route: `pg:${context.mode}/${context.table}`,
+            userId: context.actor.userId,
+          }),
+        )
+        .catch(() => {});
+    }
     return {
       message: "Nimadir xato ketdi. Qayta urinib ko'ring.",
       details: "",
@@ -529,7 +545,7 @@ class Builder<T = any[]> implements PromiseLike<PgResult<T>> {
     } catch (error) {
       return {
         data: (this.rowMode === "many" ? null : null) as T,
-        error: toError(error),
+        error: toError(error, { actor: this.actor, table: this.table, mode: this.mode }),
         count: null,
         status: 400,
         statusText: "Bad Request",

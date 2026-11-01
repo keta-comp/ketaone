@@ -302,6 +302,8 @@ const CLUB_TELEGRAM_ITEM: PresetMenuItem = {
 /**
  * Klublarda CRM yadrosi (mijoz, buyurtma, ombor, xodim, moliya, hisobot) umuman
  * ishlatilmaydi: sessiya hisobi tashqi vaqt hisoblagichida qoladi.
+ * `Sozlamalar` menyuda ko'rinmaydi (quydagi menuForPreset), lekin ochiq — aks holda
+ * klubga o'tgan biznes turini ortga qaytarib bo'lmaydi.
  */
 const CLUB_ALLOWED_ROUTES: string[] = [
   CLUB_DOWNLOAD_ITEM.to,
@@ -309,6 +311,7 @@ const CLUB_ALLOWED_ROUTES: string[] = [
   CLUB_TELEGRAM_ITEM.to,
   CLUB_BOOKING_ITEM.to,
   CORE_ITEMS.appointments.to,
+  "/dashboard/settings",
 ];
 
 /** Shu uchta sahifa faqat klub presetlarida ochiladi — boshqa sohada butunlay yopiq. */
@@ -990,7 +993,11 @@ export function menuForPreset(id: string): PresetMenuItem[] {
   menu.push(...preset.industryItems);
   // Preset o'zi sanab o'tgan sahifa (klubdagi Telegram) admin quyirig'ida takrorlanmaydi.
   const listed = new Set(menu.map((item) => item.to));
-  for (const item of ADMIN_TAIL) if (!listed.has(item.to)) menu.push(item);
+  // Bo'lim-san'li presetda (klub) admin quyirig'i menyuga chiqmaydi: 4 bo'lim saqlanadi.
+  // Sozlamalar sahifasi ochiq qoladi, lekin u yerga yo'lak pastdagi tugma orqali kiriladi.
+  if (!preset.allowedRoutes) {
+    for (const item of ADMIN_TAIL) if (!listed.has(item.to)) menu.push(item);
+  }
   return menu.filter((item) => !hidden.has(item.to));
 }
 
