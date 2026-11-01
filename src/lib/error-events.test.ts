@@ -24,6 +24,16 @@ describe("normalizeRoute", () => {
   test("keeps plain paths readable", () => {
     expect(normalizeRoute("/api/public/payme")).toBe("/api/public/payme");
   });
+  test("serverFn identifikatori raqam qoidasiga uchramaydi", () => {
+    const a = normalizeRoute("/_serverFn/b28c72d5c19cb2360284b3c0a6709dcb8ad013f2");
+    const b = normalizeRoute("/_serverFn/133837bf00663c00aeed9478eb2c708dea7cc4a1");
+    expect(a).toBe("/_serverFn/b28c72d5c19c");
+    expect(a).not.toBe(b);
+  });
+  test("eski base64 identifikator o'qiladigan nomga aylanadi", () => {
+    const id = btoa(JSON.stringify({ file: "/src/lib/booking.functions.ts", name: "saveAppointment" }));
+    expect(normalizeRoute(`/_serverFn/${id}`)).toBe("/fn/lib/booking.functions#saveAppointment");
+  });
 });
 
 describe("isCancellationNoise", () => {

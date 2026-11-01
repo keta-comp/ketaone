@@ -4,6 +4,9 @@
 /** Repeat failures inside one bucket collapse into a single row. */
 export const ERROR_BUCKET_MS = 600_000;
 
+/** Server funksiyalari shu prefiks bilan keladi — identifikatorni alohida ishlaymiz. */
+const SERVER_FN_PREFIX = "/_serverFn/";
+
 export function errorBucket(now: Date = new Date()): string {
   return new Date(Math.floor(now.getTime() / ERROR_BUCKET_MS) * ERROR_BUCKET_MS).toISOString();
 }
@@ -11,10 +14,39 @@ export function errorBucket(now: Date = new Date()): string {
 /** UUIDs and digit runs become placeholders so /customers/:id is one series, not thousands. */
 export function normalizeRoute(route: string): string {
   const path = (route.split("?")[0] ?? "").split("#")[0] ?? "";
+  if (path.startsWith(SERVER_FN_PREFIX)) return describeServerFn(path.slice(SERVER_FN_PREFIX.length));
   return path
     .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, ":id")
     .replace(/\d+/g, ":n")
     .slice(0, 300);
+}
+
+/**
+ * Server funksiyasi manzilidagi identifikator raqamlidir: umumiy raqam-qoidasi uni
+ * `:n` ga aylantirib, har xil funksiyalarni bitta «yo‘q» yo'lga urib qo'yardi.
+ */
+function describeServerFn(id: string): string {
+  const readable = decodeServerFnId(id);
+  if (readable) return `/fn/${readable}`.slice(0, 300);
+  // Hesh identifikatori: bir xil build davomida bir funksiyaga to'g'ri keladi.
+  return `${SERVER_FN_PREFIX}${id.slice(0, 12)}`;
+}
+
+function decodeServerFnId(id: string): string | null {
+  if (!id.startsWith("eyJ")) return null;
+  try {
+    const json = JSON.parse(atob(id.replace(/-/g, "+").replace(/_/g, "/"))) as {
+      file?: string;
+      name?: string;
+      longName?: string;
+    };
+    const file = (json.file ?? "").replace(/^.*\/src\//, "").replace(/\.[cm]?[jt]sx?$/, "");
+    const name = json.longName || json.name || "";
+    const label = [file, name].filter(Boolean).join("#");
+    return label || null;
+  } catch {
+    return null;
+  }
 }
 
 /**
