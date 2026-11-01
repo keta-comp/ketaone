@@ -6,7 +6,7 @@ import { CalendarDays, ChevronLeft, ChevronRight, Trash2, Wallet } from "lucide-
 import { toast } from "sonner";
 
 import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/components/app/primitives";
-import { ServicesCatalog } from "@/components/app/services-catalog";
+import { CLUB_CATALOG_LABELS, ServicesCatalog } from "@/components/app/services-catalog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,6 +47,7 @@ import {
   setAppointmentStatus,
 } from "@/lib/appointments.functions";
 import { intlLocale, t } from "@/lib/i18n";
+import { isClubPreset } from "@/lib/presets";
 import { useSectionTitle, useTerminology } from "@/lib/terminology";
 import { formatMoney } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -186,10 +187,11 @@ function ScheduleTab() {
   const save = useServerFn(saveAppointment);
   const setStatus = useServerFn(setAppointmentStatus);
   const remove = useServerFn(deleteAppointment);
-  const { term } = useTerminology();
+  const { term, service: serviceTerm } = useTerminology();
   const booking = term("appointments");
   const person = term("customers");
   const staff = term("employees");
+  const catalogTerm = serviceTerm();
 
   const [view, setView] = useState<CalendarView>("day");
   const [day, setDay] = useState(today());
@@ -305,7 +307,7 @@ function ScheduleTab() {
         }}
       >
         <div className="sm:col-span-2">
-          <Label htmlFor="apt-service">{t("Xizmat")}</Label>
+          <Label htmlFor="apt-service">{catalogTerm.one}</Label>
           <Select
             value={form.service_id}
             onValueChange={(value) => {
@@ -318,10 +320,10 @@ function ScheduleTab() {
             }}
           >
             <SelectTrigger id="apt-service">
-              <SelectValue placeholder={t("Xizmatni tanlang")} />
+              <SelectValue placeholder={t("{term}ni tanlang", { term: catalogTerm.one })} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">{t("Xizmatsiz")}</SelectItem>
+              <SelectItem value="none">{t("{term}siz", { term: catalogTerm.one })}</SelectItem>
               {(services.data ?? []).map((service) => (
                 <SelectItem key={service.id} value={service.id}>
                   {service.name} · {service.duration_minutes} {t("min")}
@@ -517,7 +519,7 @@ function ScheduleTab() {
               const customer = row.customers as { full_name?: string | null; phone?: string | null } | null;
               const employee = row.employees as { full_name?: string | null } | null;
               const branch = row.branches as { name?: string } | null;
-              const serviceName = row.service_name ?? t("Xizmatsiz");
+              const serviceName = row.service_name ?? t("{term}siz", { term: catalogTerm.one });
               const deposit = depositState(row);
               const depositSum =
                 deposit === "paid"
@@ -743,25 +745,30 @@ function ScheduleTab() {
 }
 
 function AppointmentsPage() {
-  const { term } = useTerminology();
+  const { term, service: serviceTerm, presetId } = useTerminology();
   const booking = term("appointments");
+  const catalog = serviceTerm();
+  const isClub = isClubPreset(presetId);
   useSectionTitle(booking.many);
   return (
     <>
       <PageHeader
         title={booking.many}
-        description={t("{many}: xizmatlar jadvali va qabullar bandligini boshqaring.", { many: booking.many })}
+        description={t("{many}: {services} jadvali va bandligi shu yerda boshqariladi.", {
+          many: booking.many,
+          services: catalog.many,
+        })}
       />
       <Tabs defaultValue="schedule">
         <TabsList>
           <TabsTrigger value="schedule">{t("Jadval")}</TabsTrigger>
-          <TabsTrigger value="services">{t("Xizmatlar")}</TabsTrigger>
+          <TabsTrigger value="services">{catalog.many}</TabsTrigger>
         </TabsList>
         <TabsContent value="schedule" className="mt-4">
           <ScheduleTab />
         </TabsContent>
         <TabsContent value="services" className="mt-4">
-          <ServicesCatalog />
+          <ServicesCatalog labels={isClub ? CLUB_CATALOG_LABELS : undefined} />
         </TabsContent>
       </Tabs>
     </>

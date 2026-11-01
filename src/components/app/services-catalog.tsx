@@ -75,6 +75,17 @@ const DEFAULT_LABELS: CatalogLabels = {
   emptyHint: "Bron qilish uchun avval xizmat qo'shing.",
 };
 
+/** Klub menyu va bron sahifasi shu nom bilan yozadi — ikki sahifa janjal bo'lmasligi uchun bir joyda. */
+export const CLUB_CATALOG_LABELS: CatalogLabels = {
+  name: "Qurilma yoki stol nomi",
+  add: "Qurilma/stol qo'shish",
+  remove: "Qurilmani o'chirish",
+  saved: "Qurilma saqlandi",
+  deleted: "Qurilma o'chirildi",
+  empty: "Qurilmalar va stollar yo'q",
+  emptyHint: "Bron uchun avval qurilma yoki stol qo'shing.",
+};
+
 /** Xizmat qatoridagi depozit qoidasi: sayt egasi jadvaldan chiqmasdan sozlaydi. */
 function DepositRuleCell({
   service,
@@ -169,7 +180,11 @@ function DepositRuleCell({
   );
 }
 
-export function ServicesCatalog({ labels = DEFAULT_LABELS }: { labels?: CatalogLabels } = {}) {
+export function ServicesCatalog({
+  labels = DEFAULT_LABELS,
+}: {
+  labels?: CatalogLabels | undefined;
+} = {}) {
   const queryClient = useQueryClient();
   const { term } = useTerminology();
   const staff = term("employees");

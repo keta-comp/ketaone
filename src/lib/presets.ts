@@ -942,6 +942,24 @@ export function coreTerm(
   };
 }
 
+/**
+ * Klublarning belgisi — `allowedRoutes` faqat ularda bor: menyuda faqat 4 bo'lim,
+ * yadro CRM bo'limlari umuman ochilmaydi.
+ */
+export function isClubPreset(id: string | null | undefined): boolean {
+  return Boolean(id ? PRESETS[id]?.allowedRoutes : false);
+}
+
+/**
+ * Qabul/bron band qilinadigan narsa: salon va klinikada bu xizmat, klubda esa
+ * qurilma yoki stol (`services` katalogi klubda «Qurilmalar va stollar» deb yuritiladi).
+ */
+export function serviceTermsForPreset(id: string | null | undefined): { one: string; many: string } {
+  return isClubPreset(id)
+    ? { one: "Qurilma", many: "Qurilmalar va stollar" }
+    : { one: "Xizmat", many: "Xizmatlar" };
+}
+
 /** All core terms of a preset at once, so a page calls the resolver once. */
 export function termsForPreset(
   id: string | null | undefined,

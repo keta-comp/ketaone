@@ -23,11 +23,13 @@ import {
   isModuleEnabled,
   isRouteAllowed,
   isSectionVisible,
+  isClubPreset,
   menuForPreset,
   medicalModuleKeys,
   missingPresetParts,
   presetForId,
   resolvePresetId,
+  serviceTermsForPreset,
   termsForPreset,
   workflowForPreset,
 } from "@/lib/presets";
@@ -176,6 +178,19 @@ describe("preset registry", () => {
         expect(menuForPreset(id).some((item) => item.to === to)).toBe(false);
       }
     }
+  });
+
+  test("klubda bron qurilmaga band qilinadi, boshqa sohada — xizmatga", () => {
+    expect(isClubPreset("playstation")).toBe(true);
+    expect(isClubPreset("bilyard")).toBe(true);
+    expect(isClubPreset("barbershop")).toBe(false);
+    expect(serviceTermsForPreset("bilyard")).toEqual({
+      one: "Qurilma",
+      many: "Qurilmalar va stollar",
+    });
+    expect(serviceTermsForPreset("stomatologiya")).toEqual({ one: "Xizmat", many: "Xizmatlar" });
+    // Atalmagan preset ham xavfsiz: klub atamasi chiqib qolmasligi kerak.
+    expect(serviceTermsForPreset(null)).toEqual({ one: "Xizmat", many: "Xizmatlar" });
   });
 
   test("every enabled module has a menu entry", () => {
