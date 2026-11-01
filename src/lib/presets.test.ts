@@ -19,7 +19,9 @@ import {
   droppedModulesForPreset,
   enabledModuleKeys,
   hiddenRoutesForPreset,
+  homeRouteForPreset,
   isModuleEnabled,
+  isRouteAllowed,
   isSectionVisible,
   menuForPreset,
   medicalModuleKeys,
@@ -43,12 +45,17 @@ const PRESET_IDS = Object.keys(PRESETS);
 
 describe("preset registry", () => {
   test("every industry option maps to a preset with data", () => {
-    expect(INDUSTRIES.length).toBe(11);
+    expect(INDUSTRIES.length).toBe(13);
     for (const option of INDUSTRIES) {
       const preset = presetForId(resolvePresetId(option.key));
       expect(preset?.industryKey).toBe(option.key);
       expect(preset?.name).toBe(option.label);
       expect(preset?.emoji).toBe(option.emoji);
+      // Klub presetlarida (PlayStation, Bilyard) CRM moduli yo'q: bo'limlari oq ro'yxat bilan belgilanadi.
+      if (preset?.allowedRoutes) {
+        expect(crmConfigForPreset(preset.id).modules).toEqual([]);
+        continue;
+      }
       expect(crmConfigForPreset(preset.id).modules.length).toBeGreaterThan(0);
     }
   });
@@ -99,7 +106,9 @@ describe("preset registry", () => {
     for (const id of PRESET_IDS) {
       const menu = menuForPreset(id);
       const hidden = hiddenRoutesForPreset(id);
-      expect(menu[0].to).toBe("/dashboard");
+      // Klublarda «Umumiy ko‘rinish» yo‘q — menyu birinchi bo‘limdan boshlanadi.
+      const first = presetForId(id).allowedRoutes ? homeRouteForPreset(id) : "/dashboard";
+      expect(menu[0].to).toBe(first);
       for (const to of required) {
         expect(menu.some((item) => item.to === to)).toBe(!hidden.has(to));
       }
@@ -124,6 +133,49 @@ describe("preset registry", () => {
     expect(isSectionVisible("ecommerce", "/dashboard/orders")).toBe(true);
     expect(isSectionVisible("ecommerce", "/dashboard/inventory")).toBe(true);
     expect(isSectionVisible("universal", "/dashboard/inventory")).toBe(true);
+  });
+
+  // Brief §16–17: PlayStation va Bilyard klublarida FAQAT 4 bo'lim bo'ladi,
+  // qolgan har bir CRM sahifasi (menyu ham, URL ham) yopiq qoladi.
+  test("klub presetlarida faqat to'rt bo'lim ochiq, qolgan hammasi yopiq", () => {
+    const clubMenu = [
+      "/dashboard/program",
+      "/dashboard/mobile",
+      "/dashboard/telegram",
+      "/dashboard/booking",
+    ];
+    for (const id of ["playstation", "bilyard"]) {
+      expect(menuForPreset(id).map((item) => item.to)).toEqual(clubMenu);
+      expect(homeRouteForPreset(id)).toBe("/dashboard/program");
+      // Odatiy CRM menyusi klubda ochilmaydi.
+      for (const to of [
+        "/dashboard",
+        "/dashboard/customers",
+        "/dashboard/orders",
+        "/dashboard/products",
+        "/dashboard/inventory",
+        "/dashboard/employees",
+        "/dashboard/finance",
+        "/dashboard/payroll",
+        "/dashboard/team",
+        "/dashboard/analytics",
+        "/dashboard/settings",
+        "/dashboard/crm-builder",
+      ]) {
+        expect(isRouteAllowed(id, to)).toBe(false);
+      }
+      // Bronlar ro'yxati menyuda emas, lekin 4-bo'limdan ochiladi.
+      expect(isRouteAllowed(id, "/dashboard/appointments")).toBe(true);
+      expect(isModuleEnabled(id, "mijozlar")).toBe(false);
+    }
+    // Klub sahifalari boshqa hech bir soha ochilmaydi.
+    for (const id of PRESET_IDS) {
+      if (id === "playstation" || id === "bilyard") continue;
+      for (const to of ["/dashboard/program", "/dashboard/mobile", "/dashboard/booking"]) {
+        expect(isRouteAllowed(id, to)).toBe(false);
+        expect(menuForPreset(id).some((item) => item.to === to)).toBe(false);
+      }
+    }
   });
 
   test("every enabled module has a menu entry", () => {

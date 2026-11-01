@@ -5,10 +5,11 @@
  */
 
 import type { DbClient } from "./pg-rest.server";
-import { hiddenRoutesForPreset, resolvePresetId } from "./presets";
+import { hiddenRoutesForPreset, isRouteAllowed, resolvePresetId } from "./presets";
 import { requireBusinessId } from "./tenant.server";
 
-export async function hiddenRoutesForTenant(supabase: DbClient): Promise<Set<string>> {
+/** Preset id'ni saqlangan konfiguratsiyadan o'qib, bo'lim ochiq-yopiqligini tekshiradi. */
+async function presetIdForTenant(supabase: DbClient): Promise<string> {
   const businessId = await requireBusinessId(supabase);
   const { data } = await supabase
     .from("crm_configs")
@@ -16,13 +17,16 @@ export async function hiddenRoutesForTenant(supabase: DbClient): Promise<Set<str
     .eq("business_id", businessId)
     .maybeSingle();
   const config = data?.config as { presetId?: string } | null;
-  const presetId = resolvePresetId(data?.industry ?? null, config?.presetId);
-  return hiddenRoutesForPreset(presetId);
+  return resolvePresetId(data?.industry ?? null, config?.presetId);
+}
+
+export async function hiddenRoutesForTenant(supabase: DbClient): Promise<Set<string>> {
+  return hiddenRoutesForPreset(await presetIdForTenant(supabase));
 }
 
 /** Throws when this core section is switched off for the tenant's preset. */
 export async function requireSection(supabase: DbClient, to: string): Promise<void> {
-  if ((await hiddenRoutesForTenant(supabase)).has(to)) {
+  if (!isRouteAllowed(await presetIdForTenant(supabase), to)) {
     throw new Error(`Bu soha uchun bo'lim o'chirilgan: ${to}`);
   }
 }

@@ -53,6 +53,17 @@ export function crmLabel(value: string | null | undefined) {
 /** Quick "+ Yangi" actions, tuned per industry but always backed by the same core entities. */
 export type QuickActionKey = "customer" | "order" | "payment" | "task";
 
+/**
+ * Har bir tezkor amal qaysi bo'limga yozadi — preset o'sha bo'limni yashirsa
+ * (klublar), amal ham taklif qilinmaydi.
+ */
+export const QUICK_ACTION_SECTIONS: Record<QuickActionKey, string> = {
+  customer: "/dashboard/customers",
+  order: "/dashboard/orders",
+  payment: "/dashboard/payments",
+  task: "/dashboard/tasks",
+};
+
 export function quickActionLabels(industry: string | null | undefined): Record<QuickActionKey, string> {
   const presetId = resolvePresetId(industry);
   return {

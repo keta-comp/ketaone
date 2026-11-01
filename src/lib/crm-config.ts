@@ -766,6 +766,22 @@ const BASE_PRESETS: Record<string, CrmConfigData> = {
       { key: "bemorlar", label: "Bemorlar", kind: "module_count", moduleKey: "bemorlar" },
     ],
   }),
+
+  // Klub sohalari: CRM modullari umuman yo'q. Sessiya vaqtini tashqi hisoblagichi
+  // sanaydi, KetaOne dasturni tarqatadi, Telegram'ni ulaydi va bronni boshqaradi.
+  playstation: preset({
+    modules: [],
+    pipelineStages: GENERIC_PIPELINE,
+    terminology: { customer: "Mijoz", lead: "Murojaat", order: "Bron" },
+    dashboardWidgets: [],
+  }),
+
+  bilyard: preset({
+    modules: [],
+    pipelineStages: GENERIC_PIPELINE,
+    terminology: { customer: "Mijoz", lead: "Murojaat", order: "Bron" },
+    dashboardWidgets: [],
+  }),
 };
 
 /** Which preset fields link to other modules, per industry → module → field → target. */
