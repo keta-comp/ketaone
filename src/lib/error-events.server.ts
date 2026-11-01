@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/platform.server";
+import { getRequestContext } from "./request-context.server";
 import { describeError } from "./error-capture";
 import { errorBucket, errorFingerprint, isCancellationNoise, normalizeRoute } from "./error-events";
 
@@ -27,6 +28,9 @@ export async function captureError(input: CaptureInput) {
           : "Unknown error";
     const route = normalizeRoute(input.route ?? "");
     if (isCancellationNoise(input.error, message)) return;
+    // Chaqiruv joyi ID bermasa so'rov kontekstidan olamiz: shunda «Nimadir xato ketdi»
+    // qaysi biznes va qaysi foydalanuvchida bo'lganini panel ko'rsatadi.
+    const context = getRequestContext();
     const { error } = await supabaseAdmin.from("error_events").insert({
       fingerprint: errorFingerprint({ route, message, status: input.status ?? null }),
       bucket: errorBucket(),
@@ -35,8 +39,8 @@ export async function captureError(input: CaptureInput) {
       message: message.slice(0, 500),
       detail: describeError(input.error).slice(0, 8_000),
       status_code: input.status ?? null,
-      business_id: input.businessId ?? null,
-      user_id: input.userId ?? null,
+      business_id: input.businessId ?? context.businessId ?? null,
+      user_id: input.userId ?? context.userId ?? null,
     });
     if (error?.code === "23505") return;
     if (error) {

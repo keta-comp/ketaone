@@ -37,6 +37,8 @@ export async function requireBusinessId(supabase: Client): Promise<string> {
   const { data, error } = await supabase.rpc("current_business_id");
   if (error) throw new Error(error.message);
   if (!data) throw new Error("No business workspace found for this account.");
+  const { stampRequestContext } = await import("./request-context.server");
+  stampRequestContext({ businessId: String(data) });
   return data as string;
 }
 

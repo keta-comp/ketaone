@@ -9,6 +9,10 @@ export const requireSupabaseAuth = createMiddleware({ type: "function" }).server
   const { userClient } = await import("@/lib/pg-rest.server");
 
   const session = await requireSession();
+  // Xato qaysi biznesdan kelgani `error_events`da ko'rinishi uchun foydalanuvchini
+  // so'rov kontekstiga yozamiz (node:async_hooks — faqat server, dinamik import).
+  const { stampRequestContext } = await import("./request-context.server");
+  stampRequestContext({ userId: session.userId });
 
   return next({
     context: {
