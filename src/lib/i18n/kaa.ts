@@ -1586,6 +1586,8 @@ const table: Record<string, string> = {
   "Dastur havolalari, Telegram va bron sozlamalarini CRM tayyor bo‘lgach ham o‘zgartirish mumkin.": "Dastur siltemelerin, Telegram hám bron sozlamaların CRM tayar bolǵannan keyin de ózgertiw múmkin.",
   "Klubingiz uchun 4 bo‘lim tayyor: dastur, mobil ilova, Telegram va bron.": "Klubińız ushın 4 bólim tayar: programma, mobil qosımsha, Telegram hám bron.",
   "Qurilma yoki stol nomi": "Qurılma yamasa stol atı",
+  "Qurilma": "Qurılma",
+  "{many}: {services} jadvali va bandligi shu yerda boshqariladi.": "{many}: {services} kestesi hám bandlıǵı usı jerde basqarıladı.",
   "Qurilma/stol qo'shish": "Qurılma/stol qosıw",
   "Qurilmani o'chirish": "Qurılmanı óshiriw",
   "Qurilma saqlandi": "Qurılma saqlandı",

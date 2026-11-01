@@ -1586,6 +1586,8 @@ const table: Record<string, string> = {
   "Dastur havolalari, Telegram va bron sozlamalarini CRM tayyor bo‘lgach ham o‘zgartirish mumkin.": "You can change the program links, Telegram and booking settings after the CRM is ready.",
   "Klubingiz uchun 4 bo‘lim tayyor: dastur, mobil ilova, Telegram va bron.": "4 sections are ready for your club: program, mobile app, Telegram and booking.",
   "Qurilma yoki stol nomi": "Device or table name",
+  "Qurilma": "Device",
+  "{many}: {services} jadvali va bandligi shu yerda boshqariladi.": "{many}: the {services} schedule and availability are managed here.",
   "Qurilma/stol qo'shish": "Add device or table",
   "Qurilmani o'chirish": "Delete the device",
   "Qurilma saqlandi": "Device saved",

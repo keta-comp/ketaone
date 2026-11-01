@@ -15,7 +15,7 @@ import { toast } from "sonner";
 
 import { BookingLinkCard } from "@/components/app/booking-link-card";
 import { ErrorState, LoadingState, PageHeader } from "@/components/app/primitives";
-import { ServicesCatalog, type CatalogLabels } from "@/components/app/services-catalog";
+import { CLUB_CATALOG_LABELS, ServicesCatalog } from "@/components/app/services-catalog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -127,17 +127,6 @@ function AppointmentsCard() {
     </section>
   );
 }
-
-/** Katalog `services` jadvali umumiy, lekin klubda u «Qurilmalar va stollar» — forma shu nom bilan yozadi. */
-const CLUB_CATALOG_LABELS: CatalogLabels = {
-  name: "Qurilma yoki stol nomi",
-  add: "Qurilma/stol qo'shish",
-  remove: "Qurilmani o'chirish",
-  saved: "Qurilma saqlandi",
-  deleted: "Qurilma o'chirildi",
-  empty: "Qurilmalar va stollar yo'q",
-  emptyHint: "Bron uchun avval qurilma yoki stol qo'shing.",
-};
 
 function ClubBookingPage() {
   useSectionTitle(t("Bron va qabul sozlamalari"));

@@ -10,7 +10,7 @@ import { useServerFn } from "@tanstack/react-start";
 
 import { getMyCrmConfig } from "./crm-config.functions";
 import { t } from "./i18n";
-import { type CoreKey, resolvePresetId, termsForPreset } from "./presets";
+import { type CoreKey, resolvePresetId, serviceTermsForPreset, termsForPreset } from "./presets";
 
 export type Term = { one: string; many: string };
 
@@ -18,6 +18,8 @@ export type Terminology = {
   loading: boolean;
   presetId: string;
   term: (key: CoreKey) => Term;
+  /** Qabulga nima band qilinadi — «Xizmat» yoki klubdagi «Qurilma yoki stol». */
+  service: () => Term;
 };
 
 export function useTerminology(): Terminology {
@@ -25,11 +27,13 @@ export function useTerminology(): Terminology {
   const config = useQuery({ queryKey: ["crm-config"], queryFn: () => fetchConfig() });
   const presetId = resolvePresetId(config.data?.industry, config.data?.config?.presetId);
   const terms = termsForPreset(presetId);
+  const serviceTerms = serviceTermsForPreset(presetId);
   // Istalgan tilda soha nomlari ham tarjima bo'lishi uchun tarjimani shu bir joyda qilamiz.
   return {
     loading: config.isPending,
     presetId,
     term: (key) => ({ one: t(terms[key].one), many: t(terms[key].many) }),
+    service: () => ({ one: t(serviceTerms.one), many: t(serviceTerms.many) }),
   };
 }
 
