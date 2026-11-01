@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import { friendlyError } from "@/lib/friendly-error";
+
 /**
  * Yuklash nuqtasi. Sessiyani talab qilmaydi: server funksiyasi bergan HMAC token
  * yo'l, content-type va umumiy hajmni o'zida qulflaydi, shuning uchun bu yerda
@@ -47,7 +49,7 @@ export const Route = createFileRoute("/api/storage/upload")({
           });
           return Response.json({ ok: true, complete });
         } catch (error) {
-          const message = error instanceof Error ? error.message : "Yuklash amalga oshmadi.";
+          const message = friendlyError(error, "Yuklash amalga oshmadi.");
           const status = error instanceof storage.StorageChunkError ? 409 : 400;
           return new Response(message, { status });
         }

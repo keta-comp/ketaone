@@ -23,6 +23,7 @@ import { t } from "@/lib/i18n";
 import { saveBusinessSettings, getSettings } from "@/lib/settings.functions";
 import { useSectionVisibility } from "@/lib/section-visibility";
 import { useSectionTitle } from "@/lib/terminology";
+import { friendlyError } from "@/lib/friendly-error";
 
 export const Route = createFileRoute("/_authenticated/dashboard/booking")({
   head: () => ({
@@ -59,7 +60,7 @@ function WorkingHoursCard() {
       void queryClient.invalidateQueries({ queryKey: ["settings"] });
     },
     onError: (error: unknown) =>
-      toast.error(error instanceof Error ? error.message : t("Saqlash amalga oshmadi")),
+      toast.error(friendlyError(error, t("Saqlash amalga oshmadi"))),
   });
 
   if (settings.isPending) return <LoadingState />;

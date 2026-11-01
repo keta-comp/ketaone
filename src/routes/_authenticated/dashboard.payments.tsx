@@ -23,6 +23,7 @@ import { deletePayment, listPayments } from "@/lib/payments.functions";
 import { formatMoney } from "@/lib/types";
 import { useSectionVisibility } from "@/lib/section-visibility";
 import { t } from "@/lib/i18n";
+import { friendlyError } from "@/lib/friendly-error";
 
 const searchSchema = z.object({
   status: z.string().optional(),
@@ -260,7 +261,7 @@ function PaymentsPage() {
                               toast.success(t("To‘lov o‘chirildi"));
                               void query.refetch();
                             } catch (error) {
-                              toast.error(error instanceof Error ? error.message : t("Xatolik"));
+                              toast.error(friendlyError(error, t("Xatolik")));
                             }
                           }}
                         >

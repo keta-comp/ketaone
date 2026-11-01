@@ -33,6 +33,7 @@ import {
 import { cn } from "@/lib/utils";
 import { t } from "@/lib/i18n";
 import { uploadToStorage } from "@/lib/storage-upload";
+import { friendlyError } from "@/lib/friendly-error";
 
 export const Route = createFileRoute("/_authenticated/dashboard/settings")({
   head: () => ({
@@ -60,7 +61,7 @@ function SettingsPage() {
       toast.success(t("Biznes sozlamalari saqlandi"));
       void queryClient.invalidateQueries({ queryKey: ["settings"] });
     },
-    onError: (error: unknown) => toast.error(error instanceof Error ? error.message : t("Saqlash amalga oshmadi")),
+    onError: (error: unknown) => toast.error(friendlyError(error, t("Saqlash amalga oshmadi"))),
   });
 
   if (settings.isPending) return <LoadingState />;
@@ -139,7 +140,7 @@ function PresetCard({ isAdmin }: { isAdmin: boolean }) {
         );
       }
     },
-    onError: (error: unknown) => toast.error(error instanceof Error ? error.message : t("Saqlash amalga oshmadi")),
+    onError: (error: unknown) => toast.error(friendlyError(error, t("Saqlash amalga oshmadi"))),
   });
 
   const invalidateCrm = () => {
@@ -163,7 +164,7 @@ function PresetCard({ isAdmin }: { isAdmin: boolean }) {
       }
       toast.success(t("Yangiliklar qo‘shildi: {v0}", { v0: added.join(", ") }));
     },
-    onError: (error: unknown) => toast.error(error instanceof Error ? error.message : t("Saqlash amalga oshmadi")),
+    onError: (error: unknown) => toast.error(friendlyError(error, t("Saqlash amalga oshmadi"))),
   });
 
   if (!isAdmin) return null;
@@ -396,7 +397,7 @@ function BrandingCard({
       toast.success(t("Saqlandi"));
       void queryClient.invalidateQueries({ queryKey: ["settings"] });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t("Saqlash amalga oshmadi"));
+      toast.error(friendlyError(error, t("Saqlash amalga oshmadi")));
     } finally {
       setBusy(false);
     }
@@ -427,7 +428,7 @@ function BrandingCard({
       void persist({ logo_path: path });
     } catch (error) {
       setBusy(false);
-      toast.error(error instanceof Error ? error.message : t("Yuklash amalga oshmadi"));
+      toast.error(friendlyError(error, t("Yuklash amalga oshmadi")));
     }
   };
 

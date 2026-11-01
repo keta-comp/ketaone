@@ -50,6 +50,7 @@ import {
 } from "@/lib/crm-core";
 import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { friendlyError } from "@/lib/friendly-error";
 
 const NONE = "__none__";
 
@@ -178,7 +179,7 @@ export function CustomerDialog({
       onOpenChange(false);
     },
     onError: (error: unknown) =>
-      toast.error(error instanceof Error ? error.message : t("Saqlab bo‘lmadi")),
+      toast.error(friendlyError(error, t("Saqlab bo‘lmadi"))),
   });
 
   return (
@@ -436,7 +437,7 @@ export function OrderDialog({
       onOpenChange(false);
     },
     onError: (error: unknown) =>
-      toast.error(error instanceof Error ? error.message : t("Saqlab bo‘lmadi")),
+      toast.error(friendlyError(error, t("Saqlab bo‘lmadi"))),
   });
 
   const setLine = (index: number, patch: Partial<OrderLine>) =>
@@ -610,7 +611,7 @@ export function PaymentDialog({
       onOpenChange(false);
     },
     onError: (error: unknown) =>
-      toast.error(error instanceof Error ? error.message : t("Saqlab bo‘lmadi")),
+      toast.error(friendlyError(error, t("Saqlab bo‘lmadi"))),
   });
 
   const orders = (pickers.data?.orders ?? []).filter(
@@ -807,7 +808,7 @@ export function TaskDialog({
       onOpenChange(false);
     },
     onError: (error: unknown) =>
-      toast.error(error instanceof Error ? error.message : t("Saqlab bo‘lmadi")),
+      toast.error(friendlyError(error, t("Saqlab bo‘lmadi"))),
   });
 
   return (

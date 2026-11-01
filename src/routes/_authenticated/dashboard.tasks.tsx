@@ -21,6 +21,7 @@ import { crmLabel, TASK_PRIORITIES, TASK_STATUSES } from "@/lib/crm-core";
 import { deleteTask, listTasks, setTaskStatus } from "@/lib/tasks.functions";
 import { useSectionVisibility } from "@/lib/section-visibility";
 import { t } from "@/lib/i18n";
+import { friendlyError } from "@/lib/friendly-error";
 
 const searchSchema = z.object({
   status: z.string().optional(),
@@ -195,7 +196,7 @@ function TasksPage() {
                       });
                       void query.refetch();
                     } catch (error) {
-                      toast.error(error instanceof Error ? error.message : t("Xatolik"));
+                      toast.error(friendlyError(error, t("Xatolik")));
                     }
                   }}
                 >
@@ -271,7 +272,7 @@ function TasksPage() {
                         toast.success(t("Vazifa o‘chirildi"));
                         void query.refetch();
                       } catch (error) {
-                        toast.error(error instanceof Error ? error.message : t("Xatolik"));
+                        toast.error(friendlyError(error, t("Xatolik")));
                       }
                     }}
                   >

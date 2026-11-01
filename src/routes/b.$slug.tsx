@@ -15,6 +15,7 @@ import { createPublicBooking, getPublicBookingPage, getPublicSlots } from "@/lib
 import { intlLocale, t } from "@/lib/i18n";
 import { serviceTermsForPreset } from "@/lib/presets";
 import { formatMoney } from "@/lib/types";
+import { friendlyError } from "@/lib/friendly-error";
 
 export const Route = createFileRoute("/b/$slug")({
   head: () => ({
@@ -95,7 +96,7 @@ function PublicBookingPage() {
       toast.success(t("Bron qabul qilindi"));
     },
     onError: (error: unknown) => {
-      toast.error(error instanceof Error ? error.message : t("Amalga oshmadi"));
+      toast.error(friendlyError(error, t("Amalga oshmadi")));
       setSlot(null);
       void slots.refetch();
     },
@@ -115,7 +116,7 @@ function PublicBookingPage() {
         <div className="clay-panel max-w-md p-8 text-center">
           <h1 className="text-lg font-semibold">{t("Sahifa topilmadi")}</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            {page.error instanceof Error ? page.error.message : t("Bu havola yoki onlayn qabul yopiq bo'lishi mumkin.")}
+            {friendlyError(page.error, t("Bu havola yoki onlayn qabul yopiq bo'lishi mumkin."))}
           </p>
         </div>
       </div>
@@ -277,7 +278,7 @@ function PublicBookingPage() {
           <p className="mt-2 text-sm text-muted-foreground">{t("Vaqtlar yuklanmoqda…")}</p>
         ) : slots.error ? (
           <p className="mt-2 text-sm text-destructive">
-            {slots.error instanceof Error ? slots.error.message : t("Vaqtlarni yuklab bo'lmadi")}
+            {friendlyError(slots.error, t("Vaqtlarni yuklab bo'lmadi"))}
           </p>
         ) : (slots.data?.slots.length ?? 0) === 0 ? (
           <p className="mt-2 text-sm text-muted-foreground">{t("Bu kunga bo'sh vaqt yo'q — boshqa kunni tanlang.")}</p>

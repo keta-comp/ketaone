@@ -11,6 +11,7 @@ import { ErrorState, LoadingState, PageHeader } from "@/components/app/primitive
 import { DataTable, NoData, Panel, Pill, fmtDate } from "@/components/app/super-admin-ui";
 import { clearErrorEventsFn, listErrorEventsFn } from "@/lib/super-admin.functions";
 import { t } from "@/lib/i18n";
+import { friendlyError } from "@/lib/friendly-error";
 
 export const Route = createFileRoute("/_authenticated/super-admin/errors")({
   head: () => ({
@@ -48,7 +49,7 @@ function ErrorsPage() {
       toast.success(t("{v0} yozuv o'chirildi", { v0: result.deleted }));
       void query.refetch();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t("Xatolik"));
+      toast.error(friendlyError(error, t("Xatolik")));
     }
   };
 

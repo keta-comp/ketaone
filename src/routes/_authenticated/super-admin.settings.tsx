@@ -13,6 +13,7 @@ import { ErrorState, LoadingState, PageHeader } from "@/components/app/primitive
 import { Panel } from "@/components/app/super-admin-ui";
 import { getSystemSettings, saveSystemSettings } from "@/lib/super-admin.functions";
 import { t } from "@/lib/i18n";
+import { friendlyError } from "@/lib/friendly-error";
 
 export const Route = createFileRoute("/_authenticated/super-admin/settings")({
   head: () => ({
@@ -84,7 +85,7 @@ function SettingsPage() {
       toast.success(t("Sozlamalar saqlandi"));
       void queryClient.invalidateQueries({ queryKey: ["super-admin-settings"] });
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : t("Saqlanmadi")),
+    onError: (e) => toast.error(friendlyError(e, t("Saqlanmadi"))),
   });
 
   if (isPending) return <LoadingState />;

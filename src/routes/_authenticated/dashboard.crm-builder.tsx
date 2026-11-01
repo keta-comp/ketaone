@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { aiCrmBuilder } from "@/lib/crm-config.functions";
 import { t } from "@/lib/i18n";
+import { friendlyError } from "@/lib/friendly-error";
 
 export const Route = createFileRoute("/_authenticated/dashboard/crm-builder")({
   head: () => ({ meta: [{ title: t("AI bilan CRMni sozlash — KetaOne") }] }),
@@ -52,10 +53,7 @@ function CrmBuilderPage() {
         ...prev,
         {
           role: "assistant",
-          content:
-            error instanceof Error
-              ? `Xatolik: ${error.message}`
-              : "Xatolik yuz berdi, qayta urinib ko‘ring.",
+          content: friendlyError(error, "Xatolik yuz berdi, qayta urinib ko‘ring."),
         },
       ]);
     } finally {

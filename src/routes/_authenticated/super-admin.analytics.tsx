@@ -13,6 +13,7 @@ import { ErrorState, LoadingState, PageHeader } from "@/components/app/primitive
 import { MetricCard, NoData, Panel, downloadBase64Xlsx, fmtNumber } from "@/components/app/super-admin-ui";
 import { exportPlatformExcel, getSaasAnalytics } from "@/lib/super-admin.functions";
 import { t } from "@/lib/i18n";
+import { friendlyError } from "@/lib/friendly-error";
 
 export const Route = createFileRoute("/_authenticated/super-admin/analytics")({
   head: () => ({
@@ -69,7 +70,7 @@ function AnalyticsPage() {
       const file = await exportFn({ data: { kind: "analytics", from: range.from, to: range.to } });
       downloadBase64Xlsx(file.base64, file.filename);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : t("Eksport qilinmadi"));
+      toast.error(friendlyError(e, t("Eksport qilinmadi")));
     }
   };
 

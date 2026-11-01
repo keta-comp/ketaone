@@ -12,6 +12,7 @@ import { generateCrmConfig } from "@/lib/crm-config.functions";
 import { INDUSTRIES, presetForId, resolvePresetId, SUB_PRESETS } from "@/lib/presets";
 import { cn } from "@/lib/utils";
 import { t } from "@/lib/i18n";
+import { friendlyError } from "@/lib/friendly-error";
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
   head: () => ({
@@ -153,7 +154,7 @@ function Onboarding() {
       setField("step", 5);
       setDone(true);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Xatolik yuz berdi. Qayta urinib ko‘ring.");
+      setError(friendlyError(e, "Xatolik yuz berdi. Qayta urinib ko‘ring."));
       setField("step", 3);
     } finally {
       setGenerating(false);

@@ -8,6 +8,7 @@
 import type { TransactionSql } from "postgres";
 
 import { ownerSql, withRoleSql, type RoleName } from "./db";
+import { isInternalErrorText } from "./friendly-error";
 
 export type PgError = { message: string; details: string; hint: string; code: string };
 
@@ -329,6 +330,15 @@ function toError(error: unknown): PgError {
   if (generic) {
     console.error(`[pg] ${code}: ${raw}`, anyError?.detail ? `detail: ${anyError.detail}` : "");
     return { message: generic, details: "", hint: "", code };
+  }
+  if (isInternalErrorText(raw)) {
+    console.error(`[pg] ${code}: ${raw}`, anyError?.stack ?? "");
+    return {
+      message: "Nimadir xato ketdi. Qayta urinib ko'ring.",
+      details: "",
+      hint: "",
+      code,
+    };
   }
   return {
     message: raw || "Ma'lumotlar bazasi xatosi",
@@ -653,7 +663,7 @@ class Builder<T = any[]> implements PromiseLike<PgResult<T>> {
       return {
         data: null as T,
         error: {
-          message: "JSON object requested, multiple (or no) rows returned",
+          message: "Yozuv topilmadi yoki bir nechta yozuv qaytdi.",
           details: `Natijada ${out.length} qator`,
           hint: "",
           code: "PGRST116",

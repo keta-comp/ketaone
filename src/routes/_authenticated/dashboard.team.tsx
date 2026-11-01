@@ -11,6 +11,7 @@ import { intlLocale, t } from "@/lib/i18n";
 import { listBranches } from "@/lib/branches.functions";
 import { getTeam, removeMember, setMemberBranch, setMemberRole } from "@/lib/members.functions";
 import { ASSIGNABLE_ROLES, ROLE_LABELS, type MemberRole } from "@/lib/roles";
+import { friendlyError } from "@/lib/friendly-error";
 
 export const Route = createFileRoute("/_authenticated/dashboard/team")({
   head: () => ({
@@ -42,7 +43,7 @@ function TeamPage() {
       toast.success(t("Rol o'zgartirildi"));
       invalidate();
     },
-    onError: (error: unknown) => toast.error(error instanceof Error ? error.message : t("Amalga oshmadi")),
+    onError: (error: unknown) => toast.error(friendlyError(error, t("Amalga oshmadi"))),
   });
 
   const branchMutation = useMutation({
@@ -51,7 +52,7 @@ function TeamPage() {
       toast.success(t("Filial yangilandi"));
       invalidate();
     },
-    onError: (error: unknown) => toast.error(error instanceof Error ? error.message : t("Amalga oshmadi")),
+    onError: (error: unknown) => toast.error(friendlyError(error, t("Amalga oshmadi"))),
   });
 
   const removeMutation = useMutation({
@@ -60,7 +61,7 @@ function TeamPage() {
       toast.success(t("A'zo o'chirildi"));
       invalidate();
     },
-    onError: (error: unknown) => toast.error(error instanceof Error ? error.message : t("Amalga oshmadi")),
+    onError: (error: unknown) => toast.error(friendlyError(error, t("Amalga oshmadi"))),
   });
 
   const isAdmin = team.data?.isAdmin ?? false;

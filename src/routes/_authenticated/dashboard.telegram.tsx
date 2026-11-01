@@ -19,6 +19,7 @@ import {
   updateTelegramSettings,
 } from "@/lib/telegram-link.functions";
 import { t } from "@/lib/i18n";
+import { friendlyError } from "@/lib/friendly-error";
 
 const searchSchema = z.object({ code: z.string().optional() });
 
@@ -69,7 +70,7 @@ function TelegramPage() {
       void queryClient.invalidateQueries({ queryKey: ["telegram-link"] });
       void navigate({ to: "/dashboard/telegram", search: {} });
     },
-    onError: (error: unknown) => toast.error(error instanceof Error ? error.message : t("Ulash amalga oshmadi")),
+    onError: (error: unknown) => toast.error(friendlyError(error, t("Ulash amalga oshmadi"))),
   });
 
   const settingsMutation = useMutation({
@@ -79,7 +80,7 @@ function TelegramPage() {
       toast.success(t("Sozlamalar saqlandi"));
       void queryClient.invalidateQueries({ queryKey: ["telegram-link"] });
     },
-    onError: (error: unknown) => toast.error(error instanceof Error ? error.message : t("Saqlash amalga oshmadi")),
+    onError: (error: unknown) => toast.error(friendlyError(error, t("Saqlash amalga oshmadi"))),
   });
 
   const unlinkMutation = useMutation({
@@ -88,7 +89,7 @@ function TelegramPage() {
       toast.success(t("Telegram uzildi"));
       void queryClient.invalidateQueries({ queryKey: ["telegram-link"] });
     },
-    onError: (error: unknown) => toast.error(error instanceof Error ? error.message : t("Uzish amalga oshmadi")),
+    onError: (error: unknown) => toast.error(friendlyError(error, t("Uzish amalga oshmadi"))),
   });
 
   if (link.isPending) return <LoadingState />;

@@ -52,6 +52,7 @@ import { can } from "@/lib/roles";
 import { formatMoney } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { t } from "@/lib/i18n";
+import { friendlyError } from "@/lib/friendly-error";
 
 type FindingRow = { id: string; created_at: string; data: Record<string, unknown> | null };
 
@@ -148,7 +149,7 @@ export function DentalChart({ customerId, patientName }: { customerId: string; p
       setOpen(false);
       toast.success(t("Odontogramma saqlandi"));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t("Xatolik"));
+      toast.error(friendlyError(error, t("Xatolik")));
     } finally {
       setSaving(false);
     }
@@ -160,7 +161,7 @@ export function DentalChart({ customerId, patientName }: { customerId: string; p
       await refresh();
       toast.success(t("Yozuv o‘chirildi"));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t("Xatolik"));
+      toast.error(friendlyError(error, t("Xatolik")));
     }
   };
 

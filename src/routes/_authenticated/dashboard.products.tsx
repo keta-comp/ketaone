@@ -21,6 +21,7 @@ import {
 import { formatMoney, stockState } from "@/lib/types";
 import { useSectionTitle, useTerminology } from "@/lib/terminology";
 import { t } from "@/lib/i18n";
+import { friendlyError } from "@/lib/friendly-error";
 
 export const Route = createFileRoute("/_authenticated/dashboard/products")({
   head: () => ({
@@ -109,7 +110,7 @@ function ProductsPage() {
       setDraft(null);
       void queryClient.invalidateQueries({ queryKey: ["products"] });
     },
-    onError: (error: unknown) => toast.error(error instanceof Error ? error.message : t("Saqlash amalga oshmadi")),
+    onError: (error: unknown) => toast.error(friendlyError(error, t("Saqlash amalga oshmadi"))),
   });
 
   const removeMutation = useMutation({
@@ -118,7 +119,7 @@ function ProductsPage() {
       toast.success(t("{term} o'chirildi", { term: catalog.one }));
       void queryClient.invalidateQueries({ queryKey: ["products"] });
     },
-    onError: (error: unknown) => toast.error(error instanceof Error ? error.message : t("O'chirish amalga oshmadi")),
+    onError: (error: unknown) => toast.error(friendlyError(error, t("O'chirish amalga oshmadi"))),
   });
 
   const categoryMutation = useMutation({
@@ -127,7 +128,7 @@ function ProductsPage() {
       setNewCategory("");
       void queryClient.invalidateQueries({ queryKey: ["categories"] });
     },
-    onError: (error: unknown) => toast.error(error instanceof Error ? error.message : t("Kategoriya qo'shilmadi")),
+    onError: (error: unknown) => toast.error(friendlyError(error, t("Kategoriya qo'shilmadi"))),
   });
 
   return (

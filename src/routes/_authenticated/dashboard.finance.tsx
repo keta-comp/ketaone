@@ -25,6 +25,7 @@ import {
 } from "@/lib/finance.functions";
 import { EXPENSE_CATEGORIES } from "@/lib/finance";
 import { formatMoney } from "@/lib/types";
+import { friendlyError } from "@/lib/friendly-error";
 
 export const Route = createFileRoute("/_authenticated/dashboard/finance")({
   head: () => ({
@@ -87,7 +88,7 @@ function ExpensesTab() {
       setForm((prev) => ({ ...prev, amount: "", note: "" }));
       invalidate();
     },
-    onError: (error: unknown) => toast.error(error instanceof Error ? error.message : t("Amalga oshmadi")),
+    onError: (error: unknown) => toast.error(friendlyError(error, t("Amalga oshmadi"))),
   });
 
   const removeMutation = useMutation({
@@ -96,7 +97,7 @@ function ExpensesTab() {
       toast.success(t("Xarajat o'chirildi"));
       invalidate();
     },
-    onError: (error: unknown) => toast.error(error instanceof Error ? error.message : t("Amalga oshmadi")),
+    onError: (error: unknown) => toast.error(friendlyError(error, t("Amalga oshmadi"))),
   });
 
   const total = useMemo(
@@ -285,7 +286,7 @@ function CashTab() {
       setNote("");
       invalidate();
     },
-    onError: (error: unknown) => toast.error(error instanceof Error ? error.message : t("Amalga oshmadi")),
+    onError: (error: unknown) => toast.error(friendlyError(error, t("Amalga oshmadi"))),
   });
 
   const closeMutation = useMutation({
@@ -300,7 +301,7 @@ function CashTab() {
         toast.warning(`${t("Farq")}: ${formatMoney(diff)}`);
       }
     },
-    onError: (error: unknown) => toast.error(error instanceof Error ? error.message : t("Amalga oshmadi")),
+    onError: (error: unknown) => toast.error(friendlyError(error, t("Amalga oshmadi"))),
   });
 
   const active = overview.data?.active ?? null;

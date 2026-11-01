@@ -51,6 +51,7 @@ import { isClubPreset } from "@/lib/presets";
 import { useSectionTitle, useTerminology } from "@/lib/terminology";
 import { formatMoney } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { friendlyError } from "@/lib/friendly-error";
 
 export const Route = createFileRoute("/_authenticated/dashboard/appointments")({
   head: () => ({
@@ -244,7 +245,7 @@ function ScheduleTab() {
       setView("day");
       invalidate();
     },
-    onError: (error: unknown) => toast.error(error instanceof Error ? error.message : t("Amalga oshmadi")),
+    onError: (error: unknown) => toast.error(friendlyError(error, t("Amalga oshmadi"))),
   });
 
   const statusMutation = useMutation({
@@ -253,7 +254,7 @@ function ScheduleTab() {
       toast.success(t("Holat yangilandi"));
       invalidate();
     },
-    onError: (error: unknown) => toast.error(error instanceof Error ? error.message : t("Amalga oshmadi")),
+    onError: (error: unknown) => toast.error(friendlyError(error, t("Amalga oshmadi"))),
   });
 
   const removeMutation = useMutation({
@@ -262,7 +263,7 @@ function ScheduleTab() {
       toast.success(t("{term} o'chirildi", { term: booking.one }));
       invalidate();
     },
-    onError: (error: unknown) => toast.error(error instanceof Error ? error.message : t("Amalga oshmadi")),
+    onError: (error: unknown) => toast.error(friendlyError(error, t("Amalga oshmadi"))),
   });
 
   const [depositMethod, setDepositMethod] = useState<DepositMethod>("cash");
@@ -274,7 +275,7 @@ function ScheduleTab() {
       toast.success(t("Depozit qabul qilindi"));
       invalidate();
     },
-    onError: (error: unknown) => toast.error(error instanceof Error ? error.message : t("Amalga oshmadi")),
+    onError: (error: unknown) => toast.error(friendlyError(error, t("Amalga oshmadi"))),
   });
 
   const refundMutation = useMutation({
@@ -283,7 +284,7 @@ function ScheduleTab() {
       toast.success(t("Depozit qaytarildi"));
       invalidate();
     },
-    onError: (error: unknown) => toast.error(error instanceof Error ? error.message : t("Amalga oshmadi")),
+    onError: (error: unknown) => toast.error(friendlyError(error, t("Amalga oshmadi"))),
   });
 
   const employees = (employeesQuery.data ?? []).map((employee) => ({

@@ -23,6 +23,7 @@ import { DataTable, Field, NoData, Panel, Pill, fmtDate, fmtMoney, fmtNumber } f
 import { getOrganization, setOrganizationPlan, setOrganizationStatus } from "@/lib/super-admin.functions";
 import { PLAN_IDS } from "@/lib/billing";
 import { t } from "@/lib/i18n";
+import { friendlyError } from "@/lib/friendly-error";
 
 export const Route = createFileRoute("/_authenticated/super-admin/organizations/$id")({
   head: () => ({
@@ -68,7 +69,7 @@ function OrganizationDetailPage() {
       setReason("");
       invalidate();
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : t("Amal bajarilmadi")),
+    onError: (e) => toast.error(friendlyError(e, t("Amal bajarilmadi"))),
   });
 
   const changePlan = useMutation({
@@ -77,7 +78,7 @@ function OrganizationDetailPage() {
       toast.success(t("Plan o‘zgartirildi"));
       invalidate();
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : t("Amal bajarilmadi")),
+    onError: (e) => toast.error(friendlyError(e, t("Amal bajarilmadi"))),
   });
 
   if (isPending) return <LoadingState />;

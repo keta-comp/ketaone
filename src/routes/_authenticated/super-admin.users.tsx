@@ -38,6 +38,7 @@ import {
   setUserStatus,
 } from "@/lib/super-admin.functions";
 import { t } from "@/lib/i18n";
+import { friendlyError } from "@/lib/friendly-error";
 
 export const Route = createFileRoute("/_authenticated/super-admin/users")({
   head: () => ({
@@ -118,7 +119,7 @@ function UserDialog({ userId, onClose }: { userId: string; onClose: () => void }
       );
       invalidate();
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : t("Amal bajarilmadi")),
+    onError: (e) => toast.error(friendlyError(e, t("Amal bajarilmadi"))),
   });
 
   const changeRole = useMutation({
@@ -128,7 +129,7 @@ function UserDialog({ userId, onClose }: { userId: string; onClose: () => void }
       toast.success(t("Rol yangilandi"));
       invalidate();
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : t("Amal bajarilmadi")),
+    onError: (e) => toast.error(friendlyError(e, t("Amal bajarilmadi"))),
   });
 
   const setPassword = useMutation({
@@ -137,7 +138,7 @@ function UserDialog({ userId, onClose }: { userId: string; onClose: () => void }
       toast.success(t("Parol almashtirildi — eski sessiyalar ishlashda davom etadi."));
       setNewPassword("");
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : t("Parol almashtirilmadi")),
+    onError: (e) => toast.error(friendlyError(e, t("Parol almashtirilmadi"))),
   });
 
   const remove = useMutation({
@@ -152,7 +153,7 @@ function UserDialog({ userId, onClose }: { userId: string; onClose: () => void }
       void queryClient.invalidateQueries({ queryKey: ["super-admin-users"] });
       onClose();
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : t("O‘chirilmadi")),
+    onError: (e) => toast.error(friendlyError(e, t("O‘chirilmadi"))),
   });
 
   return (
@@ -334,7 +335,7 @@ function UsersPage() {
       const file = await exportFn({ data: { kind: "users" } });
       downloadBase64Xlsx(file.base64, file.filename);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : t("Eksport qilinmadi"));
+      toast.error(friendlyError(e, t("Eksport qilinmadi")));
     }
   };
 

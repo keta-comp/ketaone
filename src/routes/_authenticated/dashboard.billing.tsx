@@ -11,6 +11,7 @@ import { computeAccess, daysLeft, PLAN_KEYS, PLANS, type PlanKey } from "@/lib/b
 import { createCheckout, getBilling } from "@/lib/billing.functions";
 import { formatMoney } from "@/lib/types";
 import { t } from "@/lib/i18n";
+import { friendlyError } from "@/lib/friendly-error";
 
 export const Route = createFileRoute("/_authenticated/dashboard/billing")({
   head: () => ({
@@ -50,7 +51,7 @@ function BillingPage() {
       const { url } = await checkout({ data: { plan, provider, returnUrl: `${window.location.origin}/dashboard/billing` } });
       window.location.href = url;
     } catch (e) {
-      toast.error(e instanceof Error ? t(e.message) : t("Xatolik"));
+      toast.error(friendlyError(e instanceof Error ? t(e.message) : "", t("Xatolik")));
       setBusy(null);
     }
   };

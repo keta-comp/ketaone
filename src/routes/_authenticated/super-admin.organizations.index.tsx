@@ -20,6 +20,7 @@ import { downloadBase64Xlsx } from "@/components/app/super-admin-ui";
 import { exportPlatformExcel, listOrganizationsFn } from "@/lib/super-admin.functions";
 import { PLAN_IDS } from "@/lib/billing";
 import { t } from "@/lib/i18n";
+import { friendlyError } from "@/lib/friendly-error";
 
 export const Route = createFileRoute("/_authenticated/super-admin/organizations/")({
   head: () => ({
@@ -57,7 +58,7 @@ function OrganizationsPage() {
       const file = await exportFn({ data: { kind: "organizations" } });
       downloadBase64Xlsx(file.base64, file.filename);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : t("Eksport qilinmadi"));
+      toast.error(friendlyError(e, t("Eksport qilinmadi")));
     }
   };
 

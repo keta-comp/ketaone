@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { getMyBookingLink, setMyBookingEnabled } from "@/lib/public-booking.functions";
 import { t } from "@/lib/i18n";
+import { friendlyError } from "@/lib/friendly-error";
 
 export function BookingLinkCard() {
   const queryClient = useQueryClient();
@@ -28,7 +29,7 @@ export function BookingLinkCard() {
       void queryClient.invalidateQueries({ queryKey: ["booking-link"] });
     },
     onError: (error: unknown) =>
-      toast.error(error instanceof Error ? error.message : t("Saqlash amalga oshmadi")),
+      toast.error(friendlyError(error, t("Saqlash amalga oshmadi"))),
   });
 
   if (link.isPending || !link.data) return null;

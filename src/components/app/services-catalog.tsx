@@ -31,6 +31,7 @@ import { listServiceTeam } from "@/lib/employees.functions";
 import { t } from "@/lib/i18n";
 import { useTerminology } from "@/lib/terminology";
 import { formatMoney } from "@/lib/types";
+import { friendlyError } from "@/lib/friendly-error";
 
 type ServiceSaveInput = {
   id?: string;
@@ -225,7 +226,7 @@ export function ServicesCatalog({
       invalidate();
     },
     onError: (error: unknown) =>
-      toast.error(error instanceof Error ? error.message : t("Amalga oshmadi")),
+      toast.error(friendlyError(error, t("Amalga oshmadi"))),
   });
 
   const removeMutation = useMutation({
@@ -235,7 +236,7 @@ export function ServicesCatalog({
       invalidate();
     },
     onError: (error: unknown) =>
-      toast.error(error instanceof Error ? error.message : t("Amalga oshmadi")),
+      toast.error(friendlyError(error, t("Amalga oshmadi"))),
   });
 
   const submit = () => {

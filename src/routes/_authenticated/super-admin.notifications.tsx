@@ -27,6 +27,7 @@ import {
   sendSystemNotification,
 } from "@/lib/super-admin.functions";
 import { t } from "@/lib/i18n";
+import { friendlyError } from "@/lib/friendly-error";
 
 export const Route = createFileRoute("/_authenticated/super-admin/notifications")({
   head: () => ({
@@ -98,7 +99,7 @@ function NotificationsPage() {
       setConfirm(false);
       void queryClient.invalidateQueries({ queryKey: ["super-admin-notifications"] });
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : t("Yuborilmadi")),
+    onError: (e) => toast.error(friendlyError(e, t("Yuborilmadi"))),
   });
 
   const revoke = useMutation({
@@ -107,7 +108,7 @@ function NotificationsPage() {
       toast.success(t("E’lon o‘chirildi"));
       void queryClient.invalidateQueries({ queryKey: ["super-admin-notifications"] });
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : t("O‘chirilmadi")),
+    onError: (e) => toast.error(friendlyError(e, t("O‘chirilmadi"))),
   });
 
   const canSend = title.trim().length >= 2 && body.trim().length >= 2 && (targetKind === "all" || !!targetValue);

@@ -11,6 +11,7 @@ import { saveCrmRecord, searchRelatedRecords } from "@/lib/crm-config.functions"
 import { saveCrmCustomer } from "@/lib/customers.functions";
 import { saveEmployee } from "@/lib/employees.functions";
 import { t } from "@/lib/i18n";
+import { friendlyError } from "@/lib/friendly-error";
 
 export interface RelationValue {
   id: string;
@@ -86,7 +87,7 @@ export function RelationCombobox({
       setOpen(false);
       toast.success(t("Qo‘shildi"));
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : t("Xatolik"));
+      toast.error(friendlyError(e, t("Xatolik")));
     } finally {
       setAdding(false);
     }

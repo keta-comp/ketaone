@@ -30,6 +30,7 @@ import { t } from "@/lib/i18n";
 import { useSectionVisibility } from "@/lib/section-visibility";
 import { useSectionTitle } from "@/lib/terminology";
 import { formatMoney } from "@/lib/types";
+import { friendlyError } from "@/lib/friendly-error";
 
 export const Route = createFileRoute("/_authenticated/dashboard/courses")({
   head: () => ({
@@ -105,7 +106,7 @@ function CoursesPage() {
       invalidate();
     },
     onError: (error: unknown) =>
-      toast.error(error instanceof Error ? error.message : t("Amalga oshmadi")),
+      toast.error(friendlyError(error, t("Amalga oshmadi"))),
   });
 
   const removeMutation = useMutation({
@@ -115,7 +116,7 @@ function CoursesPage() {
       invalidate();
     },
     onError: (error: unknown) =>
-      toast.error(error instanceof Error ? error.message : t("Amalga oshmadi")),
+      toast.error(friendlyError(error, t("Amalga oshmadi"))),
   });
 
   // Kurs — faqat o‘quv markazi sohasining sahifasi; boshqa presetlarda menyu da yo‘q,

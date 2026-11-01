@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { askBusinessAssistant } from "@/lib/workspace.functions";
 import { t } from "@/lib/i18n";
+import { friendlyError } from "@/lib/friendly-error";
 
 export const Route = createFileRoute("/_authenticated/dashboard/assistant")({
   head: () => ({
@@ -51,7 +52,7 @@ function AssistantPage() {
     } catch (error) {
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: error instanceof Error ? error.message : "Xatolik yuz berdi." },
+        { role: "assistant", content: friendlyError(error, "Xatolik yuz berdi.") },
       ]);
     } finally {
       setBusy(false);

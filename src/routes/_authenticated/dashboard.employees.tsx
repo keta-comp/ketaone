@@ -29,6 +29,7 @@ import {
 import { listServices } from "@/lib/appointments.functions";
 import { intlLocale, t } from "@/lib/i18n";
 import { useSectionTitle, useTerminology } from "@/lib/terminology";
+import { friendlyError } from "@/lib/friendly-error";
 
 export const Route = createFileRoute("/_authenticated/dashboard/employees")({
   head: () => ({
@@ -78,13 +79,13 @@ function ScheduleEditor({ employeeId }: { employeeId: string }) {
       toast.success(t("Jadval saqlandi"));
       invalidate();
     },
-    onError: (error: unknown) => toast.error(error instanceof Error ? error.message : t("Amalga oshmadi")),
+    onError: (error: unknown) => toast.error(friendlyError(error, t("Amalga oshmadi"))),
   });
 
   const removeMutation = useMutation({
     mutationFn: (id: string) => remove({ data: { id } }),
     onSuccess: () => invalidate(),
-    onError: (error: unknown) => toast.error(error instanceof Error ? error.message : t("Amalga oshmadi")),
+    onError: (error: unknown) => toast.error(friendlyError(error, t("Amalga oshmadi"))),
   });
 
   const rowsByWeekday = new Map((schedule.data ?? []).map((row) => [row.weekday, row]));
@@ -274,7 +275,7 @@ function ServicesEditor({ employeeId }: { employeeId: string }) {
       toast.success(t("Malaka saqlandi"));
       void queryClient.invalidateQueries({ queryKey: ["employee-services", employeeId] });
     },
-    onError: (error: unknown) => toast.error(error instanceof Error ? error.message : t("Amalga oshmadi")),
+    onError: (error: unknown) => toast.error(friendlyError(error, t("Amalga oshmadi"))),
   });
 
   const current = new Set(assigned.data ?? []);
@@ -335,13 +336,13 @@ function TimeOffEditor({ employeeId }: { employeeId: string }) {
       setForm({ starts_at: "", ends_at: "", reason: "" });
       invalidate();
     },
-    onError: (error: unknown) => toast.error(error instanceof Error ? error.message : t("Amalga oshmadi")),
+    onError: (error: unknown) => toast.error(friendlyError(error, t("Amalga oshmadi"))),
   });
 
   const removeMutation = useMutation({
     mutationFn: (id: string) => remove({ data: { id } }),
     onSuccess: () => invalidate(),
-    onError: (error: unknown) => toast.error(error instanceof Error ? error.message : t("Amalga oshmadi")),
+    onError: (error: unknown) => toast.error(friendlyError(error, t("Amalga oshmadi"))),
   });
 
   return (
@@ -462,7 +463,7 @@ function EmployeesPage() {
       setForm({ full_name: "", position: "", phone: "", branch_id: "" });
       invalidate();
     },
-    onError: (error: unknown) => toast.error(error instanceof Error ? error.message : t("Amalga oshmadi")),
+    onError: (error: unknown) => toast.error(friendlyError(error, t("Amalga oshmadi"))),
   });
 
   const toggleMutation = useMutation({
@@ -475,7 +476,7 @@ function EmployeesPage() {
       is_active: boolean;
     }) => save({ data: input }),
     onSuccess: () => invalidate(),
-    onError: (error: unknown) => toast.error(error instanceof Error ? error.message : t("Amalga oshmadi")),
+    onError: (error: unknown) => toast.error(friendlyError(error, t("Amalga oshmadi"))),
   });
 
   const removeMutation = useMutation({
@@ -485,7 +486,7 @@ function EmployeesPage() {
       if (selectedId === id) setSelectedId(null);
       invalidate();
     },
-    onError: (error: unknown) => toast.error(error instanceof Error ? error.message : t("Amalga oshmadi")),
+    onError: (error: unknown) => toast.error(friendlyError(error, t("Amalga oshmadi"))),
   });
 
   const selected = (employees.data ?? []).find((employee) => employee.id === selectedId) ?? null;

@@ -24,6 +24,7 @@ import { exportReportExcel, getReport } from "@/lib/workspace.functions";
 import { exportBookingCsv, getBookingReport } from "@/lib/booking-reports.functions";
 import { formatMoney } from "@/lib/types";
 import { t } from "@/lib/i18n";
+import { friendlyError } from "@/lib/friendly-error";
 
 export const Route = createFileRoute("/_authenticated/dashboard/analytics")({
   head: () => ({
@@ -88,7 +89,7 @@ function ReportsPage() {
       link.click();
       URL.revokeObjectURL(url);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t("Yuklab olish xatosi"));
+      toast.error(friendlyError(error, t("Yuklab olish xatosi")));
     } finally {
       setExporting(false);
     }
@@ -107,7 +108,7 @@ function ReportsPage() {
       link.click();
       URL.revokeObjectURL(url);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t("Yuklab olish xatosi"));
+      toast.error(friendlyError(error, t("Yuklab olish xatosi")));
     } finally {
       setExportingCsv(false);
     }

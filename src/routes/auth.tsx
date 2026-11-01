@@ -11,6 +11,7 @@ import { applyPasswordReset, getAuthSession, signIn, signUp } from "@/lib/auth.f
 import { recordFailedLogin, recordLogin, recordRegistration } from "@/lib/session.functions";
 import { t } from "@/lib/i18n";
 import { LanguageSwitcher } from "@/components/app/LanguageSwitcher";
+import { friendlyError } from "@/lib/friendly-error";
 
 const TITLE = "Kabinaga kirish — KetaOne";
 const DESCRIPTION =
@@ -114,7 +115,7 @@ function AuthPage() {
       void recordLogin().catch(() => undefined);
       navigate({ to: redirectTo ?? "/dashboard" });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t("Kirishda xatolik yuz berdi"));
+      toast.error(friendlyError(error, t("Kirishda xatolik yuz berdi")));
     } finally {
       setBusy(false);
     }

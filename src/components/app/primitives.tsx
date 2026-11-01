@@ -4,6 +4,7 @@ import { AlertTriangle, Inbox, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { t } from "@/lib/i18n";
+import { friendlyError } from "@/lib/friendly-error";
 
 export function PageHeader({
   title,
@@ -73,7 +74,7 @@ export function LoadingState({ label = "Yuklanmoqda…" }: { label?: string }) {
 }
 
 export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
-  const message = error instanceof Error ? error.message : "Nimadir xato ketdi";
+  const message = friendlyError(error, "Nimadir xato ketdi");
   return (
     <div className="clay-panel flex flex-col items-center gap-3 p-10 text-center">
       <span className="clay-inset grid size-14 place-items-center"><AlertTriangle className="size-6 text-destructive" /></span>

@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { deleteBranch, listBranches, saveBranch } from "@/lib/branches.functions";
 import { t } from "@/lib/i18n";
+import { friendlyError } from "@/lib/friendly-error";
 
 export const Route = createFileRoute("/_authenticated/dashboard/branches")({
   head: () => ({
@@ -50,7 +51,7 @@ function BranchesPage() {
       setForm({ name: "", address: "", phone: "" });
       invalidate();
     },
-    onError: (error: unknown) => toast.error(error instanceof Error ? error.message : t("Amalga oshmadi")),
+    onError: (error: unknown) => toast.error(friendlyError(error, t("Amalga oshmadi"))),
   });
 
   const toggleMutation = useMutation({
@@ -62,7 +63,7 @@ function BranchesPage() {
       is_active: boolean;
     }) => save({ data: input }),
     onSuccess: () => invalidate(),
-    onError: (error: unknown) => toast.error(error instanceof Error ? error.message : t("Amalga oshmadi")),
+    onError: (error: unknown) => toast.error(friendlyError(error, t("Amalga oshmadi"))),
   });
 
   const removeMutation = useMutation({
@@ -71,7 +72,7 @@ function BranchesPage() {
       toast.success(t("Filial o'chirildi"));
       invalidate();
     },
-    onError: (error: unknown) => toast.error(error instanceof Error ? error.message : t("Amalga oshmadi")),
+    onError: (error: unknown) => toast.error(friendlyError(error, t("Amalga oshmadi"))),
   });
 
   return (

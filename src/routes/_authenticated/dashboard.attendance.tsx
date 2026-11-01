@@ -33,6 +33,7 @@ import { intlLocale, t } from "@/lib/i18n";
 import { useSectionVisibility } from "@/lib/section-visibility";
 import { useSectionTitle, useTerminology } from "@/lib/terminology";
 import { cn } from "@/lib/utils";
+import { friendlyError } from "@/lib/friendly-error";
 
 export const Route = createFileRoute("/_authenticated/dashboard/attendance")({
   head: () => ({
@@ -135,7 +136,7 @@ function AttendancePage() {
       void queryClient.invalidateQueries({ queryKey: ["attendance-week"], refetchType: "none" });
     },
     onError: (error: unknown) => {
-      toast.error(error instanceof Error ? error.message : t("Belgilab bo‘lmadi"));
+      toast.error(friendlyError(error, t("Belgilab bo‘lmadi")));
       void day.refetch();
     },
   });
@@ -148,7 +149,7 @@ function AttendancePage() {
       void queryClient.invalidateQueries({ queryKey: ["attendance-week"], refetchType: "none" });
     },
     onError: (error: unknown) => {
-      toast.error(error instanceof Error ? error.message : t("Belgilab bo‘lmadi"));
+      toast.error(friendlyError(error, t("Belgilab bo‘lmadi")));
       void day.refetch();
     },
   });

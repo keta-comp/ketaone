@@ -23,6 +23,7 @@ import {
   type PaymentStatus,
 } from "@/lib/types";
 import { intlLocale, t } from "@/lib/i18n";
+import { friendlyError } from "@/lib/friendly-error";
 
 const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   new: "Yangi",
@@ -109,7 +110,7 @@ function OrdersPage() {
       void queryClient.invalidateQueries({ queryKey: ["orders"] });
       void queryClient.invalidateQueries({ queryKey: ["products"] });
     },
-    onError: (error: unknown) => toast.error(error instanceof Error ? error.message : t("Yangilash amalga oshmadi")),
+    onError: (error: unknown) => toast.error(friendlyError(error, t("Yangilash amalga oshmadi"))),
   });
 
   if (hidden) return <Navigate to="/dashboard" replace />;

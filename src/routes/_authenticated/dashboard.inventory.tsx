@@ -11,6 +11,7 @@ import { adjustStock, listInventoryMovements, listProducts } from "@/lib/catalog
 import { useHiddenSection } from "@/lib/section-visibility";
 import { stockState } from "@/lib/types";
 import { intlLocale, t } from "@/lib/i18n";
+import { friendlyError } from "@/lib/friendly-error";
 
 export const Route = createFileRoute("/_authenticated/dashboard/inventory")({
   head: () => ({
@@ -47,7 +48,7 @@ function InventoryPage() {
       void queryClient.invalidateQueries({ queryKey: ["products"] });
       void queryClient.invalidateQueries({ queryKey: ["movements"] });
     },
-    onError: (error: unknown) => toast.error(error instanceof Error ? error.message : t("O'zgartirish amalga oshmadi")),
+    onError: (error: unknown) => toast.error(friendlyError(error, t("O'zgartirish amalga oshmadi"))),
   });
 
   if (hidden) return <Navigate to="/dashboard" replace />;

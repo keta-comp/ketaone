@@ -23,6 +23,7 @@ import {
 import { formatMoney } from "@/lib/types";
 import { useSectionVisibility } from "@/lib/section-visibility";
 import { t } from "@/lib/i18n";
+import { friendlyError } from "@/lib/friendly-error";
 
 export const Route = createFileRoute("/_authenticated/dashboard/customers/$id")({
   head: () => ({
@@ -86,7 +87,7 @@ function CustomerProfile() {
     try {
       await action();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t("Xatolik"));
+      toast.error(friendlyError(error, t("Xatolik")));
     } finally {
       setBusy(false);
     }

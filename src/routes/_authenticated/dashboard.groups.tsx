@@ -51,6 +51,7 @@ import { useSectionVisibility } from "@/lib/section-visibility";
 import { useSectionTitle, useTerminology } from "@/lib/terminology";
 import { cn } from "@/lib/utils";
 import { formatMoney } from "@/lib/types";
+import { friendlyError } from "@/lib/friendly-error";
 
 export const Route = createFileRoute("/_authenticated/dashboard/groups")({
   head: () => ({
@@ -182,7 +183,7 @@ function GroupsPage() {
       void queryClient.invalidateQueries({ queryKey: ["study-groups"] });
     },
     onError: (error: unknown) =>
-      toast.error(error instanceof Error ? error.message : t("Amalga oshmadi")),
+      toast.error(friendlyError(error, t("Amalga oshmadi"))),
   });
 
   const submit = () => {
@@ -609,7 +610,7 @@ function TuitionButton({ period, groupId }: { period: string; groupId?: string }
       void queryClient.invalidateQueries({ queryKey: ["payments"] });
     },
     onError: (error: unknown) =>
-      toast.error(error instanceof Error ? error.message : t("Hisoblab bo‘lmadi")),
+      toast.error(friendlyError(error, t("Hisoblab bo‘lmadi"))),
   });
 
   return (
@@ -664,7 +665,7 @@ function MembersPanel({
       invalidate();
     },
     onError: (error: unknown) =>
-      toast.error(error instanceof Error ? error.message : t("Qo‘shib bo‘lmadi")),
+      toast.error(friendlyError(error, t("Qo‘shib bo‘lmadi"))),
   });
 
   const removeMutation = useMutation({
@@ -674,7 +675,7 @@ function MembersPanel({
       invalidate();
     },
     onError: (error: unknown) =>
-      toast.error(error instanceof Error ? error.message : t("Amalga oshmadi")),
+      toast.error(friendlyError(error, t("Amalga oshmadi"))),
   });
 
   const memberIds = new Set((members.data?.members ?? []).map((row) => row.student_id));

@@ -13,6 +13,7 @@ import { NoData, Panel } from "@/components/app/super-admin-ui";
 import { getFeatureFlags, saveFeatureFlag } from "@/lib/super-admin.functions";
 import { PLAN_IDS } from "@/lib/billing";
 import { t } from "@/lib/i18n";
+import { friendlyError } from "@/lib/friendly-error";
 
 export const Route = createFileRoute("/_authenticated/super-admin/flags")({
   head: () => ({
@@ -54,7 +55,7 @@ function FlagsPage() {
       setDraft({ key: "", label: "" });
       void queryClient.invalidateQueries({ queryKey: ["super-admin-flags"] });
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : t("Saqlanmadi")),
+    onError: (e) => toast.error(friendlyError(e, t("Saqlanmadi"))),
   });
 
   if (isPending) return <LoadingState />;

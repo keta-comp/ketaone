@@ -60,6 +60,7 @@ import type { PresetSection } from "@/lib/presets";
 import { cn } from "@/lib/utils";
 import { signOut as endSession } from "@/lib/auth.functions";
 import { t } from "@/lib/i18n";
+import { friendlyError } from "@/lib/friendly-error";
 
 const ICONS: Record<string, LucideIcon> = {
   target: Target,
@@ -196,7 +197,7 @@ export function DashboardShell({
     try {
       await endSession();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t("Chiqishda xatolik"));
+      toast.error(friendlyError(error, t("Chiqishda xatolik")));
       return;
     }
     navigate({ to: "/" });

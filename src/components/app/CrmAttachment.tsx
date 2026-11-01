@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { getCrmAttachmentUrl, issueCrmAttachmentPath } from "@/lib/crm-config.functions";
 import { t } from "@/lib/i18n";
 import { uploadToStorage } from "@/lib/storage-upload";
+import { friendlyError } from "@/lib/friendly-error";
 
 /** Objects are stored under `{business}/{module}/{uuid}/{name}` — the last segment is the display name. */
 function attachmentName(path: string): string {
@@ -25,7 +26,7 @@ async function runOpen(moduleKey: string, path: string) {
   try {
     await openAttachment(moduleKey, path);
   } catch (error) {
-    toast.error(error instanceof Error ? error.message : t("Faylni ochib bo‘lmadi"));
+    toast.error(friendlyError(error, t("Faylni ochib bo‘lmadi")));
   }
 }
 
@@ -73,7 +74,7 @@ export function AttachmentField({
       onChange(path);
       toast.success(t("Fayl biriktirildi"));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t("Yuklash amalga oshmadi"));
+      toast.error(friendlyError(error, t("Yuklash amalga oshmadi")));
     } finally {
       setBusy(false);
       if (picker.current) picker.current.value = "";

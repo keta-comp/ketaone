@@ -33,6 +33,7 @@ import { crmLabel } from "@/lib/crm-core";
 import { t } from "@/lib/i18n";
 import { formatMoney } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { friendlyError } from "@/lib/friendly-error";
 
 export const Route = createFileRoute("/_authenticated/dashboard/payroll")({
   head: () => ({
@@ -171,7 +172,7 @@ function StatementsTab({ employees }: { employees: EmployeeOption[] }) {
     void queryClient.invalidateQueries({ queryKey: ["payroll-statements"] });
     void queryClient.invalidateQueries({ queryKey: ["payroll-tuition"] });
   };
-  const onError = (error: unknown) => toast.error(error instanceof Error ? error.message : t("Amalga oshmadi"));
+  const onError = (error: unknown) => toast.error(friendlyError(error, t("Amalga oshmadi")));
 
   const generateMutation = useMutation({
     mutationFn: () =>
@@ -477,7 +478,7 @@ function TuitionBasis({
           period_end: period.period_end,
         },
       }),
-    enabled: Boolean(employeeId),
+    enabled: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(employeeId),
   });
 
   const data = tuition.data;
@@ -560,7 +561,7 @@ function RulesTab({ employees }: { employees: EmployeeOption[] }) {
   });
   const services = useQuery({ queryKey: ["services"], queryFn: () => fetchServices({ data: {} }) });
 
-  const onError = (error: unknown) => toast.error(error instanceof Error ? error.message : t("Amalga oshmadi"));
+  const onError = (error: unknown) => toast.error(friendlyError(error, t("Amalga oshmadi")));
 
   const saveRuleMutation = useMutation({
     mutationFn: () =>

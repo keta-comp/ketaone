@@ -24,6 +24,7 @@ import {
   type ReleasePlatform,
 } from "@/lib/distribution.functions";
 import { t } from "@/lib/i18n";
+import { friendlyError } from "@/lib/friendly-error";
 
 const PLATFORM_NAMES: Record<ReleasePlatform, string> = {
   windows: "Windows",
@@ -47,7 +48,7 @@ function releaseErrorText(error: unknown): string {
   } catch {
     // JSON emas — xato matnini o'zini ko'rsatamiz.
   }
-  return raw || t("Saqlash amalga oshmadi");
+  return friendlyError(raw, t("Saqlash amalga oshmadi"));
 }
 
 function lastUpdated(value: string | null): string {

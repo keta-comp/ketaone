@@ -66,6 +66,11 @@ async function teacherTuition(
   periodStart: string,
   periodEnd: string,
 ): Promise<TuitionSummary> {
+  // Xodim tanlanmagan holatda ("none"/bo'sh) so'rovni bazaga yubormaymiz:
+  // uuid ustuniga matn berilsa Postgres 22P02 bilan chetlab ketadi.
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(employeeId)) {
+    return { rows: [], groups: [], collected: 0, planned: 0 };
+  }
   const { data: groupRows, error } = await supabase
     .from("study_groups")
     .select("id, name, course_id")
