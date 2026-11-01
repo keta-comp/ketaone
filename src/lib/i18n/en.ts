@@ -1014,6 +1014,8 @@ const table: Record<string, string> = {
   "Mijozsiz": "No customer",
   "Xodimni tanlang": "Select an employee",
   "Xodimsiz": "No employee",
+  "Bron": "Booking",
+  "Bronlar": "Bookings",
   "Bron qo'shish": "Add booking",
   "Bron qo'shildi": "Booking added",
   "Bron o'chirildi": "Booking deleted",
