@@ -17,6 +17,19 @@ export function normalizeRoute(route: string): string {
     .slice(0, 300);
 }
 
+/**
+ * A browser cancels in-flight serverFn calls every time the user navigates — the dashboard's
+ * onboarding redirect does this constantly. A cancelled request is not a product failure, so it
+ * must not crowd real errors out of the panel.
+ */
+export function isCancellationNoise(error: unknown, message: string): boolean {
+  const name = error instanceof Error ? (error as { name?: string }).name : "";
+  if (name === "AbortError") return true;
+  return /^(this operation was aborted|aborted|request aborted|signal is aborted without reason|the user aborted a request\.?)$/i.test(
+    message.trim(),
+  );
+}
+
 export function errorFingerprint(input: {
   route: string;
   message: string;

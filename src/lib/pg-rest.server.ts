@@ -231,6 +231,27 @@ function parseTuple(value: string): string[] {
     .filter((part) => part.length > 0);
 }
 
+/**
+ * jsonb ustuniga satr bilan yozilsa uni obyektga qaytaramiz: `JSON.stringify` qilingan
+ * konfiguratsiya aks holda jsonb ichida yana bir qatlam qo'shtirnoqli satr bo'lib qoladi va
+ * `config->>'presetId'` NULL ga tushadi. JSON bo'lmagan satr o'z holicha qaytarilmaydi (undefined)
+ * — chaqiruvchi uni o'zi hal qiladi.
+ */
+export function jsonObjectOf(value: string): unknown {
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    return parsed !== null && typeof parsed === "object" ? parsed : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Yozish/filtr qiymati jsonb uchun tayyor obyekt bo'lishi kerak; satr bo'lsa shu yerda ochiladi. */
+function jsonFilterValue(value: any): any {
+  if (value === null || typeof value !== "string") return value;
+  return jsonObjectOf(value) ?? value;
+}
+
 function condition(
   column: string,
   op: string,
@@ -254,7 +275,8 @@ function condition(
     return `${col} in (${list.map((item) => p.add(item)).join(", ")})`;
   }
   if (op === "cs" || op === "contains") {
-    if (type?.isJson) return `${col} @> ${p.add(value)}::jsonb`;
+    // Filtrda ham xuddi shu qoida: `@> '{"a":1}'::jsonb` EMAS, `@> $1::jsonb` (obyekt).
+    if (type?.isJson) return `${col} @> ${p.add(jsonFilterValue(value))}::jsonb`;
     return `${col} @> ${p.add(value)}`;
   }
   if (op === "ov" || op === "overlaps") return `${col} && ${p.add(value)}`;
@@ -631,10 +653,13 @@ class Builder<T = any[]> implements PromiseLike<PgResult<T>> {
 
   private async writeValue(column: string, value: any, p: Params): Promise<string> {
     const type = (await columnTypes()).get(this.table)?.get(column);
-    if (type?.isJson && value !== null && typeof value === "object") {
+    if (type?.isJson && value !== null) {
       // postgres.js `::jsonb` cast ostidagi parametrni o'zi kodlaydi — oldindan
       // JSON.stringify qilsak qiymat ikki marta kodlanib jsonb ichida satr bo'lib qoladi.
-      return `${p.add(value)}::jsonb`;
+      // Chaqiruvchi baribir satr yuborsa shu yerdan ochamiz: `config->>'presetId'`
+      // NULL bo'lib qolmasligi uchun jsonb doim OBYEKT bo'lishi kerak.
+      const parsed = typeof value === "string" ? jsonObjectOf(value) : value;
+      if (parsed !== undefined) return `${p.add(parsed)}::jsonb`;
     }
     return p.add(value ?? null);
   }

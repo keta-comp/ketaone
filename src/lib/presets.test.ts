@@ -62,6 +62,22 @@ describe("preset registry", () => {
     }
   });
 
+  test("urug'langan qator sxemaga mos: industry satr, config jsonb obyekti", () => {
+    // `crm_configs.industry` NOT NULL va `config` jsonb. Satrga aylanib qolgan konfiguratsiyada
+    // `config->>'presetId'` NULL bo'ladi, administrator esa sababsiz «Nimadir xato ketdi» ko'radi —
+    // shuning uchun har bir presetni urug'lash uchun yaroqli holatida tekshiramiz.
+    for (const id of PRESET_IDS) {
+      const preset = presetForId(id);
+      expect(typeof preset?.industryKey).toBe("string");
+      expect(preset?.industryKey?.length ?? 0).toBeGreaterThan(0);
+      const seeded = attachPresetId(preset!.industryKey, { ...crmConfigForPreset(id), presetId: id });
+      expect(Array.isArray(seeded.modules)).toBe(true);
+      expect(Array.isArray(seeded.dashboardWidgets)).toBe(true);
+      expect(seeded.presetId).toBe(id);
+      expect(JSON.parse(JSON.stringify(seeded)).presetId).toBe(id);
+    }
+  });
+
   test("sub-presets reuse their parent module payload", () => {
     const barbershop = presetForId("barbershop");
     expect(barbershop?.industryKey).toBe("beauty");

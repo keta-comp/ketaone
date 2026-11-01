@@ -612,9 +612,12 @@ export const updateCrmConfig = createServerFn({ method: "POST" })
       .eq("business_id", businessId)
       .maybeSingle();
     if (loadError) throw new Error(loadError.message);
-    const industry = row?.industry ?? null;
     const base = (row?.config ?? crmConfigForPreset(resolvePresetId(null))) as unknown as CrmConfigData;
-    const normalized = attachPresetId(industry, normalizeConfig(data.config, base));
+    const normalized = attachPresetId(row?.industry ?? null, normalizeConfig(data.config, base));
+    // `crm_configs.industry` NOT NULL: qatori yo'q biznesni saqlashda soha nomini
+    // konfiguratsiyadagi presetdan olamiz, aks holda yozuv butunlay rad etiladi.
+    const industry =
+      row?.industry ?? presetForId(resolvePresetId(null, normalized.presetId))?.industryKey ?? "boshqa";
     const payload = { industry, config: normalized as never };
     const write = row
       ? await context.supabase
@@ -747,7 +750,7 @@ export const syncPresetModules = createServerFn({ method: "POST" })
         .upsert(
           {
             business_id: businessId,
-            industry: presetForId(seedPresetId)?.industryKey ?? null,
+            industry: presetForId(seedPresetId)?.industryKey ?? "boshqa",
             config: seeded as never,
           },
           { onConflict: "business_id" },

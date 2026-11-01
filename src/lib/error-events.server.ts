@@ -1,6 +1,6 @@
 import { supabaseAdmin } from "@/lib/platform.server";
 import { describeError } from "./error-capture";
-import { errorBucket, errorFingerprint, normalizeRoute } from "./error-events";
+import { errorBucket, errorFingerprint, isCancellationNoise, normalizeRoute } from "./error-events";
 
 export type CaptureInput = {
   error: unknown;
@@ -26,6 +26,7 @@ export async function captureError(input: CaptureInput) {
           ? input.error
           : "Unknown error";
     const route = normalizeRoute(input.route ?? "");
+    if (isCancellationNoise(input.error, message)) return;
     const { error } = await supabaseAdmin.from("error_events").insert({
       fingerprint: errorFingerprint({ route, message, status: input.status ?? null }),
       bucket: errorBucket(),

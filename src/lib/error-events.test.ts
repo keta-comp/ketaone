@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { describe, expect, test } from "bun:test";
 
-import { ERROR_BUCKET_MS, errorBucket, errorFingerprint, normalizeRoute } from "./error-events";
+import { ERROR_BUCKET_MS, errorBucket, errorFingerprint, isCancellationNoise, normalizeRoute } from "./error-events";
 
 describe("errorBucket", () => {
   test("floors to the ten-minute boundary", () => {
@@ -23,6 +23,21 @@ describe("normalizeRoute", () => {
   });
   test("keeps plain paths readable", () => {
     expect(normalizeRoute("/api/public/payme")).toBe("/api/public/payme");
+  });
+});
+
+describe("isCancellationNoise", () => {
+  test("brauzer bekor qilgan so'rov — mahsulot xatosi emas", () => {
+    expect(isCancellationNoise(new Error("This operation was aborted"), "This operation was aborted")).toBe(true);
+    const err = new Error("boom");
+    err.name = "AbortError";
+    expect(isCancellationNoise(err, "boom")).toBe(true);
+  });
+
+  test("haqiqiy xatolar panelga tushadi", () => {
+    const schema = 'null value in column "industry" of relation "crm_configs" violates not-null constraint';
+    expect(isCancellationNoise(new Error(schema), schema)).toBe(false);
+    expect(isCancellationNoise(new Error("aborted task list"), "aborted task list")).toBe(false);
   });
 });
 
