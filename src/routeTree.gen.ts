@@ -23,6 +23,7 @@ import { Route as AuthenticatedDashboardAppointmentsRouteImport } from './routes
 import { Route as AuthenticatedDashboardAssistantRouteImport } from './routes/_authenticated/dashboard.assistant'
 import { Route as AuthenticatedDashboardAttendanceRouteImport } from './routes/_authenticated/dashboard.attendance'
 import { Route as AuthenticatedDashboardBillingRouteImport } from './routes/_authenticated/dashboard.billing'
+import { Route as AuthenticatedDashboardBookingRouteImport } from './routes/_authenticated/dashboard.booking'
 import { Route as AuthenticatedDashboardBranchesRouteImport } from './routes/_authenticated/dashboard.branches'
 import { Route as AuthenticatedDashboardCoursesRouteImport } from './routes/_authenticated/dashboard.courses'
 import { Route as AuthenticatedDashboardCrmBuilderRouteImport } from './routes/_authenticated/dashboard.crm-builder'
@@ -31,11 +32,13 @@ import { Route as AuthenticatedDashboardEmployeesRouteImport } from './routes/_a
 import { Route as AuthenticatedDashboardFinanceRouteImport } from './routes/_authenticated/dashboard.finance'
 import { Route as AuthenticatedDashboardGroupsRouteImport } from './routes/_authenticated/dashboard.groups'
 import { Route as AuthenticatedDashboardInventoryRouteImport } from './routes/_authenticated/dashboard.inventory'
+import { Route as AuthenticatedDashboardMobileRouteImport } from './routes/_authenticated/dashboard.mobile'
 import { Route as AuthenticatedDashboardOrdersRouteImport } from './routes/_authenticated/dashboard.orders'
 import { Route as AuthenticatedDashboardPaymentsRouteImport } from './routes/_authenticated/dashboard.payments'
 import { Route as AuthenticatedDashboardPayrollRouteImport } from './routes/_authenticated/dashboard.payroll'
 import { Route as AuthenticatedDashboardPipelineRouteImport } from './routes/_authenticated/dashboard.pipeline'
 import { Route as AuthenticatedDashboardProductsRouteImport } from './routes/_authenticated/dashboard.products'
+import { Route as AuthenticatedDashboardProgramRouteImport } from './routes/_authenticated/dashboard.program'
 import { Route as AuthenticatedDashboardServicesRouteImport } from './routes/_authenticated/dashboard.services'
 import { Route as AuthenticatedDashboardSettingsRouteImport } from './routes/_authenticated/dashboard.settings'
 import { Route as AuthenticatedDashboardTasksRouteImport } from './routes/_authenticated/dashboard.tasks'
@@ -141,6 +144,12 @@ const AuthenticatedDashboardBillingRoute =
     path: '/billing',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardBookingRoute =
+  AuthenticatedDashboardBookingRouteImport.update({
+    id: '/booking',
+    path: '/booking',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedDashboardBranchesRoute =
   AuthenticatedDashboardBranchesRouteImport.update({
     id: '/branches',
@@ -189,6 +198,12 @@ const AuthenticatedDashboardInventoryRoute =
     path: '/inventory',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardMobileRoute =
+  AuthenticatedDashboardMobileRouteImport.update({
+    id: '/mobile',
+    path: '/mobile',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedDashboardOrdersRoute =
   AuthenticatedDashboardOrdersRouteImport.update({
     id: '/orders',
@@ -217,6 +232,12 @@ const AuthenticatedDashboardProductsRoute =
   AuthenticatedDashboardProductsRouteImport.update({
     id: '/products',
     path: '/products',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardProgramRoute =
+  AuthenticatedDashboardProgramRouteImport.update({
+    id: '/program',
+    path: '/program',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
 const AuthenticatedDashboardServicesRoute =
@@ -402,6 +423,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/assistant': typeof AuthenticatedDashboardAssistantRoute
   '/dashboard/attendance': typeof AuthenticatedDashboardAttendanceRoute
   '/dashboard/billing': typeof AuthenticatedDashboardBillingRoute
+  '/dashboard/booking': typeof AuthenticatedDashboardBookingRoute
   '/dashboard/branches': typeof AuthenticatedDashboardBranchesRoute
   '/dashboard/courses': typeof AuthenticatedDashboardCoursesRoute
   '/dashboard/crm-builder': typeof AuthenticatedDashboardCrmBuilderRoute
@@ -410,11 +432,13 @@ export interface FileRoutesByFullPath {
   '/dashboard/finance': typeof AuthenticatedDashboardFinanceRoute
   '/dashboard/groups': typeof AuthenticatedDashboardGroupsRoute
   '/dashboard/inventory': typeof AuthenticatedDashboardInventoryRoute
+  '/dashboard/mobile': typeof AuthenticatedDashboardMobileRoute
   '/dashboard/orders': typeof AuthenticatedDashboardOrdersRoute
   '/dashboard/payments': typeof AuthenticatedDashboardPaymentsRoute
   '/dashboard/payroll': typeof AuthenticatedDashboardPayrollRoute
   '/dashboard/pipeline': typeof AuthenticatedDashboardPipelineRoute
   '/dashboard/products': typeof AuthenticatedDashboardProductsRoute
+  '/dashboard/program': typeof AuthenticatedDashboardProgramRoute
   '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/dashboard/tasks': typeof AuthenticatedDashboardTasksRoute
@@ -457,6 +481,7 @@ export interface FileRoutesByTo {
   '/dashboard/assistant': typeof AuthenticatedDashboardAssistantRoute
   '/dashboard/attendance': typeof AuthenticatedDashboardAttendanceRoute
   '/dashboard/billing': typeof AuthenticatedDashboardBillingRoute
+  '/dashboard/booking': typeof AuthenticatedDashboardBookingRoute
   '/dashboard/branches': typeof AuthenticatedDashboardBranchesRoute
   '/dashboard/courses': typeof AuthenticatedDashboardCoursesRoute
   '/dashboard/crm-builder': typeof AuthenticatedDashboardCrmBuilderRoute
@@ -464,11 +489,13 @@ export interface FileRoutesByTo {
   '/dashboard/finance': typeof AuthenticatedDashboardFinanceRoute
   '/dashboard/groups': typeof AuthenticatedDashboardGroupsRoute
   '/dashboard/inventory': typeof AuthenticatedDashboardInventoryRoute
+  '/dashboard/mobile': typeof AuthenticatedDashboardMobileRoute
   '/dashboard/orders': typeof AuthenticatedDashboardOrdersRoute
   '/dashboard/payments': typeof AuthenticatedDashboardPaymentsRoute
   '/dashboard/payroll': typeof AuthenticatedDashboardPayrollRoute
   '/dashboard/pipeline': typeof AuthenticatedDashboardPipelineRoute
   '/dashboard/products': typeof AuthenticatedDashboardProductsRoute
+  '/dashboard/program': typeof AuthenticatedDashboardProgramRoute
   '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/dashboard/tasks': typeof AuthenticatedDashboardTasksRoute
@@ -515,6 +542,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/assistant': typeof AuthenticatedDashboardAssistantRoute
   '/_authenticated/dashboard/attendance': typeof AuthenticatedDashboardAttendanceRoute
   '/_authenticated/dashboard/billing': typeof AuthenticatedDashboardBillingRoute
+  '/_authenticated/dashboard/booking': typeof AuthenticatedDashboardBookingRoute
   '/_authenticated/dashboard/branches': typeof AuthenticatedDashboardBranchesRoute
   '/_authenticated/dashboard/courses': typeof AuthenticatedDashboardCoursesRoute
   '/_authenticated/dashboard/crm-builder': typeof AuthenticatedDashboardCrmBuilderRoute
@@ -523,11 +551,13 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/finance': typeof AuthenticatedDashboardFinanceRoute
   '/_authenticated/dashboard/groups': typeof AuthenticatedDashboardGroupsRoute
   '/_authenticated/dashboard/inventory': typeof AuthenticatedDashboardInventoryRoute
+  '/_authenticated/dashboard/mobile': typeof AuthenticatedDashboardMobileRoute
   '/_authenticated/dashboard/orders': typeof AuthenticatedDashboardOrdersRoute
   '/_authenticated/dashboard/payments': typeof AuthenticatedDashboardPaymentsRoute
   '/_authenticated/dashboard/payroll': typeof AuthenticatedDashboardPayrollRoute
   '/_authenticated/dashboard/pipeline': typeof AuthenticatedDashboardPipelineRoute
   '/_authenticated/dashboard/products': typeof AuthenticatedDashboardProductsRoute
+  '/_authenticated/dashboard/program': typeof AuthenticatedDashboardProgramRoute
   '/_authenticated/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/_authenticated/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/_authenticated/dashboard/tasks': typeof AuthenticatedDashboardTasksRoute
@@ -574,6 +604,7 @@ export interface FileRouteTypes {
     | '/dashboard/assistant'
     | '/dashboard/attendance'
     | '/dashboard/billing'
+    | '/dashboard/booking'
     | '/dashboard/branches'
     | '/dashboard/courses'
     | '/dashboard/crm-builder'
@@ -582,11 +613,13 @@ export interface FileRouteTypes {
     | '/dashboard/finance'
     | '/dashboard/groups'
     | '/dashboard/inventory'
+    | '/dashboard/mobile'
     | '/dashboard/orders'
     | '/dashboard/payments'
     | '/dashboard/payroll'
     | '/dashboard/pipeline'
     | '/dashboard/products'
+    | '/dashboard/program'
     | '/dashboard/services'
     | '/dashboard/settings'
     | '/dashboard/tasks'
@@ -629,6 +662,7 @@ export interface FileRouteTypes {
     | '/dashboard/assistant'
     | '/dashboard/attendance'
     | '/dashboard/billing'
+    | '/dashboard/booking'
     | '/dashboard/branches'
     | '/dashboard/courses'
     | '/dashboard/crm-builder'
@@ -636,11 +670,13 @@ export interface FileRouteTypes {
     | '/dashboard/finance'
     | '/dashboard/groups'
     | '/dashboard/inventory'
+    | '/dashboard/mobile'
     | '/dashboard/orders'
     | '/dashboard/payments'
     | '/dashboard/payroll'
     | '/dashboard/pipeline'
     | '/dashboard/products'
+    | '/dashboard/program'
     | '/dashboard/services'
     | '/dashboard/settings'
     | '/dashboard/tasks'
@@ -686,6 +722,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/assistant'
     | '/_authenticated/dashboard/attendance'
     | '/_authenticated/dashboard/billing'
+    | '/_authenticated/dashboard/booking'
     | '/_authenticated/dashboard/branches'
     | '/_authenticated/dashboard/courses'
     | '/_authenticated/dashboard/crm-builder'
@@ -694,11 +731,13 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/finance'
     | '/_authenticated/dashboard/groups'
     | '/_authenticated/dashboard/inventory'
+    | '/_authenticated/dashboard/mobile'
     | '/_authenticated/dashboard/orders'
     | '/_authenticated/dashboard/payments'
     | '/_authenticated/dashboard/payroll'
     | '/_authenticated/dashboard/pipeline'
     | '/_authenticated/dashboard/products'
+    | '/_authenticated/dashboard/program'
     | '/_authenticated/dashboard/services'
     | '/_authenticated/dashboard/settings'
     | '/_authenticated/dashboard/tasks'
@@ -847,6 +886,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardBillingRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/booking': {
+      id: '/_authenticated/dashboard/booking'
+      path: '/booking'
+      fullPath: '/dashboard/booking'
+      preLoaderRoute: typeof AuthenticatedDashboardBookingRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/branches': {
       id: '/_authenticated/dashboard/branches'
       path: '/branches'
@@ -903,6 +949,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardInventoryRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/mobile': {
+      id: '/_authenticated/dashboard/mobile'
+      path: '/mobile'
+      fullPath: '/dashboard/mobile'
+      preLoaderRoute: typeof AuthenticatedDashboardMobileRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/orders': {
       id: '/_authenticated/dashboard/orders'
       path: '/orders'
@@ -936,6 +989,13 @@ declare module '@tanstack/react-router' {
       path: '/products'
       fullPath: '/dashboard/products'
       preLoaderRoute: typeof AuthenticatedDashboardProductsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/program': {
+      id: '/_authenticated/dashboard/program'
+      path: '/program'
+      fullPath: '/dashboard/program'
+      preLoaderRoute: typeof AuthenticatedDashboardProgramRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
     '/_authenticated/dashboard/services': {
@@ -1168,6 +1228,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardAssistantRoute: typeof AuthenticatedDashboardAssistantRoute
   AuthenticatedDashboardAttendanceRoute: typeof AuthenticatedDashboardAttendanceRoute
   AuthenticatedDashboardBillingRoute: typeof AuthenticatedDashboardBillingRoute
+  AuthenticatedDashboardBookingRoute: typeof AuthenticatedDashboardBookingRoute
   AuthenticatedDashboardBranchesRoute: typeof AuthenticatedDashboardBranchesRoute
   AuthenticatedDashboardCoursesRoute: typeof AuthenticatedDashboardCoursesRoute
   AuthenticatedDashboardCrmBuilderRoute: typeof AuthenticatedDashboardCrmBuilderRoute
@@ -1176,11 +1237,13 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardFinanceRoute: typeof AuthenticatedDashboardFinanceRoute
   AuthenticatedDashboardGroupsRoute: typeof AuthenticatedDashboardGroupsRoute
   AuthenticatedDashboardInventoryRoute: typeof AuthenticatedDashboardInventoryRoute
+  AuthenticatedDashboardMobileRoute: typeof AuthenticatedDashboardMobileRoute
   AuthenticatedDashboardOrdersRoute: typeof AuthenticatedDashboardOrdersRoute
   AuthenticatedDashboardPaymentsRoute: typeof AuthenticatedDashboardPaymentsRoute
   AuthenticatedDashboardPayrollRoute: typeof AuthenticatedDashboardPayrollRoute
   AuthenticatedDashboardPipelineRoute: typeof AuthenticatedDashboardPipelineRoute
   AuthenticatedDashboardProductsRoute: typeof AuthenticatedDashboardProductsRoute
+  AuthenticatedDashboardProgramRoute: typeof AuthenticatedDashboardProgramRoute
   AuthenticatedDashboardServicesRoute: typeof AuthenticatedDashboardServicesRoute
   AuthenticatedDashboardSettingsRoute: typeof AuthenticatedDashboardSettingsRoute
   AuthenticatedDashboardTasksRoute: typeof AuthenticatedDashboardTasksRoute
@@ -1199,6 +1262,7 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
     AuthenticatedDashboardAttendanceRoute:
       AuthenticatedDashboardAttendanceRoute,
     AuthenticatedDashboardBillingRoute: AuthenticatedDashboardBillingRoute,
+    AuthenticatedDashboardBookingRoute: AuthenticatedDashboardBookingRoute,
     AuthenticatedDashboardBranchesRoute: AuthenticatedDashboardBranchesRoute,
     AuthenticatedDashboardCoursesRoute: AuthenticatedDashboardCoursesRoute,
     AuthenticatedDashboardCrmBuilderRoute:
@@ -1209,11 +1273,13 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
     AuthenticatedDashboardFinanceRoute: AuthenticatedDashboardFinanceRoute,
     AuthenticatedDashboardGroupsRoute: AuthenticatedDashboardGroupsRoute,
     AuthenticatedDashboardInventoryRoute: AuthenticatedDashboardInventoryRoute,
+    AuthenticatedDashboardMobileRoute: AuthenticatedDashboardMobileRoute,
     AuthenticatedDashboardOrdersRoute: AuthenticatedDashboardOrdersRoute,
     AuthenticatedDashboardPaymentsRoute: AuthenticatedDashboardPaymentsRoute,
     AuthenticatedDashboardPayrollRoute: AuthenticatedDashboardPayrollRoute,
     AuthenticatedDashboardPipelineRoute: AuthenticatedDashboardPipelineRoute,
     AuthenticatedDashboardProductsRoute: AuthenticatedDashboardProductsRoute,
+    AuthenticatedDashboardProgramRoute: AuthenticatedDashboardProgramRoute,
     AuthenticatedDashboardServicesRoute: AuthenticatedDashboardServicesRoute,
     AuthenticatedDashboardSettingsRoute: AuthenticatedDashboardSettingsRoute,
     AuthenticatedDashboardTasksRoute: AuthenticatedDashboardTasksRoute,

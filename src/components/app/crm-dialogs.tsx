@@ -43,6 +43,7 @@ import {
   PAYMENT_RECORD_STATUSES,
   TASK_PRIORITIES,
   TASK_STATUSES,
+  QUICK_ACTION_SECTIONS,
   crmLabel,
   quickActionLabels,
   type QuickActionKey,
@@ -947,10 +948,13 @@ export function QuickNewButton({
   const { isHidden } = useSectionVisibility();
   const [openKey, setOpenKey] = useState<QuickActionKey | null>(null);
 
-  // Buyurtmalar presetga qarab yashirinadi; Murojaatlar bo'limi butunlay o'chirilgan.
+  // Tezkor yaratish faqat preset ochib qo'ygan bo'limga yozadi: Murojaatlar butunlay
+  // o'chirilgan, Buyurtmalar presetga qarab yashirinadi, klub presetlarida esa
+  // yadro bo'limlarining hech biri yo'q — tugmaning o'zi ko'rinmaydi.
   const actions = (["customer", "order", "payment", "task"] as QuickActionKey[]).filter(
-    (key) => !(key === "order" && isHidden("/dashboard/orders")),
+    (key) => !isHidden(QUICK_ACTION_SECTIONS[key]),
   );
+  if (actions.length === 0) return null;
 
   return (
     <>

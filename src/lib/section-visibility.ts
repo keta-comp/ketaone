@@ -9,15 +9,25 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 
 import { getMyCrmConfig } from "./crm-config.functions";
-import { hiddenRoutesForPreset, menuForPreset, resolvePresetId } from "./presets";
+import {
+  hiddenRoutesForPreset,
+  homeRouteForPreset,
+  isRouteAllowed,
+  menuForPreset,
+  resolvePresetId,
+} from "./presets";
 
 export type SectionVisibility = {
   loading: boolean;
   presetId: string;
+  /** Bo'lim-san'li presetda (klublar) «Umumiy ko‘rinish» yo'q — sahifa shunga qaytadi. */
+  homeRoute: string;
   hidden: Set<string>;
   isHidden: (to: string) => boolean;
   /** Preset menusida bu yo‘nalish bormi — maxsus sahifalar (Kurslar, Guruhlar) shu bilan qo‘riqlanadi. */
   offers: (to: string) => boolean;
+  /** Sahifa umuman ochiladimi: oq ro'yxatli presetda (klublar) menyudan tashqari hammasi yopiq. */
+  allows: (to: string) => boolean;
 };
 
 export function useSectionVisibility(): SectionVisibility {
@@ -29,9 +39,11 @@ export function useSectionVisibility(): SectionVisibility {
   return {
     loading: config.isPending,
     presetId,
+    homeRoute: homeRouteForPreset(presetId) ?? "/dashboard",
     hidden,
     isHidden: (to) => hidden.has(to),
     offers: (to) => offered.has(to),
+    allows: (to) => isRouteAllowed(presetId, to),
   };
 }
 

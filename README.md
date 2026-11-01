@@ -6,7 +6,9 @@ turli bo'limlar, atamalar va jarayonlar bilan ishlaydi.
 
 ## Nima qiladi
 
-- **Sohaga mos menyu** — 12 tayyor preset; har birida o'z modullari, terminologiyasi va yashirin bo'limlari
+- **Sohaga mos menyu** — 14 tayyor preset; har birida o'z modullari, terminologiyasi va yashirin bo'limlari
+- **Klub presetlari** (PlayStation, Bilyard) — faqat 4 bo'lim: dasturni yuklab olish, mobil ilova,
+  Telegram va bron. Vaqtni tashqi hisoblagich sanaydi, KetaOne havola, versiya va bronnii boshqaradi
 - **Mijozlar / o'quvchilar / bemorlar** — bitta katalog, so'nggi qabul va to'lov tarixi bilan
 - **Qabul va bron** — xodim jadvali, band-vaqt tekshiruvi, onlayn bron sahifasi (`/b/<slug>`)
 - **Moliya** — to'lovlar, xarajatlar, oylik, ombor va narxlar

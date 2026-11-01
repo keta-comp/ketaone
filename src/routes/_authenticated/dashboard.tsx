@@ -5,13 +5,20 @@ import { Button } from "@/components/ui/button";
 import { computeAccess } from "@/lib/billing";
 import { getMyCrmConfig } from "@/lib/crm-config.functions";
 import { t } from "@/lib/i18n";
+import { homeRouteForPreset, isRouteAllowedForPath, resolvePresetId } from "@/lib/presets";
 import { useBilling } from "./dashboard.billing";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   // CRM sozlanmagan foydalanuvchini onboarding wizard'ga yo'naltiramiz.
-  loader: async () => {
+  loader: async ({ location }) => {
     const config = await getMyCrmConfig();
     if (!config.hasConfig) throw redirect({ to: "/onboarding" });
+    // Soha menyusi qaysi bo'limlarni umuman ko'rsatmasa, URL'ni qo'lda yozib kirib
+    // bo'lmaydi — tekshiruv serverda, sahifa chiqarilmasdan oldin bajariladi.
+    const presetId = resolvePresetId(config.industry, config.config?.presetId);
+    if (!isRouteAllowedForPath(presetId, location.pathname)) {
+      throw redirect({ to: homeRouteForPreset(presetId) ?? "/dashboard" });
+    }
   },
   component: DashboardLayout,
 });

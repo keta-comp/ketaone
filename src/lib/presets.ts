@@ -127,6 +127,16 @@ export interface IndustryPreset {
   medicalModuleKeys?: string[];
   reports: ReportKey[];
   defaults: PresetDefaults;
+  /**
+   * Bo'lim-san'li preset (PlayStation, Bilyard): ro'yxatdagi har bir yo'nalishdan tashqari
+   * barcha dashboard sahifalari — ADMIN_TAIL ham — yashiriladi. Qora ro'yxat (`hiddenCoreKeys`)
+   * ularni yashira olmaydi, chunki klubda umuman CRM bo'limi bo'lmaydi.
+   */
+  allowedRoutes?: string[];
+  /** `/dashboard` o'rniga tushiladigan sahifa. Klub presetlarida dashboard yo'q. */
+  homeRoute?: string;
+  /** "Qabul" so'zi klubda ma'noni ochmaydi — bron deyiladi. */
+  bookingLabel?: string;
 }
 
 const CORE_ITEMS: Record<CoreKey, PresetMenuItem> = {
@@ -237,6 +247,76 @@ const DEFAULTS: PresetDefaults = {
   workEnd: "18:00",
   slotMinutes: 30,
 };
+
+/**
+ * Har bir dashboard yo'nalishi — `allowedRoutes` shu to'plamdan chegirtilib hisoblaydi.
+ * Yangi sahifa qo'shilganda shu yerga ham yoziladi, aks holda o'sha sahifa bo'lim-san'li
+ * presetda (klublar) ochiq qolib ketadi.
+ */
+const ALL_DASHBOARD_ROUTES: string[] = [
+  "/dashboard",
+  ...Object.values(CORE_ITEMS).map((item) => item.to),
+  ...ADMIN_TAIL.map((item) => item.to),
+  // Sahifaga ega bo'lgan soha bo'limlari (CRM moduli emas).
+  "/dashboard/services",
+  "/dashboard/courses",
+  "/dashboard/groups",
+  "/dashboard/attendance",
+  "/dashboard/booking",
+  "/dashboard/program",
+  "/dashboard/mobile",
+];
+
+/** Klub sohasidagi bron — vaqt hisoblagichi tashqi dasturda, bu yerda faqat bron o'zi. */
+const CLUB_BOOKING_ITEM: PresetMenuItem = {
+  to: "/dashboard/booking",
+  label: "Bron va qabul sozlamalari",
+  icon: "calendar",
+  section: "core",
+};
+
+/** Klub menyusi 1–2-bo'limlari: tarqatish sahifalari (`program_releases` jadvalidan o'qiydi). */
+const CLUB_DOWNLOAD_ITEM: PresetMenuItem = {
+  to: "/dashboard/program",
+  label: "Dasturni yuklab olish",
+  icon: "download",
+  section: "core",
+};
+
+const CLUB_MOBILE_ITEM: PresetMenuItem = {
+  to: "/dashboard/mobile",
+  label: "Mobil dastur",
+  icon: "phone",
+  section: "core",
+};
+
+/** Telegram bo'limi — ADMIN_TAIL'dagi sahifaning o'zi, klub menyuda oldinga chiqadi. */
+const CLUB_TELEGRAM_ITEM: PresetMenuItem = {
+  to: "/dashboard/telegram",
+  label: "Telegram",
+  icon: "send",
+  section: "core",
+  permission: "settings.manage",
+};
+
+/**
+ * Klublarda CRM yadrosi (mijoz, buyurtma, ombor, xodim, moliya, hisobot) umuman
+ * ishlatilmaydi: sessiya hisobi tashqi vaqt hisoblagichida qoladi.
+ */
+const CLUB_ALLOWED_ROUTES: string[] = [
+  CLUB_DOWNLOAD_ITEM.to,
+  CLUB_MOBILE_ITEM.to,
+  CLUB_TELEGRAM_ITEM.to,
+  CLUB_BOOKING_ITEM.to,
+  CORE_ITEMS.appointments.to,
+];
+
+/** Shu uchta sahifa faqat klub presetlarida ochiladi — boshqa sohada butunlay yopiq. */
+const CLUB_ONLY_ROUTES: string[] = [
+  CLUB_DOWNLOAD_ITEM.to,
+  CLUB_MOBILE_ITEM.to,
+  CLUB_BOOKING_ITEM.to,
+];
 
 function dynamicItem(key: string, label: string, icon: string): PresetMenuItem {
   return { to: `/dashboard/crm/${key}`, label, icon, section: "industry" };
@@ -560,6 +640,42 @@ const PRESET_LIST: IndustryPreset[] = [
     defaults: DEFAULTS,
   },
   {
+    id: "playstation",
+    industryKey: "playstation",
+    emoji: "🎮",
+    name: "PlayStation klub",
+    description:
+      "Tashqi vaqt hisoblagichi dasturi, mobil ilova havolalari, Telegram va bron sozlamalari.",
+    bookingType: "appointment",
+    bookingLabel: "Bron",
+    extraCoreKeys: [],
+    labels: {},
+    industryItems: [CLUB_DOWNLOAD_ITEM, CLUB_MOBILE_ITEM, CLUB_TELEGRAM_ITEM, CLUB_BOOKING_ITEM],
+    hiddenModuleKeys: [],
+    reports: [],
+    defaults: { ...DEFAULTS, workStart: "10:00", workEnd: "23:00", slotMinutes: 60 },
+    allowedRoutes: CLUB_ALLOWED_ROUTES,
+    homeRoute: CLUB_DOWNLOAD_ITEM.to,
+  },
+  {
+    id: "bilyard",
+    industryKey: "bilyard",
+    emoji: "🎱",
+    name: "Bilyard klub",
+    description:
+      "Tashqi vaqt hisoblagichi dasturi, mobil ilova havolalari, Telegram va stollar bron sozlamalari.",
+    bookingType: "appointment",
+    bookingLabel: "Bron",
+    extraCoreKeys: [],
+    labels: {},
+    industryItems: [CLUB_DOWNLOAD_ITEM, CLUB_MOBILE_ITEM, CLUB_TELEGRAM_ITEM, CLUB_BOOKING_ITEM],
+    hiddenModuleKeys: [],
+    reports: [],
+    defaults: { ...DEFAULTS, workStart: "12:00", workEnd: "23:00", slotMinutes: 60 },
+    allowedRoutes: CLUB_ALLOWED_ROUTES,
+    homeRoute: CLUB_DOWNLOAD_ITEM.to,
+  },
+  {
     id: "universal",
     industryKey: "boshqa",
     emoji: "⚙️",
@@ -662,6 +778,9 @@ export function enabledModuleKeys(id: string): string[] {
 export function isModuleEnabled(id: string, moduleKey: string): boolean {
   const preset = PRESETS[id];
   if (!preset) return true;
+  // Bo'lim-san'li preset (klublar) hech qanday CRM modulini ko'rsatmaydi: saqlangan
+  // konfiguratsiyada modul qolsa ham sahifasi bloklangan.
+  if (preset.allowedRoutes) return false;
   return !preset.hiddenModuleKeys.includes(moduleKey);
 }
 
@@ -669,12 +788,57 @@ export function isModuleEnabled(id: string, moduleKey: string): boolean {
 export function hiddenRoutesForPreset(id: string): Set<string> {
   const preset = PRESETS[id] ?? UNIVERSAL_PRESET;
   const hidden = new Set(ALWAYS_HIDDEN_ROUTES);
+  if (preset.allowedRoutes) {
+    // Oq ro'yxat: sanab o'tilmagan har bir dashboard sahifasi — ADMIN_TAIL ham — yopiq.
+    const allowed = new Set(preset.allowedRoutes);
+    for (const to of ALL_DASHBOARD_ROUTES) if (!allowed.has(to)) hidden.add(to);
+    return hidden;
+  }
   for (const key of preset.hiddenCoreKeys ?? []) hidden.add(CORE_ITEMS[key].to);
+  // Klub sahifalari (dastur, mobil ilova, bron) faqat oq ro'yxatli presetlarda ochiladi:
+  // boshqa sohada ular menyuga chiqmaydi va URL orqali ham kirib bo'lmaydi.
+  for (const to of CLUB_ONLY_ROUTES) hidden.add(to);
   return hidden;
+}
+
+/**
+ * Route-level answer to "may this preset open the page at all". `hiddenRoutesForPreset`
+ * cannot name every CRM module page, so module routes are decided here instead.
+ */
+export function isRouteAllowed(id: string, to: string): boolean {
+  const preset = PRESETS[id] ?? UNIVERSAL_PRESET;
+  if (preset.allowedRoutes) {
+    if (to.startsWith("/dashboard/crm/")) return false;
+    return preset.allowedRoutes.includes(to);
+  }
+  return !hiddenRoutesForPreset(id).has(to);
 }
 
 export function isSectionVisible(id: string, to: string): boolean {
   return !hiddenRoutesForPreset(id).has(to);
+}
+
+/** Bo'lim-san'li presetda "Umumiy ko‘rinish" yo'q — `/dashboard` shu sahifaga yuboriladi. */
+export function homeRouteForPreset(id: string | null | undefined): string | null {
+  return id ? PRESETS[id]?.homeRoute ?? null : null;
+}
+
+/**
+ * URL bo'yi bo'lim ochiqligini tekshiradi. `/dashboard/customers/42` kabi ichki yo'l
+ * o'z bo'limi bilan birga yopiladi; bo'lim-san'li presetda (klublar) ro'yxatdagi aniq
+ * yo'nalishdan tashqari hech narsa ochilmaydi, CRM modul sahifalari ham shunga kiradi.
+ */
+export function isRouteAllowedForPath(id: string, pathname: string): boolean {
+  const preset = PRESETS[id] ?? UNIVERSAL_PRESET;
+  if (preset.allowedRoutes) {
+    return !pathname.startsWith("/dashboard/crm/") && preset.allowedRoutes.includes(pathname);
+  }
+  const hidden = hiddenRoutesForPreset(id);
+  for (const route of hidden) {
+    if (route === "/dashboard") continue;
+    if (pathname === route || pathname.startsWith(`${route}/`)) return false;
+  }
+  return true;
 }
 
 /** Modules holding patient data (diagnoses, lab results, medical cards) for this preset. */
@@ -796,14 +960,17 @@ export function menuForPreset(id: string): PresetMenuItem[] {
   const label = (key: CoreKey) => preset.labels?.[key] ?? CORE_ITEMS[key].label;
   const withLabel = (key: CoreKey): PresetMenuItem => ({ ...CORE_ITEMS[key], label: label(key) });
   const extras = preset.extraCoreKeys.filter((key) => key !== "pipeline");
-  const menu: PresetMenuItem[] = [
-    { to: "/dashboard", label: "Umumiy ko‘rinish", icon: "dashboard", section: "core" },
-  ];
+  // Klub presetida "Umumiy ko‘rinish" bo'limi yo'q — birinchi bo'lim sahifasi uni almashtiradi.
+  const menu: PresetMenuItem[] = preset.homeRoute
+    ? []
+    : [{ to: "/dashboard", label: "Umumiy ko‘rinish", icon: "dashboard", section: "core" }];
   if (preset.extraCoreKeys.includes("pipeline")) menu.push(withLabel("pipeline"));
   for (const key of LEGACY_CORE_KEYS) menu.push(withLabel(key));
   for (const key of extras) menu.push(withLabel(key));
   menu.push(...preset.industryItems);
-  menu.push(...ADMIN_TAIL);
+  // Preset o'zi sanab o'tgan sahifa (klubdagi Telegram) admin quyirig'ida takrorlanmaydi.
+  const listed = new Set(menu.map((item) => item.to));
+  for (const item of ADMIN_TAIL) if (!listed.has(item.to)) menu.push(item);
   return menu.filter((item) => !hidden.has(item.to));
 }
 
@@ -817,7 +984,7 @@ export function workflowForPreset(id: string): {
   const preset = presetForId(id) ?? UNIVERSAL_PRESET;
   return {
     bookingType: preset.bookingType,
-    bookingLabel: BOOKING_TYPE_LABELS[preset.bookingType],
+    bookingLabel: preset.bookingLabel ?? BOOKING_TYPE_LABELS[preset.bookingType],
     pipelineStages: crmConfigForPreset(preset.id).pipelineStages,
     appointmentStatuses: APPOINTMENT_STATUSES,
   };
