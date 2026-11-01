@@ -765,7 +765,7 @@ export const aiCrmBuilder = createServerFn({ method: "POST" })
       "",
       "Buyruqni bajaring va FAQAT JSON qaytaring:",
       "'{ \"reply\": \"nima qilinganini bitta-gapda o`zbekcha tushuntiring\", \"config\": { yangilangan to`liq konfiguratsiya } }'",
-      "Konfiguratsiya strukturasi joriy bilan bir xil: modules (key, label, icon, link, pipeline, fields), pipelineStages, terminology, dashboardWidgets (key, label, kind: module_count|module_count_today|field_sum|legacy_today_revenue|legacy_today_orders|legacy_today_leads|legacy_hot_leads|legacy_handoffs, moduleKey, fieldKey, where), automations.",
+      "Konfiguratsiya strukturasi joriy bilan bir xil: modules (key, label, icon, link, pipeline, fields), pipelineStages, terminology, dashboardWidgets (key, label, kind: module_count|module_count_today|field_sum|legacy_today_revenue|legacy_today_orders|legacy_handoffs, moduleKey, fieldKey, where), automations.",
       "Faqat so'ralgan o'zgarishni qiling, qolganini o'zgartirmang.",
     ].join("\n");
 
