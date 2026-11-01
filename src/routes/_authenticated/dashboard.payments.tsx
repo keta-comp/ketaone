@@ -177,7 +177,94 @@ function PaymentsPage() {
           description={t("Birinchi to‘lovni qo‘shib, kassani yuritishni boshlang.")}
         />
       ) : (
-        <div className="clay-panel overflow-x-auto p-2">
+        <>
+        <div className="grid gap-2 sm:hidden">
+          {(query.data ?? []).map((row) => {
+            const customer = row.customers as
+              | { id: string | null; full_name: string | null; phone: string | null }
+              | null;
+            const order = row.orders as
+              | { id: string | null; order_number: string | null; total: unknown }
+              | null;
+            const methodLabel = crmLabel(row.method);
+            return (
+              <div key={row.id} className="clay-panel p-4">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <p className="font-medium">
+                    {customer?.id ? (
+                      <Link
+                        to="/dashboard/customers/$id"
+                        params={{ id: customer.id }}
+                        className="underline-offset-4 hover:underline"
+                      >
+                        {customer.full_name ?? "—"}
+                      </Link>
+                    ) : (
+                      (customer?.full_name ?? "—")
+                    )}
+                  </p>
+                  <p className="font-medium tabular-nums">{formatMoney(row.amount, currency)}</p>
+                </div>
+                <div className="mt-1">
+                  <StatusBadge value={row.status} />
+                </div>
+                <div className="mt-1 space-y-0.5 text-xs text-muted-foreground">
+                  <p>{t("Usul")}: {methodLabel}</p>
+                  <p>
+                    {t("Sana")}: {new Date(row.paid_at ?? row.created_at).toLocaleDateString("uz-UZ")}
+                  </p>
+                  {showOrders ? (
+                    <p>
+                      {t("Buyurtma")}:{" "}
+                      {order?.order_number ? (
+                        <Link
+                          to="/dashboard/orders"
+                          search={{ search: order.order_number }}
+                          className="underline-offset-4 hover:underline"
+                        >
+                          #{order.order_number}
+                        </Link>
+                      ) : (
+                        "—"
+                      )}
+                    </p>
+                  ) : null}
+                </div>
+                <div className="mt-2 flex justify-end gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={t("Tahrirlash")}
+                    onClick={() => {
+                      setEditing(row);
+                      setOpen(true);
+                    }}
+                  >
+                    <Pencil className="size-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={t("O‘chirish")}
+                    onClick={async () => {
+                      if (!window.confirm(t("To‘lovni o‘chirasizmi?"))) return;
+                      try {
+                        await remove({ data: { id: row.id } });
+                        toast.success(t("To‘lov o‘chirildi"));
+                        void query.refetch();
+                      } catch (error) {
+                        toast.error(friendlyError(error, t("Xatolik")));
+                      }
+                    }}
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div className="clay-panel hidden overflow-x-auto p-2 sm:block">
           <Table>
             <TableHeader>
               <TableRow>
@@ -275,6 +362,7 @@ function PaymentsPage() {
             </TableBody>
           </Table>
         </div>
+        </>
       )}
 
       <PaymentDialog

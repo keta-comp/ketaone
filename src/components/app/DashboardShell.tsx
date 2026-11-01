@@ -55,7 +55,7 @@ import { LanguageSwitcher } from "@/components/app/LanguageSwitcher";
 import { QuickNewButton } from "@/components/app/crm-dialogs";
 import { getMyCrmConfig } from "@/lib/crm-config.functions";
 import { getPlatformNotice } from "@/lib/notifications.functions";
-import { buildNavItems } from "@/lib/nav";
+import { buildNavItems, mobileTabsForNav, type MobileTab, type NavSource } from "@/lib/nav";
 import { isClubPreset, resolvePresetId, type PresetSection } from "@/lib/presets";
 import { can } from "@/lib/roles";
 import { cn } from "@/lib/utils";
@@ -102,6 +102,8 @@ const ICONS: Record<string, LucideIcon> = {
   // Klub presetlari (PlayStation, Bilyard) bo'limlari.
   download: Download,
   phone: Smartphone,
+  // Mobil pastki panelning so'nggi tugmasi.
+  menu: Menu,
 };
 
 const SECTION_ORDER: PresetSection[] = ["core", "operations", "industry", "money", "team", "admin"];
@@ -179,6 +181,53 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
+/**
+ * Telefonda pastki panel — qabul/tolov kabi amaliyotlar bir bosishda ochiladi.
+ * Tugmalar preset va roldan keladi (lib/nav.ts), shuning uchun klubda 4 bo'lim,
+ * salonlarda Asosiy/Qabullar/Kassa + Menyu ko'rinadi.
+ */
+function MobileTabBar({
+  crm,
+  menuOpen,
+  onMenu,
+}: {
+  crm: NavSource | undefined;
+  menuOpen: boolean;
+  onMenu: () => void;
+}) {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const tabs = mobileTabsForNav(crm);
+  return (
+    <nav className="fixed inset-x-0 bottom-0 z-30 flex items-stretch gap-1 border-t border-border/60 bg-background/95 px-2 pb-[max(0.375rem,env(safe-area-inset-bottom))] pt-1.5 backdrop-blur-xl lg:hidden">
+      {tabs.map((tab) => {
+        const Icon = ICONS[tab.icon] ?? LayoutGrid;
+        const active = tab.isMenu
+          ? menuOpen
+          : tab.to === "/dashboard"
+            ? pathname === "/dashboard"
+            : pathname.startsWith(tab.to);
+        const classes = cn(
+          "flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-1 py-2 text-[11px] font-medium transition-colors",
+          active
+            ? "clay-raised bg-sidebar-accent text-sidebar-accent-foreground"
+            : "text-muted-foreground hover:text-foreground",
+        );
+        return tab.isMenu ? (
+          <button key="menu" type="button" onClick={onMenu} className={classes} aria-label={t("Menyuni ochish")}>
+            <Icon className="size-5" />
+            {t(tab.label)}
+          </button>
+        ) : (
+          <Link key={tab.to} to={tab.to} className={classes}>
+            <Icon className="size-5" />
+            <span className="w-full truncate px-0.5 text-center">{t(tab.label)}</span>
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
 /** Shown when the Control Center closed the workspace (maintenance or a blocked account). */
 function PlatformNoticeBanner() {
   const fetchNotice = useServerFn(getPlatformNotice);
@@ -214,6 +263,8 @@ export function DashboardShell({
   const [open, setOpen] = useState(false);
   const fetchConfig = useServerFn(getMyCrmConfig);
   const { data: crm } = useQuery({ queryKey: ["crm-config"], queryFn: () => fetchConfig() });
+  // Klubda menyuni ochish tugmasi kerak: Sozlamalar pastki panelda emas, shu yerdan ochiladi.
+  const isClub = isClubPreset(resolvePresetId(crm?.industry, crm?.config?.presetId));
   const signOut = async () => {
     try {
       await endSession();
@@ -256,7 +307,12 @@ export function DashboardShell({
           <div className="flex items-center gap-2">
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
-                <Button variant="outline" size="icon" className="lg:hidden" aria-label={t("Menyuni ochish")}>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className={cn("lg:hidden", !isClub && "hidden")}
+                  aria-label={t("Menyuni ochish")}
+                >
                   <Menu className="size-4" />
                 </Button>
               </SheetTrigger>
@@ -281,10 +337,11 @@ export function DashboardShell({
             </Button>
           </div>
         </header>
-        <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 lg:px-8">
+        <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 pb-28 pt-6 lg:px-8 lg:pb-6">
           <PlatformNoticeBanner />
           {children}
         </main>
+        <MobileTabBar crm={crm} menuOpen={open} onMenu={() => setOpen(true)} />
       </div>
     </div>
   );

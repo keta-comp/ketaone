@@ -218,7 +218,42 @@ function ExpensesTab() {
       ) : (expenses.data ?? []).length === 0 ? (
         <EmptyState title={t("Xarajatlar yo'q")} description={t("Bu davrda xarajat qayd etilmagan.")} />
       ) : (
-        <div className="clay-panel overflow-x-auto">
+        <>
+          <div className="grid gap-2 sm:hidden">
+            {(expenses.data ?? []).map((expense) => (
+              <div key={expense.id} className="clay-panel p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-medium tabular-nums">{formatMoney(Number(expense.amount))}</p>
+                    <p className="text-xs text-muted-foreground">{expense.expense_date}</p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={t("Xarajatni o'chirish")}
+                    onClick={() => removeMutation.mutate(expense.id)}
+                    disabled={removeMutation.isPending}
+                  >
+                    <Trash2 className="size-4 text-destructive" />
+                  </Button>
+                </div>
+                <div className="mt-2 grid gap-1 text-xs text-muted-foreground">
+                  <p>
+                    {t("Kategoriya")}:{" "}
+                    {t(EXPENSE_CATEGORIES.find((c) => c.key === expense.category)?.label ?? expense.category)}
+                  </p>
+                  <p>
+                    {t("To'lov usuli")}: {expense.payment_method}
+                  </p>
+                  <p>
+                    {t("Izoh")}: {expense.note || "—"}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="clay-panel hidden overflow-x-auto sm:block">
           <table className="w-full text-sm">
             <thead className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
@@ -253,7 +288,8 @@ function ExpensesTab() {
               ))}
             </tbody>
           </table>
-        </div>
+          </div>
+        </>
       )}
     </div>
   );
@@ -384,7 +420,57 @@ function CashTab() {
       {sessions.isPending ? (
         <LoadingState />
       ) : (sessions.data ?? []).length > 0 ? (
-        <div className="clay-panel overflow-x-auto">
+        <>
+          <div className="grid gap-2 sm:hidden">
+            {(sessions.data ?? []).map((session) => (
+              <div key={session.id} className="clay-panel p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <p className="text-sm font-medium tabular-nums">
+                    {new Date(session.opened_at).toLocaleString(intlLocale())}
+                  </p>
+                  <span className="text-xs text-muted-foreground">
+                    {t("Holat")}: {session.status === "open" ? t("Ochiq") : t("Yopilgan")}
+                  </span>
+                </div>
+                <div className="mt-2 grid gap-1 text-xs text-muted-foreground">
+                  <p>
+                    {t("Yopildi")}:{" "}
+                    <span className="tabular-nums">
+                      {session.closed_at ? new Date(session.closed_at).toLocaleString(intlLocale()) : "—"}
+                    </span>
+                  </p>
+                  <p>
+                    {t("Boshlang'ich summa")}:{" "}
+                    <span className="tabular-nums text-foreground">{formatMoney(Number(session.opening_amount))}</span>
+                  </p>
+                  <p>
+                    {t("Kutilayotgan naqd")}:{" "}
+                    <span className="tabular-nums text-foreground">
+                      {session.expected_cash != null ? formatMoney(Number(session.expected_cash)) : "—"}
+                    </span>
+                  </p>
+                  <p>
+                    {t("Sanalgan summa")}:{" "}
+                    <span className="tabular-nums text-foreground">
+                      {session.counted_amount != null ? formatMoney(Number(session.counted_amount)) : "—"}
+                    </span>
+                  </p>
+                  <p>
+                    {t("Farq")}:{" "}
+                    {session.difference != null ? (
+                      <span className={Number(session.difference) < 0 ? "text-destructive" : "text-foreground"}>
+                        {formatMoney(Number(session.difference))}
+                      </span>
+                    ) : (
+                      "—"
+                    )}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="clay-panel hidden overflow-x-auto sm:block">
           <table className="w-full text-sm">
             <thead className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
@@ -427,7 +513,8 @@ function CashTab() {
               ))}
             </tbody>
           </table>
-        </div>
+          </div>
+        </>
       ) : null}
     </div>
   );

@@ -76,7 +76,53 @@ function InventoryPage() {
         <StatCard label={t("Kam / tugagan")} value={`${lowStock} / ${outOfStock}`} tone="warning" />
       </div>
 
-      <div className="clay-panel clay-inset overflow-x-auto rounded-3xl p-2">
+      <div className="grid gap-2 sm:hidden">
+        {rows.map((product) => (
+          <div key={product.id} className="clay-panel p-4">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="font-medium text-foreground">{product.name}</p>
+                <p className="text-xs text-muted-foreground">{product.sku}</p>
+              </div>
+              <StatusBadge
+                value={stockState(product.stock_quantity, product.reserved_quantity, product.low_stock_threshold)}
+              />
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {t("Qo'lda")}: <span className="tabular-nums text-foreground">{product.stock_quantity}</span>
+              {" · "}
+              {t("Band")}: <span className="tabular-nums text-foreground">{product.reserved_quantity}</span>
+              {" · "}
+              {t("Mavjud")}:{" "}
+              <span className="tabular-nums text-foreground">{product.stock_quantity - product.reserved_quantity}</span>
+            </p>
+            <form
+              className="mt-2 flex flex-wrap items-center gap-2"
+              onSubmit={(event) => {
+                event.preventDefault();
+                const change = Number(deltas[product.id] ?? 0);
+                if (!change) return;
+                mutation.mutate({ id: product.id, change });
+                setDeltas({ ...deltas, [product.id]: "" });
+              }}
+            >
+              <Input
+                className="w-24"
+                type="number"
+                placeholder="+/-"
+                aria-label={t("{v0} uchun zaxirani o'zgartirish", { v0: product.name })}
+                value={deltas[product.id] ?? ""}
+                onChange={(event) => setDeltas({ ...deltas, [product.id]: event.target.value })}
+              />
+              <Button size="sm" variant="outline" type="submit">
+                {t("Qo'llash")}
+              </Button>
+            </form>
+          </div>
+        ))}
+      </div>
+
+      <div className="clay-panel clay-inset hidden overflow-x-auto rounded-3xl p-2 sm:block">
         <table className="w-full text-sm">
           <thead className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
             <tr>

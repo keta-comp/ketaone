@@ -70,6 +70,8 @@ function useInvalidate() {
     for (const key of [
       "customers",
       "customer",
+      // Qabul formasidagi tez qo'shish ro'yxatidan keyin navbat selektori ham yangilansin.
+      "customers-booking",
       "orders",
       "payments",
       "tasks",
@@ -111,11 +113,14 @@ export function CustomerDialog({
   onOpenChange,
   customer,
   title,
+  onSaved,
 }: {
   open: boolean;
   onOpenChange: (value: boolean) => void;
   customer?: CustomerSeed | undefined;
   title?: string;
+  /** Tez qo'shish oqimi: saqlangan mijozni darhol tanlash uchun (masalan qabulda). */
+  onSaved?: (saved: { id: string }) => void;
 }) {
   const save = useServerFn(saveCrmCustomer);
   const fetchGroups = useServerFn(listStudyGroups);
@@ -173,10 +178,11 @@ export function CustomerDialog({
       }
       return saved;
     },
-    onSuccess: () => {
+    onSuccess: (saved) => {
       toast.success(t("{term} saqlandi", { term: person }));
       invalidate();
       onOpenChange(false);
+      onSaved?.(saved);
     },
     onError: (error: unknown) =>
       toast.error(friendlyError(error, t("Saqlab bo‘lmadi"))),

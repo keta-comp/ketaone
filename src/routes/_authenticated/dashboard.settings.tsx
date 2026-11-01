@@ -334,7 +334,32 @@ function MedicalAuditCard() {
       ) : (events.data ?? []).length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("Hozircha yozuv yo‘q.")}</p>
       ) : (
-        <div className="overflow-x-auto">
+        <>
+          <div className="grid gap-2 sm:hidden">
+            {(events.data ?? []).map((event) => (
+              <div key={event.id} className="clay-inset p-4">
+                <p className="text-sm font-medium">
+                  {t("Amal")}:{" "}
+                  <span className={event.status === "failure" ? "text-destructive" : undefined}>
+                    {t(medicalAuditLabel(event.action))}
+                  </span>
+                </p>
+                <div className="mt-2 grid gap-1 text-xs text-muted-foreground">
+                  <p>
+                    {t("Vaqt")}: {fmtDate(event.created_at)}
+                  </p>
+                  <p>
+                    {t("Xodim")}: {event.actor_email ?? "—"}
+                  </p>
+                  <p>
+                    {t("Modul")}: {event.module_label ? t(event.module_label) : (event.module_key ?? "—")}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="hidden overflow-x-auto sm:block">
           <table className="w-full min-w-[560px] text-sm">
             <thead>
               <tr className="border-b border-border/60 text-left text-xs uppercase tracking-wide text-muted-foreground">
@@ -359,7 +384,8 @@ function MedicalAuditCard() {
               ))}
             </tbody>
           </table>
-        </div>
+          </div>
+        </>
       )}
     </section>
   );

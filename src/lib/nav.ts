@@ -5,6 +5,7 @@
  */
 
 import {
+  isClubPreset,
   isModuleEnabled,
   isRouteAllowed,
   menuForPreset,
@@ -23,6 +24,14 @@ export interface NavSource {
   role: string | null;
   branchCount: number;
   config: NavCrmConfig | null;
+}
+
+/** Pastki panelning bitta tugmasi; `isMenu` — sahifa emas, menyuni ochadigan tugma. */
+export interface MobileTab {
+  to: string;
+  label: string;
+  icon: string;
+  isMenu?: boolean;
 }
 
 const HOME: PresetMenuItem = {
@@ -78,4 +87,32 @@ export function buildNavItems(crm: NavSource | undefined): PresetMenuItem[] {
       ? { ...item, label: `${item.label} (CRM)` }
       : item,
   );
+}
+
+/** Bir joyni band qiladigan yo'nalishlar — rolni yoki presetni hisobga olgan holda. */
+const MOBILE_SLOTS: string[][] = [
+  ["/dashboard"],
+  ["/dashboard/appointments", "/dashboard/customers", "/dashboard/orders"],
+  ["/dashboard/payments", "/dashboard/orders", "/dashboard/products"],
+];
+
+const MOBILE_MENU_TAB: MobileTab = { to: "", label: "Menyu", icon: "menu", isMenu: true };
+
+/**
+ * Telefon pastidagi panel. Yadro sahifalari presetdan olinadi — shuning uchun
+ * salon «Qabullar»ni, klub «Bron»ni, moliyasi bo'lmagan preset esa uchinchi
+ * joyni o'z bo'limi bilan to'ldiradi; rolga ko'ra yopiq sahifa panelga chiqmaydi.
+ */
+export function mobileTabsForNav(crm: NavSource | undefined): MobileTab[] {
+  const items = buildNavItems(crm);
+  if (isClubPreset(resolvePresetId(crm?.industry, crm?.config?.presetId))) {
+    // Klubda pastki barnda aynan 4 bo'lim turadi; ochirmagan bo'lsa "Menyu" qo'shiladi.
+    const clubTabs: MobileTab[] = items.slice(0, 4);
+    return clubTabs.length === 4 ? clubTabs : [...clubTabs, MOBILE_MENU_TAB];
+  }
+  const byRoute = new Map(items.map((item) => [item.to, item]));
+  const slots = MOBILE_SLOTS.map((chain) =>
+    chain.map((to) => byRoute.get(to)).find((item) => item !== undefined),
+  ).filter((item): item is PresetMenuItem => item !== undefined);
+  return [...slots, MOBILE_MENU_TAB];
 }

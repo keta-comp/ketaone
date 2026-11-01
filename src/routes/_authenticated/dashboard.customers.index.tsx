@@ -151,7 +151,68 @@ function CustomersPage() {
           description={t("Filtrni o‘zgartiring yoki yangi {term} qo‘shing.", { term: person.one })}
         />
       ) : (
-        <div className="clay-panel overflow-x-auto p-2">
+        <>
+        <div className="grid gap-2 sm:hidden">
+          {(query.data ?? []).map((row) => {
+            const assignee = row.assignee_name;
+            return (
+              <div key={row.id} className="clay-panel p-4">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <Link
+                    to="/dashboard/customers/$id"
+                    params={{ id: row.id }}
+                    className="font-medium underline-offset-4 hover:underline"
+                  >
+                    {row.full_name ?? "Ismsiz"}
+                  </Link>
+                  <StatusBadge value={row.status} />
+                </div>
+                <div className="mt-1 space-y-0.5 text-xs text-muted-foreground">
+                  <p>{t("Aloqa")}: {[row.phone, row.email].filter(Boolean).join(" • ") || "—"}</p>
+                  <p>{t("Manba")}: {crmLabel(row.source)}</p>
+                  {showOrders ? (
+                    <p>
+                      {t("Buyurtma")}:{" "}
+                      <Link
+                        to="/dashboard/orders"
+                        search={{ customerId: row.id }}
+                        className="underline-offset-4 hover:underline"
+                      >
+                        {row.total_orders}
+                      </Link>
+                      {" · "}
+                      {t("Xarid")}: {formatMoney(row.total_spent, currency)}
+                    </p>
+                  ) : null}
+                  <p>
+                    {t("Mas’ul")}:{" "}
+                    {assignee ? (
+                      <Link to="/dashboard/team" className="underline-offset-4 hover:text-foreground hover:underline">
+                        {assignee}
+                      </Link>
+                    ) : (
+                      "—"
+                    )}
+                  </p>
+                </div>
+                <div className="mt-2 flex justify-end">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={t("Tahrirlash")}
+                    onClick={() => {
+                      setEditing(row);
+                      setOpen(true);
+                    }}
+                  >
+                    <Pencil className="size-4" />
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div className="clay-panel hidden overflow-x-auto p-2 sm:block">
           <Table>
             <TableHeader>
               <TableRow>
@@ -228,6 +289,7 @@ function CustomersPage() {
             </TableBody>
           </Table>
         </div>
+        </>
       )}
 
       <CustomerDialog

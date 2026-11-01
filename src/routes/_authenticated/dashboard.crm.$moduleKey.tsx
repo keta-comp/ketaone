@@ -231,7 +231,47 @@ function CrmModulePage() {
             description={t("\"{v0}\" bo‘limiga birinchi yozuvni qo‘shing.", { v0: module.label })}
           />
         ) : (
-          <div className="overflow-x-auto">
+          <>
+            <div className="grid gap-2 p-4 sm:hidden">
+              {filtered.map((row) => (
+                <div
+                  key={row.id}
+                  className="clay-inset cursor-pointer p-4"
+                  onClick={() => openEdit(row)}
+                >
+                  <p className="text-sm font-medium">{row.title}</p>
+                  <div className="mt-2 grid gap-1 text-xs text-muted-foreground">
+                    {fields.slice(0, 5).map((f) => (
+                      <p key={f.key} className="flex flex-wrap items-baseline gap-1">
+                        <span>{t(f.label)}:</span>
+                        <span className="min-w-0 break-words text-foreground">
+                          <CellValue field={f} data={row.data} moduleKey={module.key} />
+                        </span>
+                      </p>
+                    ))}
+                    {module.pipeline && (
+                      <p className="flex flex-wrap items-baseline gap-1">
+                        <span>{t("Bosqich")}:</span>
+                        <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+                          {t(row.stage ?? "—")}
+                        </span>
+                      </p>
+                    )}
+                  </div>
+                  <div className="mt-2 flex justify-end">
+                    <Trash2
+                      className="size-4 text-muted-foreground hover:text-destructive"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        void removeRecord({ data: { id: row.id, moduleKey } }).then(() => void records.refetch());
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="hidden overflow-x-auto sm:block">
             <table className="w-full min-w-[640px] text-sm">
               <thead>
                 <tr className="border-b border-border/60 text-left text-xs uppercase tracking-wide text-muted-foreground">
@@ -276,7 +316,8 @@ function CrmModulePage() {
                 ))}
               </tbody>
             </table>
-          </div>
+            </div>
+          </>
         )}
       </section>
 

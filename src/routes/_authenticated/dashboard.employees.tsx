@@ -91,36 +91,57 @@ function ScheduleEditor({ employeeId }: { employeeId: string }) {
   const rowsByWeekday = new Map((schedule.data ?? []).map((row) => [row.weekday, row]));
 
   return (
-    <div className="clay-panel overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
-          <tr>
-            <th className="px-4 py-3">{t("Kun")}</th>
-            <th className="px-4 py-3">{t("Boshlanish")}</th>
-            <th className="px-4 py-3">{t("Tugash")}</th>
-            <th className="px-4 py-3">{t("Tanaffus")}</th>
-            <th className="px-4 py-3" />
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-border">
-          {WEEKDAYS.map((day) => {
-            const existing = rowsByWeekday.get(day.value);
-            return (
-              <tr key={day.value}>
-                <td className="px-4 py-3 font-medium">{t(day.label)}</td>
-                <ScheduleCells
-                  weekday={day.value}
-                  existing={existing}
-                  onSave={(input) => saveMutation.mutate(input)}
-                  onDelete={() => existing && removeMutation.mutate(existing.id)}
-                  pending={saveMutation.isPending || removeMutation.isPending}
-                />
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+    <>
+      <div className="grid gap-2 sm:hidden">
+        {WEEKDAYS.map((day) => {
+          const existing = rowsByWeekday.get(day.value);
+          return (
+            <div key={day.value} className="clay-panel p-4">
+              <p className="font-medium">{t(day.label)}</p>
+              <ScheduleCells
+                layout="card"
+                weekday={day.value}
+                existing={existing}
+                onSave={(input) => saveMutation.mutate(input)}
+                onDelete={() => existing && removeMutation.mutate(existing.id)}
+                pending={saveMutation.isPending || removeMutation.isPending}
+              />
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="clay-panel hidden overflow-x-auto sm:block">
+        <table className="w-full text-sm">
+          <thead className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
+            <tr>
+              <th className="px-4 py-3">{t("Kun")}</th>
+              <th className="px-4 py-3">{t("Boshlanish")}</th>
+              <th className="px-4 py-3">{t("Tugash")}</th>
+              <th className="px-4 py-3">{t("Tanaffus")}</th>
+              <th className="px-4 py-3" />
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {WEEKDAYS.map((day) => {
+              const existing = rowsByWeekday.get(day.value);
+              return (
+                <tr key={day.value}>
+                  <td className="px-4 py-3 font-medium">{t(day.label)}</td>
+                  <ScheduleCells
+                    weekday={day.value}
+                    existing={existing}
+                    onSave={(input) => saveMutation.mutate(input)}
+                    onDelete={() => existing && removeMutation.mutate(existing.id)}
+                    pending={saveMutation.isPending || removeMutation.isPending}
+                  />
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }
 
@@ -133,12 +154,45 @@ type ScheduleRow = {
   break_end: string | null;
 };
 
+function TimeField({
+  layout,
+  label,
+  value,
+  onChange,
+  required,
+}: {
+  layout: "table" | "card";
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  required?: boolean;
+}) {
+  const input = (
+    <Input
+      type="time"
+      className={layout === "card" ? "h-9 w-full" : "h-8 w-28"}
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      required={required}
+      aria-label={label}
+    />
+  );
+  if (layout === "table") return input;
+  return (
+    <label className="grid gap-1 text-xs text-muted-foreground">
+      {label}
+      {input}
+    </label>
+  );
+}
+
 function ScheduleCells({
   weekday,
   existing,
   onSave,
   onDelete,
   pending,
+  layout = "table",
 }: {
   weekday: number;
   existing: ScheduleRow | undefined;
@@ -152,54 +206,121 @@ function ScheduleCells({
   }) => void;
   onDelete: () => void;
   pending: boolean;
+  layout?: "table" | "card";
 }) {
   const [start, setStart] = useState(existing ? existing.start_time.slice(0, 5) : "09:00");
   const [end, setEnd] = useState(existing ? existing.end_time.slice(0, 5) : "18:00");
   const [breakStart, setBreakStart] = useState(existing?.break_start ? existing.break_start.slice(0, 5) : "");
   const [breakEnd, setBreakEnd] = useState(existing?.break_end ? existing.break_end.slice(0, 5) : "");
 
+  const timeFields = (
+    <>
+      <TimeField layout={layout} label={t("Boshlanish")} value={start} onChange={setStart} required />
+      <TimeField layout={layout} label={t("Tugash")} value={end} onChange={setEnd} required />
+      <TimeField layout={layout} label={t("Tanaffus boshlanishi")} value={breakStart} onChange={setBreakStart} />
+      <TimeField layout={layout} label={t("Tanaffus tugashi")} value={breakEnd} onChange={setBreakEnd} />
+    </>
+  );
+
   if (!existing) {
+    const form = (
+      <form
+        className={layout === "card" ? "grid grid-cols-2 gap-2" : "flex items-center gap-2"}
+        onSubmit={(event) => {
+          event.preventDefault();
+          onSave({
+            weekday,
+            start_time: start,
+            end_time: end,
+            break_start: breakStart || null,
+            break_end: breakEnd || null,
+          });
+        }}
+      >
+        {timeFields}
+        <Button type="submit" size="sm" disabled={pending} className={layout === "card" ? "col-span-2 w-full" : undefined}>
+          {t("Qo'shish")}
+        </Button>
+      </form>
+    );
+
+    if (layout === "card") {
+      return (
+        <div className="mt-3 space-y-3">
+          <p className="text-xs text-muted-foreground">
+            {t("Boshlanish")}: — · {t("Tugash")}: — · {t("Tanaffus")}: —
+          </p>
+          {form}
+        </div>
+      );
+    }
+
     return (
       <>
         <td className="px-4 py-3 text-muted-foreground">—</td>
         <td className="px-4 py-3 text-muted-foreground">—</td>
         <td className="px-4 py-3 text-muted-foreground">—</td>
-        <td className="px-4 py-3">
-          <form
-            className="flex items-center gap-2"
-            onSubmit={(event) => {
-              event.preventDefault();
-              onSave({
-                weekday,
-                start_time: start,
-                end_time: end,
-                break_start: breakStart || null,
-                break_end: breakEnd || null,
-              });
-            }}
-          >
-            <Input type="time" className="h-8 w-28" value={start} onChange={(e) => setStart(e.target.value)} required />
-            <Input type="time" className="h-8 w-28" value={end} onChange={(e) => setEnd(e.target.value)} required />
-            <Input
-              type="time"
-              className="h-8 w-28"
-              value={breakStart}
-              onChange={(e) => setBreakStart(e.target.value)}
-              aria-label={t("Tanaffus boshlanishi")}
-            />
-            <Input
-              type="time"
-              className="h-8 w-28"
-              value={breakEnd}
-              onChange={(e) => setBreakEnd(e.target.value)}
-              aria-label={t("Tanaffus tugashi")}
-            />
-            <Button type="submit" size="sm" disabled={pending}>
-              {t("Qo'shish")}
-            </Button>
-          </form>
-        </td>
+        <td className="px-4 py-3">{form}</td>
       </>
+    );
+  }
+
+  const breakLabel =
+    existing.break_start && existing.break_end
+      ? `${existing.break_start.slice(0, 5)}–${existing.break_end.slice(0, 5)}`
+      : "—";
+
+  const form = (
+    <form
+      className={layout === "card" ? "grid grid-cols-2 gap-2" : "flex items-center gap-2"}
+      onSubmit={(event) => {
+        event.preventDefault();
+        onSave({
+          id: existing.id,
+          weekday,
+          start_time: start,
+          end_time: end,
+          break_start: breakStart || null,
+          break_end: breakEnd || null,
+        });
+      }}
+    >
+      {timeFields}
+      <Button
+        type="submit"
+        size="sm"
+        variant="outline"
+        disabled={pending}
+        className={layout === "card" ? "col-span-2 w-full" : undefined}
+      >
+        {t("Saqlash")}
+      </Button>
+    </form>
+  );
+
+  const removeButton = (
+    <Button variant="ghost" size="icon" aria-label={t("Jadvalni o'chirish")} onClick={onDelete} disabled={pending}>
+      <Trash2 className="size-4 text-destructive" />
+    </Button>
+  );
+
+  if (layout === "card") {
+    return (
+      <div className="mt-3 space-y-3">
+        <div className="grid gap-1 text-xs text-muted-foreground">
+          <p className="tabular-nums">
+            {t("Boshlanish")}: <span className="text-foreground">{existing.start_time.slice(0, 5)}</span>
+          </p>
+          <p className="tabular-nums">
+            {t("Tugash")}: <span className="text-foreground">{existing.end_time.slice(0, 5)}</span>
+          </p>
+          <p className="tabular-nums">
+            {t("Tanaffus")}: <span className="text-foreground">{breakLabel}</span>
+          </p>
+        </div>
+        {form}
+        <div className="flex justify-end">{removeButton}</div>
+      </div>
     );
   }
 
@@ -207,50 +328,11 @@ function ScheduleCells({
     <>
       <td className="px-4 py-3 tabular-nums">{existing.start_time.slice(0, 5)}</td>
       <td className="px-4 py-3 tabular-nums">{existing.end_time.slice(0, 5)}</td>
-      <td className="px-4 py-3 tabular-nums">
-        {existing.break_start && existing.break_end
-          ? `${existing.break_start.slice(0, 5)}–${existing.break_end.slice(0, 5)}`
-          : "—"}
-      </td>
+      <td className="px-4 py-3 tabular-nums">{breakLabel}</td>
       <td className="px-4 py-3">
         <div className="flex items-center gap-2">
-          <form
-            className="flex items-center gap-2"
-            onSubmit={(event) => {
-              event.preventDefault();
-              onSave({
-                id: existing.id,
-                weekday,
-                start_time: start,
-                end_time: end,
-                break_start: breakStart || null,
-                break_end: breakEnd || null,
-              });
-            }}
-          >
-            <Input type="time" className="h-8 w-28" value={start} onChange={(e) => setStart(e.target.value)} required />
-            <Input type="time" className="h-8 w-28" value={end} onChange={(e) => setEnd(e.target.value)} required />
-            <Input
-              type="time"
-              className="h-8 w-28"
-              value={breakStart}
-              onChange={(e) => setBreakStart(e.target.value)}
-              aria-label={t("Tanaffus boshlanishi")}
-            />
-            <Input
-              type="time"
-              className="h-8 w-28"
-              value={breakEnd}
-              onChange={(e) => setBreakEnd(e.target.value)}
-              aria-label={t("Tanaffus tugashi")}
-            />
-            <Button type="submit" size="sm" variant="outline" disabled={pending}>
-              {t("Saqlash")}
-            </Button>
-          </form>
-          <Button variant="ghost" size="icon" aria-label={t("Jadvalni o'chirish")} onClick={onDelete} disabled={pending}>
-            <Trash2 className="size-4 text-destructive" />
-          </Button>
+          {form}
+          {removeButton}
         </div>
       </td>
     </>
@@ -389,7 +471,35 @@ function TimeOffEditor({ employeeId }: { employeeId: string }) {
       </form>
 
       {(timeOff.data ?? []).length > 0 ? (
-        <div className="clay-panel overflow-x-auto">
+        <>
+          <div className="grid gap-2 sm:hidden">
+            {(timeOff.data ?? []).map((off) => (
+              <div key={off.id} className="clay-panel p-4">
+                <p className="flex items-center gap-2 text-xs tabular-nums text-muted-foreground">
+                  <CalendarX2 className="size-4 shrink-0" />
+                  <span>
+                    {new Date(off.starts_at).toLocaleString(intlLocale())}
+                    {" — "}
+                    {new Date(off.ends_at).toLocaleString(intlLocale())}
+                  </span>
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">{off.reason || "—"}</p>
+                <div className="mt-2 flex justify-end">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={t("Ta'tilni o'chirish")}
+                    onClick={() => removeMutation.mutate(off.id)}
+                    disabled={removeMutation.isPending}
+                  >
+                    <Trash2 className="size-4 text-destructive" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="clay-panel hidden overflow-x-auto sm:block">
           <table className="w-full text-sm">
             <tbody className="divide-y divide-border">
               {(timeOff.data ?? []).map((off) => (
@@ -416,7 +526,8 @@ function TimeOffEditor({ employeeId }: { employeeId: string }) {
               ))}
             </tbody>
           </table>
-        </div>
+          </div>
+        </>
       ) : (
         <p className="px-1 text-sm text-muted-foreground">{t("Ta'tillar qayd etilmagan.")}</p>
       )}
@@ -569,7 +680,70 @@ function EmployeesPage() {
           description={t("Bronlarni biriktirish uchun xodim qo'shing.")}
         />
       ) : (
-        <div className="clay-panel overflow-x-auto">
+        <>
+          <div className="grid gap-2 sm:hidden">
+            {(employees.data ?? []).map((employee) => {
+              const branch = employee.branches as { name?: string } | null;
+              return (
+                <div
+                  key={employee.id}
+                  className={`clay-panel p-4${selectedId === employee.id ? " ring-2 ring-primary/40" : ""}`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-medium">{employee.full_name}</p>
+                      <p className="text-xs text-muted-foreground">{employee.phone || "—"}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">{t("Faol")}</span>
+                      <Switch
+                        checked={employee.is_active}
+                        onCheckedChange={(checked) =>
+                          toggleMutation.mutate({
+                            id: employee.id,
+                            full_name: employee.full_name,
+                            position: employee.position,
+                            phone: employee.phone,
+                            branch_id: employee.branch_id,
+                            is_active: checked,
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-2 grid gap-1 text-xs text-muted-foreground">
+                    <p>
+                      {t("Lavozim")}: {employee.position || "—"}
+                    </p>
+                    <p>
+                      {t("Filial")}: {branch?.name ?? "—"}
+                    </p>
+                  </div>
+                  <div className="mt-2 flex justify-end gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label={t("Jadval va malaka")}
+                      onClick={() => setSelectedId(selectedId === employee.id ? null : employee.id)}
+                    >
+                      <Pencil className="size-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label={t("Xodimni o'chirish")}
+                      onClick={() => removeMutation.mutate(employee.id)}
+                      disabled={removeMutation.isPending}
+                    >
+                      <Trash2 className="size-4 text-destructive" />
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="clay-panel hidden overflow-x-auto sm:block">
           <table className="w-full text-sm">
             <thead className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
@@ -632,7 +806,8 @@ function EmployeesPage() {
               })}
             </tbody>
           </table>
-        </div>
+          </div>
+        </>
       )}
 
       {selected ? (

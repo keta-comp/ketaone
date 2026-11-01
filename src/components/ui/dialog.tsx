@@ -38,7 +38,10 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 sm:rounded-lg",
+        // Mobil: pastdan ochiladigan varaq (sheet). Ekranning pastiga yopishadi,
+        // klaviatura ochilganda ham cho'qqisi ko'rinadi, katta tugmalar bilan bir
+        // qatorda pastki navigatsiya ustiga chiqmaydi. sm+ — oldingidek markazda.
+        "fixed bottom-0 left-0 right-0 z-50 mx-auto grid max-h-[90dvh] w-full max-w-lg gap-4 overflow-y-auto overscroll-contain rounded-t-3xl border bg-background p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:slide-out-to-bottom-8 data-[state=open]:slide-in-from-bottom-8 sm:bottom-auto sm:left-[50%] sm:right-auto sm:top-[50%] sm:max-h-[85vh] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-lg sm:p-6 sm:pb-6 sm:data-[state=closed]:slide-out-to-bottom-0 sm:data-[state=open]:slide-in-from-bottom-0 sm:data-[state=closed]:zoom-out-95 sm:data-[state=open]:zoom-in-95",
         className,
       )}
       {...props}

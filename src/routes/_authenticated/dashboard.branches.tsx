@@ -125,24 +125,14 @@ function BranchesPage() {
       ) : (branches.data ?? []).length === 0 ? (
         <EmptyState title={t("Filiallar yo'q")} description={t("Yuqoridagi formadan birinchi filialni qo'shing.")} />
       ) : (
-        <div className="clay-panel overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
-              <tr>
-                <th className="px-4 py-3">{t("Filial nomi")}</th>
-                <th className="px-4 py-3">{t("Manzil")}</th>
-                <th className="px-4 py-3">{t("Telefon")}</th>
-                <th className="px-4 py-3">{t("Faol")}</th>
-                <th className="px-4 py-3" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {(branches.data ?? []).map((branch) => (
-                <tr key={branch.id}>
-                  <td className="px-4 py-3 font-medium">{branch.name}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{branch.address || "—"}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{branch.phone || "—"}</td>
-                  <td className="px-4 py-3">
+        <>
+          <div className="grid gap-2 sm:hidden">
+            {(branches.data ?? []).map((branch) => (
+              <div key={branch.id} className="clay-panel p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <p className="font-medium">{branch.name}</p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground">{t("Faol")}</span>
                     <Switch
                       checked={branch.is_active}
                       onCheckedChange={(checked) =>
@@ -155,23 +145,79 @@ function BranchesPage() {
                         })
                       }
                     />
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label={t("Filialni o'chirish")}
-                      disabled={removeMutation.isPending}
-                      onClick={() => removeMutation.mutate(branch.id)}
-                    >
-                      <Trash2 className="size-4 text-destructive" />
-                    </Button>
-                  </td>
+                  </div>
+                </div>
+                <div className="mt-2 grid gap-1 text-xs text-muted-foreground">
+                  <p>
+                    {t("Manzil")}: {branch.address || "—"}
+                  </p>
+                  <p>
+                    {t("Telefon")}: {branch.phone || "—"}
+                  </p>
+                </div>
+                <div className="mt-2 flex justify-end">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={t("Filialni o'chirish")}
+                    disabled={removeMutation.isPending}
+                    onClick={() => removeMutation.mutate(branch.id)}
+                  >
+                    <Trash2 className="size-4 text-destructive" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="clay-panel hidden overflow-x-auto sm:block">
+            <table className="w-full text-sm">
+              <thead className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
+                <tr>
+                  <th className="px-4 py-3">{t("Filial nomi")}</th>
+                  <th className="px-4 py-3">{t("Manzil")}</th>
+                  <th className="px-4 py-3">{t("Telefon")}</th>
+                  <th className="px-4 py-3">{t("Faol")}</th>
+                  <th className="px-4 py-3" />
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {(branches.data ?? []).map((branch) => (
+                  <tr key={branch.id}>
+                    <td className="px-4 py-3 font-medium">{branch.name}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{branch.address || "—"}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{branch.phone || "—"}</td>
+                    <td className="px-4 py-3">
+                      <Switch
+                        checked={branch.is_active}
+                        onCheckedChange={(checked) =>
+                          toggleMutation.mutate({
+                            id: branch.id,
+                            name: branch.name,
+                            address: branch.address,
+                            phone: branch.phone,
+                            is_active: checked,
+                          })
+                        }
+                      />
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label={t("Filialni o'chirish")}
+                        disabled={removeMutation.isPending}
+                        onClick={() => removeMutation.mutate(branch.id)}
+                      >
+                        <Trash2 className="size-4 text-destructive" />
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </>
   );

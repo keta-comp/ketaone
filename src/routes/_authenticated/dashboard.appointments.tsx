@@ -2,9 +2,10 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { CalendarDays, ChevronLeft, ChevronRight, Trash2, Wallet } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, Plus, Trash2, Wallet } from "lucide-react";
 import { toast } from "sonner";
 
+import { CustomerDialog } from "@/components/app/crm-dialogs";
 import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/components/app/primitives";
 import { CLUB_CATALOG_LABELS, ServicesCatalog } from "@/components/app/services-catalog";
 import { Badge } from "@/components/ui/badge";
@@ -213,6 +214,8 @@ function ScheduleTab() {
     queryFn: () => fetchAppointments({ data: { from: bounds.from, to: bounds.to } }),
   });
   const services = useQuery({ queryKey: ["services"], queryFn: () => fetchServices({ data: {} }) });
+  // Navbatda yo'q mijoz: qabul formasidan chiqmasdan tez qo'shamiz.
+  const [quickCustomer, setQuickCustomer] = useState(false);
   const employeesQuery = useQuery({ queryKey: ["employees"], queryFn: () => fetchEmployees({ data: {} }) });
   const branches = useQuery({ queryKey: ["branches"], queryFn: () => fetchBranches({ data: {} }) });
   const customers = useQuery({
@@ -342,7 +345,19 @@ function ScheduleTab() {
           ) : null}
         </div>
         <div className="sm:col-span-2">
-          <Label htmlFor="apt-customer">{person.one}</Label>
+          <div className="flex items-center justify-between gap-2">
+            <Label htmlFor="apt-customer">{person.one}</Label>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-7 gap-1 px-2 text-xs"
+              onClick={() => setQuickCustomer(true)}
+            >
+              <Plus className="size-3.5" />
+              {t("Tez qo'shish")}
+            </Button>
+          </div>
           <Select
             value={form.customer_id}
             onValueChange={(value) => setForm((prev) => ({ ...prev, customer_id: value === "none" ? "" : value }))}
@@ -438,6 +453,12 @@ function ScheduleTab() {
           </Button>
         </div>
       </form>
+
+      <CustomerDialog
+        open={quickCustomer}
+        onOpenChange={setQuickCustomer}
+        onSaved={(saved) => setForm((prev) => ({ ...prev, customer_id: saved.id }))}
+      />
 
       <div className="clay-panel flex flex-wrap items-center gap-3 p-4">
         <div className="flex rounded-xl bg-muted p-1">

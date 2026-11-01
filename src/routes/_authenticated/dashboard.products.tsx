@@ -196,7 +196,68 @@ function ProductsPage() {
           action={<Button onClick={() => setDraft(EMPTY)}>{t("Yangi {term}", { term: catalog.one })}</Button>}
         />
       ) : (
-        <div className="clay-panel clay-inset overflow-x-auto rounded-3xl p-2">
+        <>
+        <div className="grid gap-2 sm:hidden">
+          {products.data.map((product) => {
+            const category = product.categories as { id: string; name: string } | null;
+            return (
+              <div key={product.id} className="clay-panel p-4">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-medium text-foreground">{product.name}</p>
+                    <p className="text-xs text-muted-foreground">{product.sku}</p>
+                  </div>
+                  <StatusBadge
+                    value={stockState(
+                      product.stock_quantity,
+                      product.reserved_quantity,
+                      product.low_stock_threshold,
+                    )}
+                  />
+                </div>
+                <div className="mt-1 space-y-0.5 text-xs text-muted-foreground">
+                  <p>{t("Kategoriya")}: {category?.name ?? "—"}</p>
+                  <p>
+                    {t("Narx")}: <span className="tabular-nums text-foreground">{formatMoney(product.price)}</span>
+                  </p>
+                  <p>
+                    {t("Zaxira")}: <span className="tabular-nums text-foreground">{product.stock_quantity}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {" "}
+                      ({product.reserved_quantity} {t("band)")}
+                    </span>
+                  </p>
+                </div>
+                <div className="mt-2 flex flex-wrap justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setDraft({
+                        id: product.id,
+                        sku: product.sku,
+                        name: product.name,
+                        category_id: product.category_id ?? "none",
+                        description: product.description ?? "",
+                        price: String(product.price),
+                        stock_quantity: String(product.stock_quantity),
+                        low_stock_threshold: String(product.low_stock_threshold),
+                        tags: (product.tags ?? []).join(", "),
+                        is_active: product.is_active,
+                      })
+                    }
+                  >
+                    {t("Tahrirlash")}
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => removeMutation.mutate(product.id)}>
+                    {t("O'chirish")}
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div className="clay-panel clay-inset hidden overflow-x-auto rounded-3xl p-2 sm:block">
           <table className="w-full text-sm">
             <thead className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
@@ -265,6 +326,7 @@ function ProductsPage() {
             </tbody>
           </table>
         </div>
+        </>
       )}
 
       <Sheet open={Boolean(draft)} onOpenChange={(open) => (open ? null : setDraft(null))}>

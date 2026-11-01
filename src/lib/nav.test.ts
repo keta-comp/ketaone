@@ -1,8 +1,8 @@
 // @ts-nocheck
 import { describe, expect, test } from "bun:test";
 
-import { buildNavItems } from "@/lib/nav";
-import { enabledModuleKeys, menuForPreset } from "@/lib/presets";
+import { buildNavItems, mobileTabsForNav } from "@/lib/nav";
+import { enabledModuleKeys, isClubPreset, menuForPreset, PRESETS } from "@/lib/presets";
 
 function crm(overrides = {}) {
   return {
@@ -108,5 +108,63 @@ describe("sidebar navigation", () => {
     expect(payments.map((i) => i.to)).toContain("/dashboard/payments");
     expect(payments.map((i) => i.to)).toContain("/dashboard/crm/tolovlar");
     expect(payments.find((i) => i.to === "/dashboard/crm/tolovlar")?.label).toBe("To‘lovlar (CRM)");
+  });
+});
+
+describe("mobil pastki panel", () => {
+  const club = { industry: "playstation", role: "owner", branchCount: 0, config: { presetId: "playstation", modules: [] } };
+
+  test("klubda aynan 4 bo'lim turadi, qo'shimcha «Menyu» kerak emas", () => {
+    const tabs = mobileTabsForNav(club);
+    expect(tabs.map((tab) => tab.to)).toEqual([
+      "/dashboard/program",
+      "/dashboard/mobile",
+      "/dashboard/telegram",
+      "/dashboard/booking",
+    ]);
+    expect(tabs.every((tab) => !tab.isMenu)).toBe(true);
+    // Odatiy CRM menyusi klubning pastki bariga hech qachon sizib o'tmaydi.
+    expect(tabs.some((tab) => tab.to.startsWith("/dashboard/crm/"))).toBe(false);
+  });
+
+  test("klubda Telegram rolsiz qolsa «Menyu» tugmasi qo'shiladi", () => {
+    const tabs = mobileTabsForNav({ ...club, role: "receptionist" });
+    expect(tabs.length).toBeLessThanOrEqual(4);
+    expect(tabs[tabs.length - 1].isMenu).toBe(true);
+  });
+
+  test("salon va barbershopda Asosiy/Qabullar/Kassa + Menyu ketma-ket keladi", () => {
+    for (const presetId of ["beauty", "barbershop"]) {
+      const tabs = mobileTabsForNav(
+        { industry: "beauty", role: "owner", branchCount: 0, config: { presetId, modules: [] } },
+      );
+      expect(tabs.map((tab) => tab.to)).toEqual([
+        "/dashboard",
+        "/dashboard/appointments",
+        "/dashboard/payments",
+        "",
+      ]);
+      expect(tabs[3].label).toBe("Menyu");
+    }
+  });
+
+  test("har bir presetda panel tugmalari menyudagi ochiq bo'limlardan olinadi", () => {
+    for (const presetId of Object.keys(PRESETS)) {
+      const source = { industry: presetId, role: "owner", branchCount: 0, config: { presetId, modules: [] } };
+      const allowed = new Set(buildNavItems(source).map((item) => item.to));
+      const tabs = mobileTabsForNav(source);
+      expect(tabs.length).toBeGreaterThanOrEqual(2);
+      expect(tabs.length).toBeLessThanOrEqual(4);
+      // Klubda 4 bo'limning o'zi turadi; boshqa sohada oxirgi joy «Menyu»ga beriladi.
+      expect(Boolean(tabs[tabs.length - 1].isMenu)).toBe(!isClubPreset(presetId));
+      for (const tab of tabs.filter((item) => !item.isMenu)) {
+        expect(allowed.has(tab.to)).toBe(true);
+      }
+      expect(new Set(tabs.map((tab) => tab.to)).size).toBe(tabs.length);
+    }
+  });
+
+  test("konfiguratsiyasi yo'q biznesda ham panel ochiq sahifalarni ko'rsatadi", () => {
+    expect(mobileTabsForNav(undefined).map((tab) => tab.to)).toEqual(["/dashboard", ""]);
   });
 });

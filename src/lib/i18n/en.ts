@@ -752,6 +752,7 @@ const table: Record<string, string> = {
   "Tekshirilmoqda...": "Checking...",
   "Tekshirilmoqda…": "Checking...",
   "Telefon": "Phone",
+  "Tez qo'shish": "Add quickly",
   "Telegram — hisobot va bildirishnoma kanali. Asosiy CRM ishi shu veb platformada davom etadi.": "Telegram — reporting and notification channel. The main CRM work continues on this web platform.",
   "Telegram @": "Telegram @",
   "Telegram akkaunt": "Telegram account",
