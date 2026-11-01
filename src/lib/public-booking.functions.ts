@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/lib/auth-middleware";
 import { supabaseAdmin } from "@/lib/platform.server";
 import { depositFor } from "./deposit";
+import { resolvePresetId } from "./presets";
 import { can, type MemberRole } from "./roles";
 import { requireBusinessId } from "./tenant.server";
 import {
@@ -91,7 +92,8 @@ export const getPublicBookingPage = createServerFn({ method: "GET" })
     // Never leak infrastructure details on a public page.
     try {
       const business = await resolveBusiness(data.slug);
-      const [{ data: services }, { data: employees }, { data: settings }] = await Promise.all([
+      const [{ data: services }, { data: employees }, { data: settings }, { data: crmConfig }] =
+        await Promise.all([
         supabaseAdmin
           .from("services")
           .select("id, name, duration_minutes, price, deposit_type, deposit_value")
@@ -109,10 +111,21 @@ export const getPublicBookingPage = createServerFn({ method: "GET" })
           .select("phone, logo_path, working_hours")
           .eq("business_id", business.id)
           .maybeSingle(),
+        // Klubda xizmat katalogi «Qurilma va stollar» — ommaviy sahifa shu nomni ko'rsatishi uchun soha kerak.
+        supabaseAdmin
+          .from("crm_configs")
+          .select("industry, config")
+          .eq("business_id", business.id)
+          .maybeSingle(),
       ]);
       const { signedDownloadUrl } = await import("./storage.server");
       return {
         businessName: business.name,
+        // Ommaviy sahifa klubda katalogni «Qurilma va stollar» deb atashi uchun preset yetarli.
+        presetId: resolvePresetId(
+          crmConfig?.industry,
+          (crmConfig?.config as { presetId?: string } | null)?.presetId,
+        ),
         phone: settings?.phone ?? "",
         workingHours: settings?.working_hours ?? "",
         logoUrl: settings?.logo_path ? await signedDownloadUrl("branding", settings.logo_path, 3600) : "",
