@@ -60,16 +60,11 @@ export const exportReportExcel = createServerFn({ method: "POST" })
     const { buildReport } = await import("./workspace.server");
     const { buildWorkbookBase64 } = await import("./excel.server");
 
-    const [report, customers, leads, orders, payments] = await Promise.all([
+    const [report, customers, orders, payments] = await Promise.all([
       buildReport(context.supabase, data.from, data.to),
       context.supabase
         .from("customers")
         .select("full_name, phone, email, status, source, total_orders, total_spent, created_at")
-        .gte("created_at", data.from)
-        .lte("created_at", data.to),
-      context.supabase
-        .from("leads")
-        .select("requested_product, status, score, source, value, phone, created_at")
         .gte("created_at", data.from)
         .lte("created_at", data.to),
       context.supabase
@@ -91,7 +86,6 @@ export const exportReportExcel = createServerFn({ method: "POST" })
           { "Ko‘rsatkich": "Tushum", "Qiymat": report.kpis.revenue },
           { "Ko‘rsatkich": "Buyurtmalar", "Qiymat": report.kpis.orders },
           { "Ko‘rsatkich": "Yakunlangan buyurtmalar", "Qiymat": report.kpis.completedOrders },
-          { "Ko‘rsatkich": "Murojaatlar", "Qiymat": report.kpis.leads },
           { "Ko‘rsatkich": "Konversiya (%)", "Qiymat": report.kpis.conversionRate },
           { "Ko‘rsatkich": "O‘rtacha buyurtma", "Qiymat": report.kpis.averageOrderValue },
           { "Ko‘rsatkich": "Yangi mijozlar", "Qiymat": report.kpis.newCustomers },
@@ -109,18 +103,6 @@ export const exportReportExcel = createServerFn({ method: "POST" })
           Buyurtmalar: c.total_orders,
           "Jami xarid": c.total_spent,
           Yaratilgan: c.created_at,
-        })),
-      },
-      {
-        name: "Murojaatlar",
-        rows: (leads.data ?? []).map((l) => ({
-          Mahsulot: l.requested_product,
-          Holat: l.status,
-          "Baho": l.score,
-          Manba: crmLabel(l.source),
-          Summa: l.value,
-          Telefon: l.phone,
-          Yaratilgan: l.created_at,
         })),
       },
       {
@@ -164,16 +146,10 @@ export const askBusinessAssistant = createServerFn({ method: "POST" })
     const to = new Date().toISOString();
     const hidden = await hiddenRoutesForTenant(context.supabase);
 
-    const [kpis, report, todos, followUps, openTasks] = await Promise.all([
+    const [kpis, report, todos, openTasks] = await Promise.all([
       buildKpis(context.supabase),
       buildReport(context.supabase, from, to),
       buildTodoActions(context.supabase, hidden),
-      context.supabase
-        .from("leads")
-        .select("requested_product, status, last_contact_at, customers(full_name, phone)")
-        .in("status", ["contacted", "negotiating", "assigned", "needs_attention"])
-        .order("last_contact_at", { ascending: true, nullsFirst: true })
-        .limit(15),
       context.supabase
         .from("tasks")
         .select("title, due_date, priority, status")
@@ -187,11 +163,9 @@ export const askBusinessAssistant = createServerFn({ method: "POST" })
       bugun: {
         tushum: kpis.revenueToday,
         yangi_mijozlar: kpis.newCustomers,
-        yangi_murojaatlar: kpis.newLeads,
         yangi_buyurtmalar: kpis.newOrders,
       },
       oylik_tushum: kpis.revenueMonth,
-      faol_leadlar: kpis.activeLeads,
       kutilayotgan_tolovlar: {
         soni: kpis.pendingPaymentsCount,
         summa: kpis.pendingPaymentsAmount,
@@ -202,16 +176,6 @@ export const askBusinessAssistant = createServerFn({ method: "POST" })
       masullar: report.byMember,
       top_mahsulotlar: report.topProducts,
       bugungi_vazifalar: todos.map((t) => `${t.count} ${t.label}`),
-      qayta_aloqa_kerak: (followUps.data ?? []).map((l) => {
-        const c = l.customers as { full_name: string | null; phone: string | null } | null;
-        return {
-          mijoz: c?.full_name ?? null,
-          telefon: c?.phone ?? null,
-          holat: l.status,
-          oxirgi_aloqa: l.last_contact_at,
-          mahsulot: l.requested_product,
-        };
-      }),
       ochiq_vazifalar: openTasks.data ?? [],
     };
 

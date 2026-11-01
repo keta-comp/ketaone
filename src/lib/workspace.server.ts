@@ -41,8 +41,6 @@ export async function buildKpis(supabase: Client) {
     spentToday,
     spentMonth,
     newCustomers,
-    newLeads,
-    activeLeads,
     newOrders,
     pendingPayments,
     openTasks,
@@ -75,12 +73,6 @@ export async function buildKpis(supabase: Client) {
       .select("id", { count: "exact", head: true })
       .eq("business_id", businessId)
       .gte("created_at", today),
-    supabase.from("leads").select("id", { count: "exact", head: true }).eq("business_id", businessId).gte("created_at", today),
-    supabase
-      .from("leads")
-      .select("id", { count: "exact", head: true })
-      .eq("business_id", businessId)
-      .in("status", ["new", "needs_attention", "assigned", "contacted", "negotiating"]),
     supabase
       .from("orders")
       .select("id", { count: "exact", head: true })
@@ -111,8 +103,6 @@ export async function buildKpis(supabase: Client) {
     expenseToday: (spentToday.data ?? []).reduce((s, r) => s + num(r.amount), 0),
     expenseMonth: (spentMonth.data ?? []).reduce((s, r) => s + num(r.amount), 0),
     newCustomers: newCustomers.count ?? 0,
-    newLeads: newLeads.count ?? 0,
-    activeLeads: activeLeads.count ?? 0,
     newOrders: newOrders.count ?? 0,
     pendingPaymentsCount: pendingRows.length,
     pendingPaymentsAmount: pendingAmount,
@@ -134,7 +124,7 @@ export async function buildTodoActions(supabase: Client, hidden = new Set<string
   const soon = dayStart(3).toISOString().slice(0, 10);
   const todayDate = dayStart().toISOString().slice(0, 10);
 
-  const [unconfirmedOrders, duePayments, overdueTasks, unconfirmedAppointments, newLeads] = await Promise.all([
+  const [unconfirmedOrders, duePayments, overdueTasks, unconfirmedAppointments] = await Promise.all([
     supabase
       .from("orders")
       .select("id", { count: "exact", head: true })
@@ -155,22 +145,9 @@ export async function buildTodoActions(supabase: Client, hidden = new Set<string
       .eq("status", "new")
       .gte("starts_at", dayStart().toISOString())
       .lt("starts_at", dayStart(1).toISOString()),
-    hidden.has("/dashboard/leads")
-      ? Promise.resolve({ count: 0 })
-      : supabase
-          .from("leads")
-          .select("id", { count: "exact", head: true })
-          .in("status", ["new", "needs_attention"]),
   ]);
 
   const actions: TodoAction[] = [
-    {
-      key: "leads",
-      count: newLeads.count ?? 0,
-      label: "yangi murojaatga javob berilmagan",
-      to: "/dashboard/leads",
-      tone: "warning",
-    },
     {
       key: "orders",
       count: unconfirmedOrders.count ?? 0,
@@ -261,31 +238,24 @@ export interface ReportResult {
     revenue: number;
     orders: number;
     completedOrders: number;
-    leads: number;
-    wonLeads: number;
     conversionRate: number;
     averageOrderValue: number;
     newCustomers: number;
     pendingPayments: number;
   };
-  days: { date: string; label: string; revenue: number; orders: number; leads: number }[];
-  bySource: { name: string; leads: number; customers: number }[];
-  byMember: { name: string; orders: number; revenue: number; leads: number }[];
+  days: { date: string; label: string; revenue: number; orders: number }[];
+  bySource: { name: string; customers: number }[];
+  byMember: { name: string; orders: number; revenue: number }[];
   topProducts: { name: string; quantity: number; revenue: number }[];
 }
 
 export async function buildReport(supabase: Client, from: string, to: string): Promise<ReportResult> {
   const businessId = await requireBusinessId(supabase);
-  const [settings, orders, leads, customers, payments, items] = await Promise.all([
+  const [settings, orders, customers, payments, items] = await Promise.all([
     supabase.from("business_settings").select("currency").limit(1).maybeSingle(),
     supabase
       .from("orders")
       .select("id, total, status, created_at, assigned_member_id")
-      .gte("created_at", from)
-      .lte("created_at", to),
-    supabase
-      .from("leads")
-      .select("id, status, source, created_at, assigned_member_id")
       .gte("created_at", from)
       .lte("created_at", to),
     supabase.from("customers").select("id, source, created_at").gte("created_at", from).lte("created_at", to),
@@ -304,18 +274,16 @@ export async function buildReport(supabase: Client, from: string, to: string): P
     .filter((p) => p.status === "paid" || p.status === "partial")
     .reduce((s, p) => s + num(p.amount), 0);
   const pendingPayments = paymentRows.filter((p) => p.status === "pending").reduce((s, p) => s + num(p.amount), 0);
-  const leadRows = leads.data ?? [];
-  const wonLeads = leadRows.filter((l) => l.status === "won").length;
   const completedOrders = orderRows.filter((o) => o.status === "delivered").length;
   const orderTotal = orderRows.reduce((s, o) => s + num(o.total), 0);
 
   // day buckets
-  const dayMap = new Map<string, { date: string; label: string; revenue: number; orders: number; leads: number }>();
+  const dayMap = new Map<string, { date: string; label: string; revenue: number; orders: number }>();
   const cursor = new Date(from);
   const end = new Date(to);
   while (cursor <= end) {
     const key = cursor.toISOString().slice(0, 10);
-    dayMap.set(key, { date: key, label: key.slice(5), revenue: 0, orders: 0, leads: 0 });
+    dayMap.set(key, { date: key, label: key.slice(5), revenue: 0, orders: 0 });
     cursor.setUTCDate(cursor.getUTCDate() + 1);
   }
   for (const p of paymentRows) {
@@ -328,29 +296,23 @@ export async function buildReport(supabase: Client, from: string, to: string): P
     const bucket = dayMap.get(o.created_at.slice(0, 10));
     if (bucket) bucket.orders += 1;
   }
-  for (const l of leadRows) {
-    const bucket = dayMap.get(l.created_at.slice(0, 10));
-    if (bucket) bucket.leads += 1;
-  }
 
   // sources
-  const sourceMap = new Map<string, { name: string; leads: number; customers: number }>();
-  const bumpSource = (name: string, field: "leads" | "customers") => {
-    const key = name || "other";
-    const entry = sourceMap.get(key) ?? { name: key, leads: 0, customers: 0 };
-    entry[field] += 1;
+  const sourceMap = new Map<string, { name: string; customers: number }>();
+  for (const c of customers.data ?? []) {
+    const key = c.source ?? "other";
+    const entry = sourceMap.get(key) ?? { name: key, customers: 0 };
+    entry.customers += 1;
     sourceMap.set(key, entry);
-  };
-  for (const l of leadRows) bumpSource(l.source ?? "other", "leads");
-  for (const c of customers.data ?? []) bumpSource(c.source ?? "other", "customers");
+  }
 
   // team members who closed deals
   const memberNames = await assigneeNameMap(businessId);
-  const memberMap = new Map<string, { name: string; orders: number; revenue: number; leads: number }>();
+  const memberMap = new Map<string, { name: string; orders: number; revenue: number }>();
   const memberEntry = (id: string | null) => {
     const key = id ?? "unassigned";
     const name = id ? (memberNames.get(id) ?? "Mas’ul") : "Tayinlanmagan";
-    const entry = memberMap.get(key) ?? { name, orders: 0, revenue: 0, leads: 0 };
+    const entry = memberMap.get(key) ?? { name, orders: 0, revenue: 0 };
     memberMap.set(key, entry);
     return entry;
   };
@@ -359,7 +321,6 @@ export async function buildReport(supabase: Client, from: string, to: string): P
     entry.orders += 1;
     entry.revenue += num(o.total);
   }
-  for (const l of leadRows) memberEntry(l.assigned_member_id).leads += 1;
 
   // products
   const productMap = new Map<string, { name: string; quantity: number; revenue: number }>();
@@ -378,15 +339,14 @@ export async function buildReport(supabase: Client, from: string, to: string): P
       revenue,
       orders: orderRows.length,
       completedOrders,
-      leads: leadRows.length,
-      wonLeads,
-      conversionRate: leadRows.length ? Math.round((wonLeads / leadRows.length) * 1000) / 10 : 0,
+      // Konversiya endi buyurtmalar ustida hisoblanadi: Murojaatlar bo'limi ochildi.
+      conversionRate: orderRows.length ? Math.round((completedOrders / orderRows.length) * 1000) / 10 : 0,
       averageOrderValue: orderRows.length ? Math.round(orderTotal / orderRows.length) : 0,
       newCustomers: (customers.data ?? []).length,
       pendingPayments,
     },
     days: [...dayMap.values()],
-    bySource: [...sourceMap.values()].sort((a, b) => b.leads + b.customers - (a.leads + a.customers)),
+    bySource: [...sourceMap.values()].sort((a, b) => b.customers - a.customers),
     byMember: [...memberMap.values()].sort((a, b) => b.revenue - a.revenue),
     topProducts: [...productMap.values()].sort((a, b) => b.revenue - a.revenue).slice(0, 10),
   };

@@ -31,7 +31,6 @@ import { Route as AuthenticatedDashboardEmployeesRouteImport } from './routes/_a
 import { Route as AuthenticatedDashboardFinanceRouteImport } from './routes/_authenticated/dashboard.finance'
 import { Route as AuthenticatedDashboardGroupsRouteImport } from './routes/_authenticated/dashboard.groups'
 import { Route as AuthenticatedDashboardInventoryRouteImport } from './routes/_authenticated/dashboard.inventory'
-import { Route as AuthenticatedDashboardLeadsRouteImport } from './routes/_authenticated/dashboard.leads'
 import { Route as AuthenticatedDashboardOrdersRouteImport } from './routes/_authenticated/dashboard.orders'
 import { Route as AuthenticatedDashboardPaymentsRouteImport } from './routes/_authenticated/dashboard.payments'
 import { Route as AuthenticatedDashboardPayrollRouteImport } from './routes/_authenticated/dashboard.payroll'
@@ -188,12 +187,6 @@ const AuthenticatedDashboardInventoryRoute =
   AuthenticatedDashboardInventoryRouteImport.update({
     id: '/inventory',
     path: '/inventory',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardLeadsRoute =
-  AuthenticatedDashboardLeadsRouteImport.update({
-    id: '/leads',
-    path: '/leads',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
 const AuthenticatedDashboardOrdersRoute =
@@ -417,7 +410,6 @@ export interface FileRoutesByFullPath {
   '/dashboard/finance': typeof AuthenticatedDashboardFinanceRoute
   '/dashboard/groups': typeof AuthenticatedDashboardGroupsRoute
   '/dashboard/inventory': typeof AuthenticatedDashboardInventoryRoute
-  '/dashboard/leads': typeof AuthenticatedDashboardLeadsRoute
   '/dashboard/orders': typeof AuthenticatedDashboardOrdersRoute
   '/dashboard/payments': typeof AuthenticatedDashboardPaymentsRoute
   '/dashboard/payroll': typeof AuthenticatedDashboardPayrollRoute
@@ -472,7 +464,6 @@ export interface FileRoutesByTo {
   '/dashboard/finance': typeof AuthenticatedDashboardFinanceRoute
   '/dashboard/groups': typeof AuthenticatedDashboardGroupsRoute
   '/dashboard/inventory': typeof AuthenticatedDashboardInventoryRoute
-  '/dashboard/leads': typeof AuthenticatedDashboardLeadsRoute
   '/dashboard/orders': typeof AuthenticatedDashboardOrdersRoute
   '/dashboard/payments': typeof AuthenticatedDashboardPaymentsRoute
   '/dashboard/payroll': typeof AuthenticatedDashboardPayrollRoute
@@ -532,7 +523,6 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/finance': typeof AuthenticatedDashboardFinanceRoute
   '/_authenticated/dashboard/groups': typeof AuthenticatedDashboardGroupsRoute
   '/_authenticated/dashboard/inventory': typeof AuthenticatedDashboardInventoryRoute
-  '/_authenticated/dashboard/leads': typeof AuthenticatedDashboardLeadsRoute
   '/_authenticated/dashboard/orders': typeof AuthenticatedDashboardOrdersRoute
   '/_authenticated/dashboard/payments': typeof AuthenticatedDashboardPaymentsRoute
   '/_authenticated/dashboard/payroll': typeof AuthenticatedDashboardPayrollRoute
@@ -592,7 +582,6 @@ export interface FileRouteTypes {
     | '/dashboard/finance'
     | '/dashboard/groups'
     | '/dashboard/inventory'
-    | '/dashboard/leads'
     | '/dashboard/orders'
     | '/dashboard/payments'
     | '/dashboard/payroll'
@@ -647,7 +636,6 @@ export interface FileRouteTypes {
     | '/dashboard/finance'
     | '/dashboard/groups'
     | '/dashboard/inventory'
-    | '/dashboard/leads'
     | '/dashboard/orders'
     | '/dashboard/payments'
     | '/dashboard/payroll'
@@ -706,7 +694,6 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/finance'
     | '/_authenticated/dashboard/groups'
     | '/_authenticated/dashboard/inventory'
-    | '/_authenticated/dashboard/leads'
     | '/_authenticated/dashboard/orders'
     | '/_authenticated/dashboard/payments'
     | '/_authenticated/dashboard/payroll'
@@ -914,13 +901,6 @@ declare module '@tanstack/react-router' {
       path: '/inventory'
       fullPath: '/dashboard/inventory'
       preLoaderRoute: typeof AuthenticatedDashboardInventoryRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/leads': {
-      id: '/_authenticated/dashboard/leads'
-      path: '/leads'
-      fullPath: '/dashboard/leads'
-      preLoaderRoute: typeof AuthenticatedDashboardLeadsRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
     '/_authenticated/dashboard/orders': {
@@ -1196,7 +1176,6 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardFinanceRoute: typeof AuthenticatedDashboardFinanceRoute
   AuthenticatedDashboardGroupsRoute: typeof AuthenticatedDashboardGroupsRoute
   AuthenticatedDashboardInventoryRoute: typeof AuthenticatedDashboardInventoryRoute
-  AuthenticatedDashboardLeadsRoute: typeof AuthenticatedDashboardLeadsRoute
   AuthenticatedDashboardOrdersRoute: typeof AuthenticatedDashboardOrdersRoute
   AuthenticatedDashboardPaymentsRoute: typeof AuthenticatedDashboardPaymentsRoute
   AuthenticatedDashboardPayrollRoute: typeof AuthenticatedDashboardPayrollRoute
@@ -1230,7 +1209,6 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
     AuthenticatedDashboardFinanceRoute: AuthenticatedDashboardFinanceRoute,
     AuthenticatedDashboardGroupsRoute: AuthenticatedDashboardGroupsRoute,
     AuthenticatedDashboardInventoryRoute: AuthenticatedDashboardInventoryRoute,
-    AuthenticatedDashboardLeadsRoute: AuthenticatedDashboardLeadsRoute,
     AuthenticatedDashboardOrdersRoute: AuthenticatedDashboardOrdersRoute,
     AuthenticatedDashboardPaymentsRoute: AuthenticatedDashboardPaymentsRoute,
     AuthenticatedDashboardPayrollRoute: AuthenticatedDashboardPayrollRoute,

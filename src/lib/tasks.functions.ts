@@ -15,7 +15,6 @@ export const listTasks = createServerFn({ method: "GET" })
         priority: z.string().optional(),
         memberId: z.string().optional(),
         customerId: z.string().optional(),
-        leadId: z.string().optional(),
         search: z.string().optional(),
       })
       .parse(input ?? {}),
@@ -32,7 +31,6 @@ export const listTasks = createServerFn({ method: "GET" })
     if (data.memberId && data.memberId !== "all")
       query = query.eq("assigned_member_id", data.memberId);
     if (data.customerId) query = query.eq("customer_id", data.customerId);
-    if (data.leadId) query = query.eq("lead_id", data.leadId);
     if (data.search) query = query.ilike("title", `%${data.search}%`);
     const { data: rows, error } = await query;
     if (error) throw new Error(error.message);

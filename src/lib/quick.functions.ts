@@ -55,98 +55,12 @@ export const listPickers = createServerFn({ method: "GET" })
     };
   });
 
-export const createQuickLead = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
-    z
-      .object({
-        customer_id: z.string(),
-        requested_product: z.string().nullable().optional(),
-        source: z.string().default("manual"),
-        value: z.number().nonnegative().default(0),
-        stage: z.string().nullable().optional(),
-        next_action: z.string().nullable().optional(),
-        phone: z.string().nullable().optional(),
-        notes: z.string().nullable().optional(),
-        assigned_member_id: z.string().nullable().optional(),
-      })
-      .parse(input),
-  )
-  .handler(async ({ data, context }) => {
-    const businessId = await requirePermission(
-      context.supabase,
-      "sales.manage",
-      "Murojaatni faqat savdo bilan shug‘ullanadigan xodim ochadi.",
-    );
-    // Mijoz va mas'ul a'zo shu biznesdan bo'lishi shart: RLS begona ID'ni
-    // bizning lidimizga yozishning oldini olmaydi.
-    for (const [table, id, label] of [
-      ["customers", data.customer_id, "Mijoz"],
-      ["business_members", data.assigned_member_id ?? null, "Mas'ul a'zo"],
-    ] as const) {
-      if (!id) continue;
-      const { data: ownRow, error: linkError } = await context.supabase
-        .from(table)
-        .select("id")
-        .eq("business_id", businessId)
-        .eq("id", id)
-        .maybeSingle();
-      if (linkError) throw new Error(linkError.message);
-      if (!ownRow) throw new Error(`${label} topilmadi — ro'yxatdan qayta tanlang.`);
-    }
-    const { logActivity } = await import("./activity.server");
-    const { data: created, error } = await context.supabase
-      .from("leads")
-      .insert({ ...data, last_contact_at: new Date().toISOString() } as never)
-      .select("id")
-      .single();
-    if (error) throw new Error(error.message);
-    await logActivity(context.supabase, {
-      entityType: "lead",
-      entityId: created.id,
-      customerId: data.customer_id,
-      action: "lead_created",
-      detail: data.requested_product ?? "Yangi murojaat",
-      actorUserId: context.userId,
-    });
-    return created;
-  });
-
-export const updateLeadStage = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
-    z.object({ id: z.string(), stage: z.string(), customer_id: z.string().nullable().optional() }).parse(input),
-  )
-  .handler(async ({ data, context }) => {
-    await requirePermission(
-      context.supabase,
-      "sales.manage",
-      "Murojaat bosqichini faqat savdo bilan shug‘ullanadigan xodim o‘zgartiradi.",
-    );
-    const { logActivity } = await import("./activity.server");
-    const { error } = await context.supabase
-      .from("leads")
-      .update({ stage: data.stage, last_contact_at: new Date().toISOString() } as never)
-      .eq("id", data.id);
-    if (error) throw new Error(error.message);
-    await logActivity(context.supabase, {
-      entityType: "lead",
-      entityId: data.id,
-      customerId: data.customer_id ?? null,
-      action: "lead_stage_changed",
-      detail: data.stage,
-      actorUserId: context.userId,
-    });
-    return { ok: true };
-  });
-
 export const createQuickOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
     z
       .object({
         customer_id: z.string(),
-        lead_id: z.string().nullable().optional(),
         phone: z.string().nullable().optional(),
         delivery_address: z.string().nullable().optional(),
         notes: z.string().nullable().optional(),
@@ -176,7 +90,6 @@ export const createQuickOrder = createServerFn({ method: "POST" })
     // begona ID yozishga to'shmaydi — bog'lanadigan har ID'ni tekshiramiz.
     const links = [
       ["customers", data.customer_id, "Mijoz"],
-      ["leads", data.lead_id ?? null, "Lid"],
       ["business_members", data.assigned_member_id ?? null, "Mas'ul a'zo"],
     ] as const;
     for (const [table, id, label] of links) {
@@ -219,7 +132,6 @@ export const createQuickOrder = createServerFn({ method: "POST" })
       .from("orders")
       .insert({
         customer_id: data.customer_id,
-        lead_id: data.lead_id ?? null,
         phone: data.phone ?? null,
         delivery_address: data.delivery_address ?? null,
         notes: data.notes ?? null,

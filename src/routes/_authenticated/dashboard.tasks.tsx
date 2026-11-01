@@ -26,7 +26,6 @@ const searchSchema = z.object({
   status: z.string().optional(),
   priority: z.string().optional(),
   customerId: z.string().optional(),
-  leadId: z.string().optional(),
   memberId: z.string().optional(),
   search: z.string().optional(),
 });
@@ -59,7 +58,6 @@ function TasksPage() {
   const priority = params.priority ?? "all";
   const search = params.search ?? "";
   const customerId = params.customerId ?? null;
-  const leadId = params.leadId ?? null;
   const memberId = params.memberId ?? null;
 
   const setFilter = (next: "status" | "priority" | "search", value: string) =>
@@ -75,7 +73,7 @@ function TasksPage() {
   const showOrders = !isHidden("/dashboard/orders");
 
   const query = useQuery({
-    queryKey: ["tasks", status, priority, search, customerId, leadId, memberId],
+    queryKey: ["tasks", status, priority, search, customerId, memberId],
     queryFn: () =>
       fetchTasks({
         data: {
@@ -83,7 +81,6 @@ function TasksPage() {
           priority,
           search,
           ...(customerId ? { customerId } : {}),
-          ...(leadId ? { leadId } : {}),
           ...(memberId ? { memberId } : {}),
         },
       }),
@@ -144,7 +141,7 @@ function TasksPage() {
             ))}
           </SelectContent>
         </Select>
-        {customerId || leadId || memberId ? (
+        {customerId || memberId ? (
           <button
             type="button"
             onClick={() =>
@@ -153,7 +150,6 @@ function TasksPage() {
                 search: (prev) => ({
                   ...prev,
                   customerId: undefined,
-                  leadId: undefined,
                   memberId: undefined,
                 }),
               })

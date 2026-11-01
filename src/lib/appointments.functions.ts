@@ -312,7 +312,14 @@ export const saveAppointment = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (error) throw conflictError(error);
-    return { ok: true, id: created?.id ?? null };
+
+    const appointmentId = created?.id ?? null;
+    if (appointmentId) {
+      const { sendAppointmentCardById } = await import("./telegram-appointments.server");
+      await sendAppointmentCardById(businessId, appointmentId, "CRM — qabulxona");
+    }
+
+    return { ok: true, id: appointmentId };
   });
 
 export const setAppointmentStatus = createServerFn({ method: "POST" })

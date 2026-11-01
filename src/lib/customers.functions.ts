@@ -130,17 +130,12 @@ export const getCustomerProfile = createServerFn({ method: "GET" })
   .inputValidator((input: unknown) => z.object({ id: z.string() }).parse(input))
   .handler(async ({ data, context }) => {
     const { role } = await memberContext(context.supabase);
-    const [customer, leads, orders, payments, tasks, activities, conversations] = await Promise.all([
+    const [customer, orders, payments, tasks, activities, conversations] = await Promise.all([
       context.supabase
         .from("customers")
         .select("*")
         .eq("id", data.id)
         .single(),
-      context.supabase
-        .from("leads")
-        .select("id, status, stage, score, source, value, next_action, created_at, requested_product")
-        .eq("customer_id", data.id)
-        .order("created_at", { ascending: false }),
       context.supabase
         .from("orders")
         .select("id, order_number, status, payment_status, total, discount, created_at")
@@ -174,7 +169,6 @@ export const getCustomerProfile = createServerFn({ method: "GET" })
       customer: namedCustomer,
       canErase: isAdminRole(role),
       canConsent: can(role, "sales.manage"),
-      leads: leads.data ?? [],
       orders: orders.data ?? [],
       payments: payments.data ?? [],
       tasks: tasks.data ?? [],

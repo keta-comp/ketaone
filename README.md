@@ -88,6 +88,7 @@ roadmap.md        qilingan va rejalangan ishlar
 - **RLS aylanib o'tilmaydi:** tenant ma'lumotlari `userClient(user_id)` orqali o'qiladi;
   `supabaseAdmin` (BYPASSRLS) faqat platform vazifalari uchun.
 - Repo **Lovable**ga ulangan: chop etilgan tarixni qayta yozmang (force push, rebase, amend).
-- **Murojaatlar (leads)** bo'limi barcha presetda yashirin — menyu, kartochkalar va server
-  guard bir kalitdan (`hiddenRoutesForPreset`) boshqariladi.
+- **Murojaatlar (leads)** bo'limi mahsulotdan olib tashlandi: sahifa, Kanban, tez yaratish va
+  preset kaliti o'chirilgan, `/dashboard/leads` `ALWAYS_HIDDEN_ROUTES`da doimiy yashirin.
+  `leads` jadvallari bilan Telegram/Instagram agentining kirish oqimi (`notify_lead`) qoladi.
 - Sohani o'zgartirmaydigan kod izohi yozilmaydi; matnlar o'zbek tilida, `t()` orqali.

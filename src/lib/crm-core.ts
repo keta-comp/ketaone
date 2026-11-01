@@ -1,4 +1,4 @@
-/** Client-safe constants for the CRM core (customers, leads, orders, payments, tasks). */
+/** Client-safe constants for the CRM core (customers, orders, payments, tasks). */
 
 import { coreTerm, resolvePresetId } from "./presets";
 
@@ -50,23 +50,13 @@ export function crmLabel(value: string | null | undefined) {
   return CRM_LABELS[key] ?? key.replace(/_/g, " ");
 }
 
-export const DEFAULT_LEAD_PIPELINE = [
-  "Yangi",
-  "Aloqa qilindi",
-  "Qiziqmoqda",
-  "Taklif berildi",
-  "Kelishildi",
-  "Yopildi",
-];
-
 /** Quick "+ Yangi" actions, tuned per industry but always backed by the same core entities. */
-export type QuickActionKey = "customer" | "lead" | "order" | "payment" | "task";
+export type QuickActionKey = "customer" | "order" | "payment" | "task";
 
 export function quickActionLabels(industry: string | null | undefined): Record<QuickActionKey, string> {
   const presetId = resolvePresetId(industry);
   return {
     customer: coreTerm(presetId, "customers").one,
-    lead: coreTerm(presetId, "leads").one,
     order: coreTerm(presetId, "orders").one,
     payment: coreTerm(presetId, "payments").one,
     task: coreTerm(presetId, "tasks").one,

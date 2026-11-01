@@ -131,15 +131,3 @@ export const removeBrandingLogo = createServerFn({ method: "POST" })
     await deleteObjects("branding", [data.path], context.userId);
     return { ok: true };
   });
-
-export const notifyLeadStaff = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
-    z.object({ leadId: z.string(), reason: z.string().min(1) }).parse(input),
-  )
-  .handler(async ({ data, context }) => {
-    const { requireBusinessId } = await import("./tenant.server");
-    const { notifyStaffGroup } = await import("./agent.server");
-    const businessId = await requireBusinessId(context.supabase);
-    return notifyStaffGroup(businessId, data.leadId, data.reason);
-  });

@@ -89,11 +89,7 @@ function Overview() {
             <Button asChild variant="outline" size="sm">
               <Link to="/dashboard/analytics">{t("Hisobotlar")}</Link>
             </Button>
-            <QuickNewButton
-              industry={crmConfig.data?.industry}
-              stages={crmConfig.data?.config?.pipelineStages}
-              size="sm"
-            />
+            <QuickNewButton industry={crmConfig.data?.industry} size="sm" />
           </>
         }
       />

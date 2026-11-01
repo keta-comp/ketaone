@@ -49,7 +49,6 @@ export function isCoreRelationTarget(target: string): boolean {
 
 /** Legacy dashboard routes a module can map onto (existing functionality, kept). */
 export type CrmModuleLink =
-  | "/dashboard/leads"
   | "/dashboard/customers"
   | "/dashboard/orders"
   | "/dashboard/inventory"

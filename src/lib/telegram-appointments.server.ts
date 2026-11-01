@@ -193,8 +193,55 @@ export async function sendBookingCard(
   return targets.length;
 }
 
-/* ------------------------------- inline amallar ------------------------------- */
+/**
+ * Yangi qabulni ID'si bo'yicha kartochka qilib yuborish — CRM va modul sahifalari
+ * faqat qatorni qo'lga kiritadi, ism/telefon/summa bazadan o'qiladi. Qabul
+ * yozilgan faktidan keyingi eng oxirgi qadam: xabar borgani bilan qabul
+ * yozilishi o'zarmaydi, shuning uchun barcha xatolar yutiladi.
+ */
+export async function sendAppointmentCardById(
+  businessId: string,
+  appointmentId: string,
+  source: string,
+  excludeTelegramUserId?: string,
+): Promise<number> {
+  try {
+    const { supabaseAdmin } = await import("@/lib/platform.server");
+    const { data } = await supabaseAdmin
+      .from("appointments")
+      .select("starts_at, service_name, deposit_amount, note, customers:customer_id(full_name, phone), employees:employee_id(full_name)")
+      .eq("business_id", businessId)
+      .eq("id", appointmentId)
+      .maybeSingle();
+    const row = (data ?? null) as unknown as {
+      starts_at: string;
+      service_name: string | null;
+      deposit_amount: string | number | null;
+      customers: { full_name: string; phone: string | null } | null;
+      employees: { full_name: string } | null;
+    } | null;
+    if (!row) return 0;
+    return await sendBookingCard(
+      businessId,
+      {
+        id: appointmentId,
+        startsAt: row.starts_at,
+        serviceName: row.service_name ?? "Xizmat",
+        employeeName: row.employees?.full_name ?? null,
+        customerName: row.customers?.full_name ?? "Nomaʼlum mijoz",
+        customerPhone: row.customers?.phone ?? "—",
+        source,
+        ...(row.deposit_amount === null ? {} : { depositAmount: Number(row.deposit_amount) }),
+      },
+      excludeTelegramUserId,
+    );
+  } catch (error) {
+    console.error("[telegram-booking] card by id failed", error);
+    return 0;
+  }
+}
 
+/* ------------------------------- inline amallar ------------------------------- */
 async function loadAppointment(link: TelegramLinkRow, id: string): Promise<AppointmentRow | null> {
   const client = await rlsClient(link);
   const { data } = await client

@@ -38,7 +38,6 @@ export type PresetSection = "core" | "industry" | "operations" | "money" | "team
 export type CoreKey =
   | "pipeline"
   | "customers"
-  | "leads"
   | "orders"
   | "products"
   | "inventory"
@@ -58,7 +57,6 @@ export type CoreKey =
 const CORE_SINGLES: Record<CoreKey, string> = {
   pipeline: "Sotuv quvuri",
   customers: "Mijoz",
-  leads: "Murojaat",
   orders: "Buyurtma",
   products: "Xizmat yoki mahsulot",
   inventory: "Ombordagi pozitsiya",
@@ -134,7 +132,6 @@ export interface IndustryPreset {
 const CORE_ITEMS: Record<CoreKey, PresetMenuItem> = {
   pipeline: { to: "/dashboard/pipeline", label: "Pipeline", icon: "pipeline", section: "core" },
   customers: { to: "/dashboard/customers", label: "Mijozlar", icon: "users", section: "core" },
-  leads: { to: "/dashboard/leads", label: "Murojaatlar", icon: "target", section: "core" },
   orders: { to: "/dashboard/orders", label: "Buyurtmalar", icon: "cart", section: "core" },
   products: {
     to: "/dashboard/products",
@@ -189,10 +186,10 @@ const CORE_ITEMS: Record<CoreKey, PresetMenuItem> = {
 };
 
 /**
- * Sections no preset offers any more: "Murojaatlar" is gone from the product for every
- * industry (leads keep flowing in from the Telegram bot, they are just not a tenant page).
+ * Sections no preset offers any more. "Murojaatlar" bundan buyon mahsulotda yo‘q:
+ * sahifa, menyudagi joyi va tez yaratish tugmasi olib tashlandi.
  */
-const ALWAYS_HIDDEN_ROUTES: string[] = [CORE_ITEMS.leads.to];
+const ALWAYS_HIDDEN_ROUTES: string[] = ["/dashboard/leads"];
 
 const ADMIN_TAIL: PresetMenuItem[] = [
   {
@@ -339,10 +336,10 @@ const PRESET_LIST: IndustryPreset[] = [
     industryKey: "oquv",
     emoji: "🎓",
     name: "O‘quv markazi",
-    description: "Lidlar, o‘quvchilar, kurslar, guruhlar, davomat va oylik to‘lovlar.",
+    description: "O‘quvchilar, kurslar, guruhlar, davomat va oylik to‘lovlar.",
     bookingType: "trial_lesson",
-    extraCoreKeys: ["leads", "appointments", "tasks", "payments", "finance", "employees", "payroll", "team"],
-    labels: { customers: "O‘quvchilar", leads: "Murojaatlar", products: "Kurslar" },
+    extraCoreKeys: ["appointments", "tasks", "payments", "finance", "employees", "payroll", "team"],
+    labels: { customers: "O‘quvchilar", products: "Kurslar" },
     singles: { customers: "O‘quvchi", appointments: "Sinov darsi", products: "Kurs" },
     industryItems: [
       { to: "/dashboard/courses", label: "Kurslar", icon: "book", section: "industry" },
@@ -671,7 +668,7 @@ export function isModuleEnabled(id: string, moduleKey: string): boolean {
 /** Core routes this preset must not show anywhere: menu entry, cross-page link, page. */
 export function hiddenRoutesForPreset(id: string): Set<string> {
   const preset = PRESETS[id] ?? UNIVERSAL_PRESET;
-  const hidden = new Set(preset.extraCoreKeys.includes("leads") ? [] : ALWAYS_HIDDEN_ROUTES);
+  const hidden = new Set(ALWAYS_HIDDEN_ROUTES);
   for (const key of preset.hiddenCoreKeys ?? []) hidden.add(CORE_ITEMS[key].to);
   return hidden;
 }

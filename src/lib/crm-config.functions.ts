@@ -933,7 +933,6 @@ export const deleteCrmRecord = createServerFn({ method: "POST" })
 const LINKED_COUNT_TABLE: Partial<Record<CrmModuleLink, string>> = {
   "/dashboard/customers": "customers",
   "/dashboard/orders": "orders",
-  "/dashboard/leads": "leads",
   "/dashboard/products": "products",
   "/dashboard/attendance": "attendance",
   "/dashboard/services": "services",

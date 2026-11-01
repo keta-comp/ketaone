@@ -93,7 +93,6 @@ describe("preset registry", () => {
   test("core entry points stay in the menu unless the preset switches them off", () => {
     const required = [
       "/dashboard/customers",
-      "/dashboard/leads",
       "/dashboard/orders",
       "/dashboard/products",
     ];
@@ -104,9 +103,14 @@ describe("preset registry", () => {
       for (const to of required) {
         expect(menu.some((item) => item.to === to)).toBe(!hidden.has(to));
       }
-      // Murojaatlar faqat extraCoreKeys'ida "leads" deb yoqqan sohada ochiq.
-      expect(hidden.has("/dashboard/leads")).toBe(id !== "oquv");
     }
+  });
+
+  // Murojaatlar bo'limi mahsulotdan butunlay olib tashlandi: hech bir preset ocholmaydi,
+  // sahifa fayli mavjud emas, konfiguratsiyadagi link esa menyuga chiqmaydi.
+  test("Murojaatlar hech qanday presetda qaytib ochilmaydi", () => {
+    for (const id of PRESET_IDS) expect(hiddenRoutesForPreset(id).has("/dashboard/leads")).toBe(true);
+    expect(existsSync(`${ROUTES_DIR}${routeFile("/dashboard/leads")}`)).toBe(false);
   });
 
   test("the industries the owner switched off really lost those sections", () => {
@@ -115,7 +119,7 @@ describe("preset registry", () => {
     }
     expect(isSectionVisible("oquv", "/dashboard/inventory")).toBe(false);
     expect(isSectionVisible("oquv", "/dashboard/customers")).toBe(true);
-    expect(isSectionVisible("oquv", "/dashboard/leads")).toBe(true);
+    expect(isSectionVisible("oquv", "/dashboard/leads")).toBe(false);
     expect(isSectionVisible("beauty", "/dashboard/leads")).toBe(false);
     expect(isSectionVisible("ecommerce", "/dashboard/orders")).toBe(true);
     expect(isSectionVisible("ecommerce", "/dashboard/inventory")).toBe(true);

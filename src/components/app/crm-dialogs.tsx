@@ -33,7 +33,7 @@ import { saveCrmCustomer } from "@/lib/customers.functions";
 import { listStudentGroups, listStudyGroups, syncStudentGroups } from "@/lib/groups.functions";
 import { savePayment } from "@/lib/payments.functions";
 import { saveTask } from "@/lib/tasks.functions";
-import { createQuickLead, createQuickOrder, listPickers } from "@/lib/quick.functions";
+import { createQuickOrder, listPickers } from "@/lib/quick.functions";
 import { useSectionVisibility } from "@/lib/section-visibility";
 import { useTerminology } from "@/lib/terminology";
 import {
@@ -68,7 +68,6 @@ function useInvalidate() {
     for (const key of [
       "customers",
       "customer",
-      "leads",
       "orders",
       "payments",
       "tasks",
@@ -368,201 +367,6 @@ function GroupChipsField({
         );
       })}
     </div>
-  );
-}
-
-export function LeadDialog({
-  open,
-  onOpenChange,
-  defaultCustomerId,
-  stages,
-  label = "Yangi murojaat",
-}: {
-  open: boolean;
-  onOpenChange: (value: boolean) => void;
-  defaultCustomerId?: string | undefined;
-  stages?: string[] | undefined;
-  label?: string;
-}) {
-  const create = useServerFn(createQuickLead);
-  const pickers = usePickers(open);
-  const invalidate = useInvalidate();
-  const [form, setForm] = useState<{
-    customer_id: string;
-    requested_product: string;
-    source: string;
-    value: string;
-    stage: string;
-    next_action: string;
-    assigned_member_id: string;
-    notes: string;
-  }>({
-    customer_id: defaultCustomerId ?? "",
-    requested_product: "",
-    source: "manual",
-    value: "",
-    stage: stages?.[0] ?? "Yangi",
-    next_action: "",
-    assigned_member_id: NONE,
-    notes: "",
-  });
-
-  useEffect(() => {
-    if (open)
-      setForm((f) => ({
-        ...f,
-        customer_id: defaultCustomerId ?? f.customer_id,
-        stage: stages?.[0] ?? "Yangi",
-      }));
-  }, [open, defaultCustomerId, stages]);
-
-  const mutation = useMutation({
-    mutationFn: () =>
-      create({
-        data: {
-          customer_id: form.customer_id,
-          requested_product: form.requested_product || null,
-          source: form.source,
-          value: Number(form.value || 0),
-          stage: form.stage,
-          next_action: form.next_action || null,
-          notes: form.notes || null,
-          assigned_member_id: form.assigned_member_id === NONE ? null : form.assigned_member_id,
-        },
-      }),
-    onSuccess: () => {
-      toast.success(t("Murojaat yaratildi"));
-      invalidate();
-      onOpenChange(false);
-    },
-    onError: (error: unknown) =>
-      toast.error(error instanceof Error ? error.message : t("Saqlab bo‘lmadi")),
-  });
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{label}</DialogTitle>
-          <DialogDescription>
-            {t("Mijozni tanlang — ma’lumotlarini qayta kiritish shart emas.")}
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="sm:col-span-2">
-            <Field label={t("Mijoz *")}>
-              <Select
-                value={form.customer_id}
-                onValueChange={(value) => setForm((f) => ({ ...f, customer_id: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={t("Mijozni tanlang")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {(pickers.data?.customers ?? []).map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.full_name ?? "Ismsiz"} {c.phone ? `· ${c.phone}` : ""}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-          </div>
-          <Field label={t("Nima so‘ralgan")}>
-            <Input
-              value={form.requested_product}
-              onChange={(e) => setForm((f) => ({ ...f, requested_product: e.target.value }))}
-            />
-          </Field>
-          <Field label={t("Taxminiy summa")}>
-            <Input
-              type="number"
-              value={form.value}
-              onChange={(e) => setForm((f) => ({ ...f, value: e.target.value }))}
-            />
-          </Field>
-          <Field label={t("Manba")}>
-            <Select
-              value={form.source}
-              onValueChange={(value) => setForm((f) => ({ ...f, source: value }))}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {CUSTOMER_SOURCES.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {crmLabel(s)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </Field>
-          <Field label={t("Bosqich")}>
-            <Select
-              value={t(form.stage)}
-              onValueChange={(value) => setForm((f) => ({ ...f, stage: value }))}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {(stages ?? ["Yangi"]).map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {s}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </Field>
-          <Field label={t("Mas’ul")}>
-            <Select
-              value={form.assigned_member_id}
-              onValueChange={(value) => setForm((f) => ({ ...f, assigned_member_id: value }))}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={t("Tanlanmagan")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={NONE}>{t("Tanlanmagan")}</SelectItem>
-                {(pickers.data?.assignees ?? []).map((o) => (
-                  <SelectItem key={o.id} value={o.id}>
-                    {o.full_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </Field>
-          <Field label={t("Keyingi qadam")}>
-            <Input
-              value={form.next_action}
-              onChange={(e) => setForm((f) => ({ ...f, next_action: e.target.value }))}
-              placeholder={t("Ertaga qo‘ng‘iroq qilish")}
-            />
-          </Field>
-          <div className="sm:col-span-2">
-            <Field label={t("Izoh")}>
-              <Textarea
-                rows={2}
-                value={form.notes}
-                onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-              />
-            </Field>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            {t("Bekor qilish")}
-          </Button>
-          <Button
-            disabled={!form.customer_id || mutation.isPending}
-            onClick={() => mutation.mutate()}
-          >
-            {t("Saqlash")}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   );
 }
 
@@ -1134,20 +938,18 @@ export function TaskDialog({
 /** Universal "+ Yangi" entry point. Labels adapt to the configured industry. */
 export function QuickNewButton({
   industry,
-  stages,
   size = "default",
 }: {
   industry?: string | null | undefined;
-  stages?: string[] | undefined;
   size?: "default" | "sm";
 }) {
   const labels = quickActionLabels(industry);
   const { isHidden } = useSectionVisibility();
   const [openKey, setOpenKey] = useState<QuickActionKey | null>(null);
 
-  // Murojaatlar bo'limi butunlay o'chirilgan; buyurtmalar esa presetga qarab yashirinadi.
-  const actions = (["customer", "lead", "order", "payment", "task"] as QuickActionKey[]).filter(
-    (key) => key !== "lead" && !(key === "order" && isHidden("/dashboard/orders")),
+  // Buyurtmalar presetga qarab yashirinadi; Murojaatlar bo'limi butunlay o'chirilgan.
+  const actions = (["customer", "order", "payment", "task"] as QuickActionKey[]).filter(
+    (key) => !(key === "order" && isHidden("/dashboard/orders")),
   );
 
   return (
@@ -1171,12 +973,6 @@ export function QuickNewButton({
         open={openKey === "customer"}
         onOpenChange={(v) => setOpenKey(v ? "customer" : null)}
         title={t("Yangi {v0}", { v0: labels.customer.toLowerCase() })}
-      />
-      <LeadDialog
-        open={openKey === "lead"}
-        onOpenChange={(v) => setOpenKey(v ? "lead" : null)}
-        stages={stages}
-        label={t("Yangi {v0}", { v0: labels.lead.toLowerCase() })}
       />
       <OrderDialog
         open={openKey === "order"}

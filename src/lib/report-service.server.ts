@@ -153,19 +153,16 @@ export interface BusinessReport {
   orders: number;
   completedOrders: number;
   newCustomers: number;
-  leads: number;
-  wonLeads: number;
   conversion: number;
   pendingPaymentsCount: number;
   pendingPaymentsAmount: number;
   topProducts: { name: string; quantity: number; revenue: number }[];
   topMember: { name: string; revenue: number } | null;
-  sources: { name: string; leads: number }[];
+  sources: { name: string; customers: number }[];
   rows: {
     orders: Record<string, unknown>[];
     payments: Record<string, unknown>[];
     customers: Record<string, unknown>[];
-    leads: Record<string, unknown>[];
   };
 }
 
@@ -178,7 +175,7 @@ export async function buildBusinessReport(
   range: ReportRange,
 ): Promise<BusinessReport> {
   const { supabaseAdmin } = await import("@/lib/platform.server");
-  const [settings, orders, payments, customers, leads, items] = await Promise.all([
+  const [settings, orders, payments, customers, items] = await Promise.all([
     supabaseAdmin
       .from("business_settings")
       .select("currency, business_name")
@@ -206,13 +203,6 @@ export async function buildBusinessReport(
       .lte("created_at", range.to)
       .limit(5000),
     supabaseAdmin
-      .from("leads")
-      .select("id, status, source, value, created_at, customer_id, assigned_member_id, requested_product")
-      .eq("business_id", businessId)
-      .gte("created_at", range.from)
-      .lte("created_at", range.to)
-      .limit(5000),
-    supabaseAdmin
       .from("order_items")
       .select("order_id, product_name, quantity, line_total, created_at")
       .eq("business_id", businessId)
@@ -223,7 +213,6 @@ export async function buildBusinessReport(
 
   const orderRows = (orders.data ?? []).filter((o) => o.status !== "cancelled");
   const paymentRows = payments.data ?? [];
-  const leadRows = leads.data ?? [];
   const customerRows = customers.data ?? [];
   const memberNames = await assigneeNameMap(businessId);
 
@@ -231,7 +220,6 @@ export async function buildBusinessReport(
     .filter((p) => p.status === "paid" || p.status === "partial")
     .reduce((sum, p) => sum + num(p.amount), 0);
   const pending = paymentRows.filter((p) => p.status === "pending" || p.status === "partial");
-  const wonLeads = leadRows.filter((l) => l.status === "won").length;
   const completedOrders = orderRows.filter((o) => o.status === "delivered").length;
 
   const productMap = new Map<string, { name: string; quantity: number; revenue: number }>();
@@ -253,8 +241,8 @@ export async function buildBusinessReport(
   const topMemberEntry = [...memberRevenue.entries()].sort((a, b) => b[1] - a[1])[0];
 
   const sourceMap = new Map<string, number>();
-  for (const lead of leadRows) {
-    const key = lead.source || "other";
+  for (const customer of customerRows) {
+    const key = customer.source || "other";
     sourceMap.set(key, (sourceMap.get(key) ?? 0) + 1);
   }
 
@@ -268,9 +256,8 @@ export async function buildBusinessReport(
     orders: orderRows.length,
     completedOrders,
     newCustomers: customerRows.length,
-    leads: leadRows.length,
-    wonLeads,
-    conversion: leadRows.length ? Math.round((wonLeads / leadRows.length) * 1000) / 10 : 0,
+    // Konversiya — buyurtmalarning yetkazib berilganlari (Murojaatlar bo'limi ochildi).
+    conversion: orderRows.length ? Math.round((completedOrders / orderRows.length) * 1000) / 10 : 0,
     pendingPaymentsCount: pending.length,
     pendingPaymentsAmount: pending.reduce((sum, p) => sum + num(p.amount), 0),
     topProducts: [...productMap.values()].sort((a, b) => b.revenue - a.revenue).slice(0, 5),
@@ -278,8 +265,8 @@ export async function buildBusinessReport(
       ? { name: memberNames.get(topMemberEntry[0]) ?? "Mas’ul", revenue: topMemberEntry[1] }
       : null,
     sources: [...sourceMap.entries()]
-      .map(([name, leadCount]) => ({ name, leads: leadCount }))
-      .sort((a, b) => b.leads - a.leads),
+      .map(([name, customerCount]) => ({ name, customers: customerCount }))
+      .sort((a, b) => b.customers - a.customers),
     rows: {
       orders: orderRows.map((order) => ({
         "Buyurtma ID": order.order_number,
@@ -305,15 +292,6 @@ export async function buildBusinessReport(
         Manba: customer.source ?? "",
         Status: customer.status ?? "",
         Yaratilgan: customer.created_at.slice(0, 10),
-      })),
-      leads: leadRows.map((lead) => ({
-        "Lead ID": lead.id.slice(0, 8),
-        Mijoz: customerNames.get(lead.customer_id) ?? "",
-        Manba: lead.source ?? "",
-        Status: lead.status,
-        Qiymat: num(lead.value),
-        "So‘rov": lead.requested_product ?? "",
-        Yaratilgan: lead.created_at.slice(0, 10),
       })),
     },
   };
@@ -347,7 +325,6 @@ export function formatReportMessage(
     `💰 Tushum: <b>${formatMoneyPlain(report.revenue, report.currency)}</b>`,
     `🛒 Buyurtmalar: <b>${report.orders}</b> ta`,
     `👥 Yangi mijozlar: <b>${report.newCustomers}</b> ta`,
-    `🔥 Leadlar: <b>${report.leads}</b> ta`,
     `✅ Yakunlangan savdolar: <b>${report.completedOrders}</b> ta`,
     `💳 Kutilayotgan to‘lovlar: <b>${report.pendingPaymentsCount}</b> ta (${formatMoneyPlain(
       report.pendingPaymentsAmount,
@@ -377,13 +354,13 @@ export function formatReportMessage(
     lines.push("", `⭐ Eng samarali xodim: ${report.topMember.name}`);
   }
   if (report.sources.length) {
-    lines.push("", `📌 Lead manbalari: ${report.sources.slice(0, 3).map((s) => `${s.name} (${s.leads})`).join(", ")}`);
+    lines.push("", `📌 Mijoz manbalari: ${report.sources.slice(0, 3).map((s) => `${s.name} (${s.customers})`).join(", ")}`);
   }
 
   return lines.join("\n");
 }
 
-/** Excel workbook (base64) for a report: Umumiy, Savdolar, To‘lovlar, Mijozlar, Leadlar. */
+/** Excel workbook (base64) for a report: Umumiy, Savdolar, To‘lovlar, Mijozlar. */
 export function buildReportExcel(report: BusinessReport): { base64: string; filename: string } {
   const base64 = buildWorkbookBase64([
     {
@@ -394,7 +371,6 @@ export function buildReportExcel(report: BusinessReport): { base64: string; file
           Tushum: report.revenue,
           Buyurtmalar: report.orders,
           "Yangi mijozlar": report.newCustomers,
-          Leadlar: report.leads,
           "Yakunlangan savdolar": report.completedOrders,
           "Kutilayotgan to‘lovlar": report.pendingPaymentsAmount,
           "Konversiya %": report.conversion,
@@ -405,7 +381,6 @@ export function buildReportExcel(report: BusinessReport): { base64: string; file
     { name: "Savdolar", rows: report.rows.orders },
     { name: "To‘lovlar", rows: report.rows.payments },
     { name: "Mijozlar", rows: report.rows.customers },
-    { name: "Leadlar", rows: report.rows.leads },
   ]);
   return {
     base64,

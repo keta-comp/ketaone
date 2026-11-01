@@ -246,7 +246,7 @@ export function DashboardShell({
             <GlobalSearch />
             <LanguageSwitcher />
             <NotificationsBell />
-            <QuickNewButton industry={crm?.industry} stages={crm?.config?.pipelineStages} size="sm" />
+            <QuickNewButton industry={crm?.industry} size="sm" />
             <span className="hidden text-xs text-muted-foreground lg:inline">{email}</span>
             <Button variant="outline" size="sm" className="gap-2" onClick={signOut}>
               <LogOut className="size-4" />

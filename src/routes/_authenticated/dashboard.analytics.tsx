@@ -192,7 +192,6 @@ function ReportBody({ data }: { data: Awaited<ReturnType<typeof getReport>> }) {
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label={t("Tushum")} value={formatMoney(data.kpis.revenue, currency)} />
         <StatCard label={t("Buyurtmalar")} value={data.kpis.orders} hint={t("Yakunlangan: {v0}", { v0: data.kpis.completedOrders })} />
-        <StatCard label={t("Murojaatlar")} value={data.kpis.leads} hint={t("Yutilgan: {v0}", { v0: data.kpis.wonLeads })} />
         <StatCard label={t("Konversiya")} value={`${data.kpis.conversionRate}%`} />
         <StatCard label={t("O‘rtacha buyurtma")} value={formatMoney(data.kpis.averageOrderValue, currency)} />
         <StatCard label={t("Yangi mijozlar")} value={data.kpis.newCustomers} />
@@ -216,7 +215,7 @@ function ReportBody({ data }: { data: Awaited<ReturnType<typeof getReport>> }) {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <section className="clay-panel p-5">
-          <h2 className="font-display text-base font-semibold">{t("Kunlik murojaat va buyurtma")}</h2>
+          <h2 className="font-display text-base font-semibold">{t("Kunlik buyurtmalar")}</h2>
           <div className="mt-4 h-56">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={days}>
@@ -224,7 +223,6 @@ function ReportBody({ data }: { data: Awaited<ReturnType<typeof getReport>> }) {
                 <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" />
                 <YAxis tick={{ fontSize: 11 }} stroke="var(--muted-foreground)" width={30} />
                 <Tooltip />
-                <Bar dataKey="leads" fill="var(--muted-foreground)" radius={4} />
                 <Bar dataKey="orders" fill="var(--foreground)" radius={4} />
               </BarChart>
             </ResponsiveContainer>
@@ -241,7 +239,7 @@ function ReportBody({ data }: { data: Awaited<ReturnType<typeof getReport>> }) {
                 <div key={row.name} className="clay-inset flex items-center justify-between rounded-2xl px-3 py-2 text-sm">
                   <span>{row.name}</span>
                   <span className="text-muted-foreground">
-                    {row.leads} {t("murojaat •")}{" "}{row.customers} mijoz
+                    {row.customers} {t("mijoz")}
                   </span>
                 </div>
               ))

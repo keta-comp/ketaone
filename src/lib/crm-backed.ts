@@ -493,6 +493,12 @@ export async function saveBackedRecord(
 
   const { data: created, error } = await sb.from(table).insert(row).select("id").single();
   if (error) throw new Error(conflictMessage(table, error));
+
+  if (table === "appointments" && created?.id) {
+    const { sendAppointmentCardById } = await import("./telegram-appointments.server");
+    await sendAppointmentCardById(input.businessId, created.id, `CRM — ${input.module.label}`);
+  }
+
   return { id: created?.id };
 }
 
