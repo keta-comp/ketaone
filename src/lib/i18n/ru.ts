@@ -1014,6 +1014,8 @@ const table: Record<string, string> = {
   "Mijozsiz": "Без клиента",
   "Xodimni tanlang": "Выберите сотрудника",
   "Xodimsiz": "Без сотрудника",
+  "Bron": "Бронь",
+  "Bronlar": "Бронирования",
   "Bron qo'shish": "Добавить бронь",
   "Bron qo'shildi": "Бронь добавлена",
   "Bron o'chirildi": "Бронь удалена",

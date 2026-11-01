@@ -189,6 +189,8 @@ describe("preset registry", () => {
       many: "Qurilmalar va stollar",
     });
     expect(serviceTermsForPreset("stomatologiya")).toEqual({ one: "Xizmat", many: "Xizmatlar" });
+    // Klubda bron — `appointments` atamasi ham shunga aylanadi.
+    expect(coreTerm("playstation", "appointments")).toEqual({ one: "Bron", many: "Bronlar" });
     // Atalmagan preset ham xavfsiz: klub atamasi chiqib qolmasligi kerak.
     expect(serviceTermsForPreset(null)).toEqual({ one: "Xizmat", many: "Xizmatlar" });
   });

@@ -167,8 +167,10 @@ export function ProgramReleasesPanel({ platforms }: { platforms: ReleasePlatform
     return <ErrorState error={releases.error} onRetry={() => void releases.refetch()} />;
 
   const { isAdmin, releases: rows } = releases.data;
-  const wanted = new Set(platforms);
-  const shown = rows.filter((release) => wanted.has(release.platform));
+  // Chaqiruvchi sahifaning tartibi saqlanadi: klubda Android oldinda — real fayl shu.
+  const shown = platforms
+    .map((platform) => rows.find((release) => release.platform === platform))
+    .filter((release): release is ProgramRelease => Boolean(release));
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
