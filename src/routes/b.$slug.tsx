@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { depositFor } from "@/lib/deposit";
 import { createPublicBooking, getPublicBookingPage, getPublicSlots } from "@/lib/public-booking.functions";
 import { intlLocale, t } from "@/lib/i18n";
+import { serviceTermsForPreset } from "@/lib/presets";
 import { formatMoney } from "@/lib/types";
 
 export const Route = createFileRoute("/b/$slug")({
@@ -121,7 +122,9 @@ function PublicBookingPage() {
     );
   }
 
-  const { businessName, services, employees, phone, logoUrl, workingHours } = page.data;
+  const { businessName, services, employees, phone, logoUrl, workingHours, presetId } = page.data;
+  // Klubning katalogi — qurilma va stollar; ommaviy sahifa ham shu nom bilan yuritadi.
+  const serviceTerm = serviceTermsForPreset(presetId);
 
   if (done) {
     return (
@@ -211,10 +214,10 @@ function PublicBookingPage() {
 
       <div className="clay-panel grid gap-3 p-4">
         <div>
-          <Label htmlFor="pb-service">{t("Xizmat")}</Label>
+          <Label htmlFor="pb-service">{serviceTerm.one}</Label>
           <Select value={activeServiceId} onValueChange={(value) => { setServiceId(value); setSlot(null); }}>
             <SelectTrigger id="pb-service">
-              <SelectValue placeholder={t("Xizmatni tanlang")} />
+              <SelectValue placeholder={t("{term}ni tanlang", { term: serviceTerm.one })} />
             </SelectTrigger>
             <SelectContent>
               {services.map((service) => (
