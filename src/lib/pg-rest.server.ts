@@ -659,7 +659,9 @@ class Builder<T = any[]> implements PromiseLike<PgResult<T>> {
       // Chaqiruvchi baribir satr yuborsa shu yerdan ochamiz: `config->>'presetId'`
       // NULL bo'lib qolmasligi uchun jsonb doim OBYEKT bo'lishi kerak.
       const parsed = typeof value === "string" ? jsonObjectOf(value) : value;
-      if (parsed !== undefined) return `${p.add(parsed)}::jsonb`;
+      // `Builder` raw SQL (`tx.unsafe`) bilan parametr sifatida obyekt yuborib bo'lmaydi —
+      // postgres.js satr/Buffer kutadi. jsonb ustuniga esa JSON satri bilan ::jsonb cast yetarli.
+      if (parsed !== undefined) return `${p.add(JSON.stringify(parsed))}::jsonb`;
     }
     return p.add(value ?? null);
   }
